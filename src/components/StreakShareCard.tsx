@@ -1,6 +1,13 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import { Pet } from "./ui/Pet";
+import { useStore } from "@/store/useStore";
+
+const getAbsoluteUrl = (path: string) => {
+  if (typeof window === 'undefined') return path;
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  return `${window.location.origin}${basePath}${path}`;
+};
 
 interface StreakShareCardProps {
   currentStreak: number;
@@ -11,8 +18,54 @@ interface StreakShareCardProps {
 
 export const StreakShareCard = forwardRef<HTMLDivElement, StreakShareCardProps>(
   ({ currentStreak, highestStreak, membershipTier, streakShieldActive }, ref) => {
-    
+    const { user, selectedCompanion } = useStore();
     const displayTier = membershipTier;
+    
+    const avatarUrl = user?.avatar || "/assets/pfp/user.png";
+    const mascotUrl = "/assets/API-streak.gif";
+    
+    const [avatarSrc, setAvatarSrc] = useState<string>("");
+    const [mascotSrc, setMascotSrc] = useState<string>("");
+
+    useEffect(() => {
+      let active = true;
+      const loadAvatar = async () => {
+        const absUrl = getAbsoluteUrl(avatarUrl);
+        try {
+          const res = await fetch(absUrl);
+          const blob = await res.blob();
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (active) setAvatarSrc(reader.result as string);
+          };
+          reader.readAsDataURL(blob);
+        } catch (e) {
+          if (active) setAvatarSrc(absUrl);
+        }
+      };
+      loadAvatar();
+      return () => { active = false; };
+    }, [avatarUrl]);
+
+    useEffect(() => {
+      let active = true;
+      const loadMascot = async () => {
+        const absUrl = getAbsoluteUrl(mascotUrl);
+        try {
+          const res = await fetch(absUrl);
+          const blob = await res.blob();
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (active) setMascotSrc(reader.result as string);
+          };
+          reader.readAsDataURL(blob);
+        } catch (e) {
+          if (active) setMascotSrc(absUrl);
+        }
+      };
+      loadMascot();
+      return () => { active = false; };
+    }, [mascotUrl]);
     
     // 9:16 aspect ratio share card: 360x640 in premium high-contrast light mode
     return (
@@ -49,7 +102,7 @@ export const StreakShareCard = forwardRef<HTMLDivElement, StreakShareCardProps>(
         <div className="flex flex-col items-center z-10 space-y-6">
           <div className="relative">
             <img
-              src="/assets/API-streak.gif"
+              src={mascotSrc || getAbsoluteUrl(mascotUrl)}
               alt="Streak Mascot"
               className="w-48 h-48 object-contain"
               style={{
@@ -78,6 +131,7 @@ export const StreakShareCard = forwardRef<HTMLDivElement, StreakShareCardProps>(
             animation={currentStreak === 0 ? 'sad' : currentStreak >= 7 ? 'excited' : 'happy'} 
             size={112}
             className="drop-shadow-lg transform rotate-[-5deg] pointer-events-none"
+            companionId={selectedCompanion}
           />
         </div>
 
@@ -87,7 +141,7 @@ export const StreakShareCard = forwardRef<HTMLDivElement, StreakShareCardProps>(
           <div className="flex justify-between items-center w-full px-4 h-10">
              <div className="flex items-center gap-2.5 h-10">
                <img 
-                 src="/assets/pfp/user.png" 
+                 src={avatarSrc || getAbsoluteUrl(avatarUrl)} 
                  alt="User Profile" 
                  className="w-10 h-10 rounded-full border border-pink-500/20 object-cover shadow-md"
                />

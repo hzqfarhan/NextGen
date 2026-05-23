@@ -199,15 +199,15 @@ export function CoachFAB() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Interactive Mascot Pet - Click to cycle Easter Eggs */}
-          <div 
-            onClick={handlePetClick}
-            className="cursor-pointer hover:scale-110 active:scale-95 transition-transform select-none"
+          {/* Interactive Mascot Pet - Click to redirect to AI Chat */}
+          <Link 
+            href="/coach"
+            className="block hover:scale-110 active:scale-95 transition-transform select-none"
           >
             <div className="relative pointer-events-none">
               <Pet animation={activeAnimation as any} size={80} />
             </div>
-          </div>
+          </Link>
         </div>
       </motion.div>
     </>

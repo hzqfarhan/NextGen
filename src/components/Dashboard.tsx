@@ -42,7 +42,8 @@ export function Dashboard() {
     streakShieldActive,
     moveFundsToAwfarNest,
     simulateNextDay,
-    simulateNextTier
+    simulateNextTier,
+    selectedCompanion
   } = useStore()
   const bills = useStore(state => state.bills)
 
@@ -68,15 +69,32 @@ export function Dashboard() {
     try {
       setIsGenerating(true);
       const domtoimage = (await import('dom-to-image')).default;
-      const dataUrl = await domtoimage.toPng(shareCardRef.current, { quality: 1.0 });
+      const dataUrl = await domtoimage.toPng(shareCardRef.current, {
+        quality: 1.0,
+        width: 360,
+        height: 640,
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left',
+          margin: '0',
+          padding: '0',
+          boxShadow: 'none',
+        }
+      });
 
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], 'streak.png', { type: 'image/png' });
 
+      const companionName = selectedCompanion
+        ? selectedCompanion.charAt(0).toUpperCase() + selectedCompanion.slice(1)
+        : 'Uteh';
+
+      const shareText = `I just hit a ${currentStreak}-day savings streak with ${companionName} on Be U: NextGen! 🐾🔥\n\nJoin Be U: NextGen today and unlock more interactive companions when you sign up and start your savings streak with your own AI digital companion.\n\n✅ Explore NextGen:\nhttps://nextgen.haziqfarhan.my\n\n✅ Use Code:\nTEAMITC\n\nStart your journey with Be U: NextGen and experience banking done right!\n\nT&Cs apply.`;
+
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: 'My Saving Streak',
-          text: `I just hit a ${currentStreak}-day streak on Be U: NextGen! 🚀`,
+          text: shareText,
           files: [file]
         });
       } else {
@@ -97,7 +115,18 @@ export function Dashboard() {
     try {
       setIsGenerating(true);
       const domtoimage = (await import('dom-to-image')).default;
-      const dataUrl = await domtoimage.toPng(shareCardRef.current, { quality: 1.0 });
+      const dataUrl = await domtoimage.toPng(shareCardRef.current, {
+        quality: 1.0,
+        width: 360,
+        height: 640,
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left',
+          margin: '0',
+          padding: '0',
+          boxShadow: 'none',
+        }
+      });
 
       const link = document.createElement('a');
       link.download = 'my-streak.png';
@@ -592,7 +621,8 @@ export function Dashboard() {
         )}
       </AnimatePresence>
 
-      <div className="absolute left-[-9999px] top-[-9999px]">
+      {/* Off-screen but in-viewport rendering container to avoid dom-to-image clipping/black-side defects */}
+      <div className="fixed left-0 top-0 pointer-events-none opacity-0 z-[-100] overflow-hidden">
         <StreakShareCard
           ref={shareCardRef}
           currentStreak={currentStreak}
