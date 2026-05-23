@@ -823,6 +823,23 @@ export function Coach() {
                             m.role === 'assistant' ? "bg-white/95 border border-pink-100 text-[#221F20]" : "bg-primary text-white font-medium"
                           )}>
                             {m.content}
+                            {m.role === 'assistant' && (
+                              <div className="mt-2.5 pt-2 border-t border-pink-100 flex justify-between items-center gap-4">
+                                <span className="text-[8px] text-[#727272]">Share to get Streak Shield + RM10!</span>
+                                <button
+                                  onClick={() => {
+                                    useStore.getState().activateStreakShield();
+                                    useStore.setState((s) => ({
+                                      user: { ...s.user, currentBalance: s.user.currentBalance + 10 }
+                                    }));
+                                    alert("Passport generated! 🛡️ Streak Shield activated & RM10 simulated referral bounty added to wallet!");
+                                  }}
+                                  className="px-2 py-0.5 rounded-lg bg-pink-100 text-[#CC0D5A] hover:bg-pink-200 text-[8px] font-extrabold transition-all"
+                                >
+                                  📢 Share Roast
+                                </button>
+                              </div>
+                            )}
                           </div>
 
                           {/* Redirect Button */}

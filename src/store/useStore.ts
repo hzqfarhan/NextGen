@@ -205,6 +205,15 @@ interface ResilienceState {
   hasNotificationSave: boolean;
   lastQuotaUpdateDate: string | null;
   
+  // Gamification & BIMB Transition State
+  currentStreak: number;
+  highestStreak: number;
+  lastCalculatedDate: string;
+  membershipTier: 'Bronze' | 'Silver' | 'Gold';
+  streakShieldActive: boolean;
+  awfarDrawTickets: number;
+  isBimbMigrated: boolean;
+  
   // Actions
   setShowSpendOnly: (val: boolean) => void;
   setHideBalance: (val: boolean) => void;
@@ -225,6 +234,14 @@ interface ResilienceState {
   simulateGrowth: () => void;
   updateResilienceScore: () => void;
   setLanguage: (lang: Language) => void;
+  
+  // Gamification Actions
+  incrementStreak: () => void;
+  resetStreak: () => void;
+  activateStreakShield: () => void;
+  triggerBimbMigration: () => void;
+  moveFundsToAwfarNest: (amount: number) => void;
+  simulateNextDay: () => void;
   
   // Bills Actions
   addBill: (b: Bill) => void;
@@ -361,6 +378,13 @@ export const initialStoreState = {
   pendingMainGoal: null,
   hasNotificationSave: false,
   lastQuotaUpdateDate: null,
+  currentStreak: 0,
+  highestStreak: 0,
+  lastCalculatedDate: '',
+  membershipTier: 'Bronze' as const,
+  streakShieldActive: false,
+  awfarDrawTickets: 0,
+  isBimbMigrated: false,
   petOffsets: {
     idle: { offsetY: -2, scale: 800 },
     walk: { offsetY: -6.5, scale: 800 },
@@ -685,7 +709,10 @@ const useStoreBase = create<ResilienceState>()(
         let totalGrowth = 0;
         const newPockets = state.savingsPockets.map(p => {
           if (p.mode === 'growth' && p.riskLevel) {
-            const annualRate = RISK_RETURNS[p.riskLevel];
+            let annualRate = RISK_RETURNS[p.riskLevel];
+            if (state.membershipTier === 'Gold') {
+              annualRate += 0.005; // 0.5% yield boost for Gold Tier
+            }
             // Simulate daily growth (compounded daily for effect)
             const dailyRate = annualRate / 365;
             const growth = p.current * dailyRate;
@@ -701,11 +728,165 @@ const useStoreBase = create<ResilienceState>()(
           savingsPockets: newPockets,
           lastGrowthSimulationDate: today,
           pet: { 
-            message: `Market update: Your growth pockets earned RM ${totalGrowth.toFixed(2)} today! 📈`,
+            message: `Market update: Your growth pockets earned RM ${totalGrowth.toFixed(2)} today! 📈${state.membershipTier === 'Gold' ? ' (Gold 0.5% Yield Boost Active!)' : ''}`,
             animation: "excited"
           }
         };
       }),
+      incrementStreak: () => set((state) => {
+        const nextStreak = state.currentStreak + 1;
+        const highest = Math.max(state.highestStreak, nextStreak);
+        let tier = state.membershipTier;
+        if (nextStreak >= 30) {
+          tier = 'Gold';
+        } else if (nextStreak >= 7) {
+          tier = 'Silver';
+        }
+        return {
+          currentStreak: nextStreak,
+          highestStreak: highest,
+          membershipTier: tier,
+          pet: {
+            message: `Streak increased to ${nextStreak} days! 🔥 Keep it up!`,
+            animation: "excited"
+          }
+        };
+      }),
+      resetStreak: () => set((state) => ({
+        currentStreak: 0,
+        membershipTier: 'Bronze',
+        pet: {
+          message: "Streak reset to 0. Every day is a new chance to start saving! 🌱",
+          animation: "sad"
+        }
+      })),
+      activateStreakShield: () => set((state) => ({
+        streakShieldActive: true,
+        pet: {
+          message: "Streak Shield activated! Your saving streak is protected for the next simulated day. 🛡️",
+          animation: "happy"
+        }
+      })),
+      triggerBimbMigration: () => set((state) => ({
+        isBimbMigrated: true,
+        pet: {
+          message: "Financial Passport data successfully migrated to BIMB Mobile app! 🎓",
+          animation: "excited"
+        }
+      })),
+      moveFundsToAwfarNest: (amount) => {
+        const state = get();
+        if (state.user.currentBalance < amount) {
+          throw new Error("Insufficient balance in your wallet.");
+        }
+        
+        let nest = state.savingsPockets.find(p => p.name === "Be U Awfar Nest");
+        let nextPockets = [...state.savingsPockets];
+
+        if (!nest) {
+          nest = {
+            id: `awfar-${Date.now()}`,
+            name: "Be U Awfar Nest",
+            target: 1000,
+            current: amount,
+            icon: "Nest",
+            mode: "growth",
+            riskLevel: "low",
+            isMainGoal: false
+          };
+          nextPockets.push(nest);
+        } else {
+          nextPockets = state.savingsPockets.map(p => 
+            p.id === nest.id ? { ...p, current: p.current + amount } : p
+          );
+        }
+
+        const ticketsEarned = Math.floor(amount / 10);
+
+        set((s) => ({
+          user: { ...s.user, currentBalance: s.user.currentBalance - amount },
+          savingsPockets: nextPockets,
+          awfarDrawTickets: s.awfarDrawTickets + ticketsEarned,
+          pet: {
+            message: `Locked RM ${amount.toFixed(2)} into Be U Awfar Nest! Unlocked ${ticketsEarned} tickets for the RM15 Million Draw! 🎟️`,
+            animation: "excited"
+          }
+        }));
+
+        get().updateResilienceScore();
+      },
+      simulateNextDay: () => {
+        const state = get();
+        const todayStr = new Date().toDateString();
+        
+        const todayExpenses = state.transactions
+          .filter(t => t.type === 'expense' && new Date(t.date).toDateString() === todayStr)
+          .reduce((sum, t) => sum + t.amount, 0);
+          
+        const limit = state.safeDailySpend;
+        let streakUpdated = state.currentStreak;
+        let shieldActive = state.streakShieldActive;
+        let petAnimation = 'idle';
+        let petMessage = '';
+
+        if (todayExpenses <= limit) {
+          streakUpdated += 1;
+          petAnimation = 'excited';
+          petMessage = `Awesome! You stayed under your Safe Daily Spend limit. Your saving streak is now ${streakUpdated} days! 🔥`;
+        } else {
+          if (shieldActive) {
+            shieldActive = false;
+            petAnimation = 'think';
+            petMessage = `You overspent today, but your Streak Shield protected your streak of ${streakUpdated} days! 🛡️`;
+          } else {
+            streakUpdated = 0;
+            petAnimation = 'sad';
+            petMessage = `Oh no! You overspent today (spent RM ${todayExpenses.toFixed(2)} vs limit RM ${limit.toFixed(2)}). Your streak has reset to 0. 😿`;
+          }
+        }
+
+        const highest = Math.max(state.highestStreak, streakUpdated);
+        
+        let tier: 'Bronze' | 'Silver' | 'Gold' = 'Bronze';
+        if (streakUpdated >= 30) {
+          tier = 'Gold';
+        } else if (streakUpdated >= 7) {
+          tier = 'Silver';
+        }
+
+        if (tier !== state.membershipTier) {
+          if (tier === 'Silver') {
+            petMessage += ` Graduation! You've unlocked Silver Saver Tier. Access Be U Awfar Nest and merchant perks! 🥈`;
+            petAnimation = 'happy';
+          } else if (tier === 'Gold') {
+            petMessage += ` Spectacular! You've reached Gold Guardian Tier. Boosted returns and MaxCash active! 🥇`;
+            petAnimation = 'excited';
+          } else if (tier === 'Bronze') {
+            petMessage += ` You are back to Bronze Budgeter Tier. Keep saving to unlock rewards!`;
+          }
+        }
+
+        const shiftedTransactions = state.transactions.map(t => ({
+          ...t,
+          date: new Date(new Date(t.date).getTime() - 24 * 60 * 60 * 1000).toISOString()
+        }));
+
+        set((s) => ({
+          currentStreak: streakUpdated,
+          highestStreak: highest,
+          streakShieldActive: shieldActive,
+          membershipTier: tier,
+          transactions: shiftedTransactions,
+          lastCalculatedDate: todayStr,
+          pet: {
+            message: petMessage,
+            animation: petAnimation
+          }
+        }));
+
+        get().updateResilienceScore();
+        get().checkAndRefreshDailyQuota();
+      },
       updateResilienceScore: () => {
         set((state) => {
           // 1. Cashflow Safety (50% Weight)
@@ -959,6 +1140,12 @@ export const useStore = (() => {
       processAutoPay: storeState.processAutoPay,
       updatePetOffset: storeState.updatePetOffset,
       calculateDailyLimitForBalance: storeState.calculateDailyLimitForBalance,
+      incrementStreak: storeState.incrementStreak,
+      resetStreak: storeState.resetStreak,
+      activateStreakShield: storeState.activateStreakShield,
+      triggerBimbMigration: storeState.triggerBimbMigration,
+      moveFundsToAwfarNest: storeState.moveFundsToAwfarNest,
+      simulateNextDay: storeState.simulateNextDay,
     };
 
     const stateToUse = hydrated

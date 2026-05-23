@@ -11,6 +11,7 @@ import { useState, useEffect } from "react"
 import { SpendGuardModal } from "./BudgetGuardModal"
 import { ResilienceModal } from "./ResilienceModal"
 import { TopUpModal } from "./TopUpModal"
+import { RewardsModal } from "./RewardsModal"
 import Link from "next/link"
 import { t } from "@/lib/translations"
 import { BalanceDetailDrawer } from "./BalanceDetailDrawer"
@@ -32,7 +33,12 @@ export function Dashboard() {
     showSpendOnly,
     savingsPockets,
     hideBalance,
-    setHideBalance
+    setHideBalance,
+    currentStreak,
+    highestStreak,
+    membershipTier,
+    streakShieldActive,
+    simulateNextDay
   } = useStore()
   const bills = useStore(state => state.bills)
 
@@ -44,6 +50,7 @@ export function Dashboard() {
   const [showGuardModal, setShowGuardModal] = useState(false)
   const [showResilienceModal, setShowResilienceModal] = useState(false)
   const [showTopUpModal, setShowTopUpModal] = useState(false)
+  const [showRewardsModal, setShowRewardsModal] = useState(false)
   const [showBalanceDrawer, setShowBalanceDrawer] = useState(false)
   const [safeDailyView, setSafeDailyView] = useState<'quota' | 'average'>('quota')
   const strings = t[language]
@@ -291,6 +298,74 @@ export function Dashboard() {
         })}
       </div>
 
+      {/* Gamification / Saving Momentum Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+      >
+        <Card className="glass-card overflow-hidden border-primary/20 relative">
+          <div className="absolute top-0 right-0 p-3 flex items-center gap-1.5">
+            <span className="animate-pulse flex h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-[9px] font-bold text-slate-400 uppercase">Streak Engine Active</span>
+          </div>
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-2xl relative shadow-inner animate-bounce">
+                  🔥
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-black text-black">{currentStreak} {language === 'en' ? 'Days Streak' : 'Hari Streak'}</span>
+                    {streakShieldActive && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 border border-blue-200 flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5">
+                        🛡️ Shield Active
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground font-medium">
+                    {language === 'en' ? 'Highest Streak:' : 'Streak Tertinggi:'} <span className="font-bold text-black">{highestStreak} {language === 'en' ? 'days' : 'hari'}</span>
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <Badge className={cn(
+                  "font-bold text-xs px-2.5 py-1 rounded-lg border shadow-sm",
+                  membershipTier === 'Gold' ? "bg-amber-100 text-amber-700 border-amber-300" :
+                  membershipTier === 'Silver' ? "bg-slate-100 text-slate-700 border-slate-300" :
+                  "bg-rose-100 text-rose-700 border-rose-300"
+                )}>
+                  {membershipTier === 'Gold' ? '🏆 Gold Guardian' :
+                   membershipTier === 'Silver' ? '🥈 Silver Saver' :
+                   '🥉 Bronze Budgeter'}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => simulateNextDay()}
+                className="w-full h-9 rounded-xl bg-slate-900 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 hover:bg-slate-800 transition-colors shadow-sm"
+              >
+                <CalendarClock className="w-3.5 h-3.5" />
+                {language === 'en' ? 'Simulate Next Day' : 'Simulasi Hari Seterusnya'}
+              </motion.button>
+
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowRewardsModal(true)}
+                className="w-full h-9 rounded-xl bg-primary text-white font-bold text-[11px] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity shadow-sm"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                {language === 'en' ? 'Rewards & Perks' : 'Ganjaran & Kelebihan'}
+              </motion.button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
 
       {/* NextGen Demo Digest */}
       <PromoCarousel />
@@ -350,6 +425,11 @@ export function Dashboard() {
       <BalanceDetailDrawer
         open={showBalanceDrawer}
         onClose={() => setShowBalanceDrawer(false)}
+      />
+
+      <RewardsModal
+        isOpen={showRewardsModal}
+        onClose={() => setShowRewardsModal(false)}
       />
     </div>
   )

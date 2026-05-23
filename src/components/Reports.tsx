@@ -3,8 +3,8 @@
 import { useStore } from "@/store/useStore"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts'
 import { TrendingUp, Award, Calendar, Target, Shield, ArrowUpRight, ArrowDownRight } from "lucide-react"
@@ -76,14 +76,14 @@ export function Insights() {
     }
     return item
   })
-  
+
   const lockedAmount = bills
     .filter(b => b.isLocked && b.status !== 'paid')
     .reduce((sum, b) => sum + b.amount, 0);
   const paidCount = bills.filter(b => b.status === 'paid').length;
   const nextBill = bills.filter(b => b.status !== 'paid')
     .sort((a, b) => new Date(a.nextDueDate).getTime() - new Date(b.nextDueDate).getTime())[0];
-  
+
   const strings = t[language]
 
   return (
@@ -131,7 +131,7 @@ export function Insights() {
       <Card className="glass-card overflow-hidden">
         <CardHeader className="p-4 pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" /> Resilience Trend
+            <TrendingUp className="w-4 h-4 text-primary" /> NextGen Trend
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0 h-48 w-full">
@@ -139,17 +139,17 @@ export function Insights() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={dynamicSpendingData} margin={{ top: 20, right: 30, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff10" />
-                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
-                <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
-                <Tooltip 
+                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8' }} />
+                <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8' }} />
+                <Tooltip
                   contentStyle={{ backgroundColor: '#111114', border: '1px solid #ffffff10', borderRadius: '12px', fontSize: '10px' }}
                   itemStyle={{ color: '#818cf8' }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="amount" 
-                  stroke="#6366f1" 
-                  strokeWidth={3} 
+                <Line
+                  type="monotone"
+                  dataKey="amount"
+                  stroke="#6366f1"
+                  strokeWidth={3}
                   dot={{ fill: '#6366f1', strokeWidth: 2, r: 4 }}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                 />
