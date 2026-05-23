@@ -987,9 +987,11 @@ export function Coach() {
           </div>
           <Badge 
             variant="outline" 
-            className="text-[10px] bg-emerald-500/10 border-emerald-500/20 text-emerald-500 font-bold px-2 py-1 cursor-pointer hover:bg-emerald-500/20 transition-colors"
+            className="text-[9px] font-black text-white tracking-widest px-2.5 py-1 rounded-full cursor-pointer transition-all duration-300 border-none bg-gradient-to-r from-[#DF0059] via-[#CC0D5A] to-[#FF6B6B] shadow-md shadow-[#DF0059]/40 hover:shadow-lg hover:shadow-[#DF0059]/60 hover:scale-110 active:scale-95 flex items-center gap-1 animate-pulse"
+            style={{ animationDuration: '3s' }}
             onClick={() => setShowCompanionModal(true)}
           >
+            <Sparkles className="w-2.5 h-2.5 animate-spin" style={{ animationDuration: '4s' }} />
             CUSTOM
           </Badge>
         </div>

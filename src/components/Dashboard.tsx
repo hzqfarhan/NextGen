@@ -69,6 +69,23 @@ export function Dashboard() {
     try {
       setIsGenerating(true);
       const { toPng } = await import('html-to-image');
+      
+      // WebKit/Safari rendering cache workaround: Trigger a pre-render to force browser caching of inlined base64 SVG resources
+      await toPng(shareCardRef.current, {
+        pixelRatio: 2,
+        width: 360,
+        height: 450,
+        style: {
+          width: '360px',
+          height: '450px',
+          transform: 'none',
+          margin: '0',
+          padding: '0',
+          boxShadow: 'none',
+        }
+      });
+
+      // Secondary capture retrieves fully cached and painted image structures on all mobile and desktop devices
       const dataUrl = await toPng(shareCardRef.current, {
         pixelRatio: 2,
         width: 360,
@@ -116,6 +133,23 @@ export function Dashboard() {
     try {
       setIsGenerating(true);
       const { toPng } = await import('html-to-image');
+      
+      // WebKit/Safari rendering cache workaround: Trigger a pre-render to force browser caching of inlined base64 SVG resources
+      await toPng(shareCardRef.current, {
+        pixelRatio: 2,
+        width: 360,
+        height: 450,
+        style: {
+          width: '360px',
+          height: '450px',
+          transform: 'none',
+          margin: '0',
+          padding: '0',
+          boxShadow: 'none',
+        }
+      });
+
+      // Secondary capture retrieves fully cached and painted image structures on all mobile and desktop devices
       const dataUrl = await toPng(shareCardRef.current, {
         pixelRatio: 2,
         width: 360,
