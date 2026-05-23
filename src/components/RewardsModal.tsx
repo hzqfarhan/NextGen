@@ -55,7 +55,7 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
   const tiers = [
     {
       id: 'Bronze',
-      name: language === 'en' ? 'Bronze Budgeter' : 'Bronze Budgeter',
+      name: language === 'en' ? 'Novice' : 'Novice',
       milestone: 'Base level (0–6 Day Streak)',
       perks: [
         'Baseline conversational access to 4 specialized AI Council Agents.',
@@ -68,7 +68,7 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
     },
     {
       id: 'Silver',
-      name: language === 'en' ? 'Silver Saver' : 'Silver Saver',
+      name: language === 'en' ? 'Pro' : 'Pro',
       milestone: 'Maintain 7-Day Streak',
       perks: [
         'Unlocks Be U Awfar Nest integration prompts.',
@@ -83,7 +83,7 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
     },
     {
       id: 'Gold',
-      name: language === 'en' ? 'Gold Guardian' : 'Gold Guardian',
+      name: language === 'en' ? 'Legend' : 'Legend',
       milestone: 'Maintain 30-Day Streak',
       perks: [
         'Unlocks premium BeU MaxCash Term Deposit-i Hybrid Simulator.',
@@ -146,7 +146,7 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                   <div>
                     <span className="text-slate-400 font-medium">Your Tier:</span>
                     <Badge className="ml-1 bg-primary text-white border-none font-bold text-[9px]">
-                      {membershipTier}
+                      {membershipTier === 'Gold' ? 'Legend' : membershipTier === 'Silver' ? 'Pro' : 'Novice'}
                     </Badge>
                   </div>
                 </div>

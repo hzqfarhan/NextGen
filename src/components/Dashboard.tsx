@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { motion, AnimatePresence } from "framer-motion"
-import { TrendingUp, AlertTriangle, ShieldCheck, Wallet, Settings as SettingsIcon, Send, History, CalendarClock, RefreshCw, Eye, EyeOff, Sparkles } from "lucide-react"
+import { TrendingUp, AlertTriangle, ShieldCheck, Wallet, Settings as SettingsIcon, Send, History, CalendarClock, RefreshCw, Eye, EyeOff, Sparkles, Flame } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
 import { SpendGuardModal } from "./BudgetGuardModal"
@@ -305,16 +305,25 @@ export function Dashboard() {
         transition={{ delay: 0.25 }}
       >
         <Card className="glass-card overflow-hidden border-primary/20 relative">
-          <div className="absolute top-0 right-0 p-3 flex items-center gap-1.5">
-            <span className="animate-pulse flex h-2 w-2 rounded-full bg-emerald-500" />
-            <span className="text-[9px] font-bold text-slate-400 uppercase">Streak Engine Active</span>
-          </div>
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-2xl relative shadow-inner animate-bounce">
-                  🔥
-                </div>
+                  {currentStreak === 0 ? (
+                    <Flame className="w-12 h-12 text-slate-300 shrink-0" />
+                  ) : (
+                    <img
+                      src="/assets/API-streak.gif"
+                      alt="Streak Icon"
+                      className="w-12 h-12 object-contain transition-all duration-500"
+                      style={{
+                        filter: currentStreak < 7
+                          ? "hue-rotate(15deg) saturate(2.5) drop-shadow(0 0 8px rgba(249, 115, 22, 0.5))"
+                          : currentStreak < 30
+                          ? "hue-rotate(200deg) saturate(2.2) drop-shadow(0 0 8px rgba(37, 99, 235, 0.6))"
+                          : "hue-rotate(280deg) saturate(2.5) brightness(1.1) drop-shadow(0 0 12px rgba(168, 85, 247, 0.7))"
+                      }}
+                    />
+                  )}
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-black text-black">{currentStreak} {language === 'en' ? 'Days Streak' : 'Hari Streak'}</span>
@@ -336,9 +345,9 @@ export function Dashboard() {
                   membershipTier === 'Silver' ? "bg-slate-100 text-slate-700 border-slate-300" :
                   "bg-rose-100 text-rose-700 border-rose-300"
                 )}>
-                  {membershipTier === 'Gold' ? '🏆 Gold Guardian' :
-                   membershipTier === 'Silver' ? '🥈 Silver Saver' :
-                   '🥉 Bronze Budgeter'}
+                  {membershipTier === 'Gold' ? '🏆 Legend' :
+                   membershipTier === 'Silver' ? '🥈 Pro' :
+                   '🥉 Novice'}
                 </Badge>
               </div>
             </div>
