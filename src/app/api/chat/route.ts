@@ -1,31 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Upgraded Agent Personas (from AI Agent Migration & Cloud Deployment Guide)
+// Off-topic server guard — blocks before hitting Gemini
 // ─────────────────────────────────────────────────────────────────────────────
+const OFF_TOPIC_PATTERNS = [
+    /\b(recipe|cook|food|weather|sport|soccer|football|game|movie|music|politic|relationship|dating|coding|programming|homework|essay|poem|joke|story)\b/i
+];
+
+const FINANCE_KEYWORDS = [
+    'rm', 'ringgit', 'spend', 'save', 'saving', 'budget', 'money', 'balance',
+    'daily', 'safe', 'limit', 'fund', 'goal', 'bill', 'debt', 'loan', 'invest',
+    'transfer', 'income', 'salary', 'credit', 'debit', 'bank', 'pocket', 'score',
+    'streak', 'asb', 'unit trust', 'profit', 'loss', 'withdraw', 'deposit',
+    'spending', 'afford', 'interest', 'return', 'growth', 'wallet', 'commit',
+    'commitment', 'bnpl', 'autopay', 'insurance', 'tax', 'zakat', 'tabung', 'epf',
+];
+
+function isOffTopic(message: string): boolean {
+    const lower = message.toLowerCase();
+    const hasFinanceKeyword = FINANCE_KEYWORDS.some(kw => lower.includes(kw));
+    const hasOffTopic = OFF_TOPIC_PATTERNS.some(p => p.test(lower));
+    // Block only if: explicitly off-topic OR no finance keyword found AND message is long enough to be a real query
+    return hasOffTopic || (!hasFinanceKeyword && lower.trim().split(' ').length > 3);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Structured JSON Agent Personas
+// Each agent instructs Gemini to return a strict JSON schema — no prose paragraphs.
+// ─────────────────────────────────────────────────────────────────────────────
+const STRUCTURED_SCHEMA = `
+CRITICAL OUTPUT RULES — YOU MUST FOLLOW EXACTLY:
+1. Reply ONLY with valid JSON. No markdown, no prose outside JSON.
+2. Use this exact schema:
+{
+  "headline": "Short direct answer, max 8 words",
+  "status": "good" | "warning" | "critical" | "neutral",
+  "insight": "One sentence of actionable advice, max 20 words.",
+  "metric": { "label": "Metric name", "value": "Value with unit", "trend": "up" | "down" | "flat" } | null,
+  "action": "Short CTA text if relevant (e.g. Enable Spend Guard)" | null,
+  "actionType": "toggle_spend_guard" | "go_savings" | "go_bills" | "go_transfer" | null
+}
+3. If the question is NOT about personal finance, money, savings, bills, debt, or investments:
+   Return: { "headline": "Finance questions only.", "status": "neutral", "insight": "Ask me about your budget, savings, or spending limits.", "metric": null, "action": null, "actionType": null }
+`;
+
 const AGENT_PROMPTS: Record<string, string> = {
-    finance: `You are Finance Strategist, the chief financial advisor.
-You look at the big picture: safe daily spending, net worth, emergency funds, and overarching goals.
-Directly answer user questions about their daily spending limits, budgeting, and overall financial health.
-Do not refuse to answer or constantly defer to other agents unless the question is highly specific to another domain. Use RM currency.
-Keep responses concise and under 150 words. Be warm but direct.`,
+    finance: `You are Finance Strategist, the chief financial advisor for BeU NextGen — a Malaysian personal finance app.
+You answer questions about safe daily spending, net worth, budgets, and overall financial health.
+Use RM currency. Be direct and warm.
+${STRUCTURED_SCHEMA}`,
 
-    save: `You are Savings Sentinel, a strict financial advisor specializing in budgeting, expense reduction, savings pockets, and cash retention strategies for young Malaysians.
-Directly help the user find ways to cut expenses, set up savings goals, and build budgets.
-Always answer questions directly. Use RM currency.
-When the user wants to create a savings goal or pocket, use the createSavingsPocket function.
-When the user wants to add funds to an existing pocket, use the addFundsToPocket function.
-Keep responses concise and under 150 words.`,
+    save: `You are Savings Sentinel, a strict savings and budgeting coach for young Malaysians.
+You help users set savings goals, cut expenses, and build emergency funds.
+When the user wants to create a savings goal, use the createSavingsPocket function.
+When the user wants to add funds to a pocket, use the addFundsToPocket function.
+Use RM currency.
+${STRUCTURED_SCHEMA}`,
 
-    debt: `You are Debt Shield, a specialist in liability management, interest rates, BNPL risks, and loan/credit card payoff strategies.
-Directly answer questions about debt management and strategies.
-Always warn about BNPL risks. Use RM currency.
-Keep responses concise and under 150 words.`,
+    debt: `You are Commitment Shield, a specialist in bills, debt management, BNPL risks, and loan strategies for Malaysians.
+Warn about BNPL risks. Use RM currency.
+${STRUCTURED_SCHEMA}`,
 
-    invest: `You are Growth Guru, a wealth-building specialist focused on investments, compound interest, ASB, unit trusts, and portfolio growth for Malaysians.
-Directly answer questions about investments, returns, and growth opportunities.
+    invest: `You are Growth Guru, a wealth-building specialist focused on ASB, unit trusts, and portfolio growth.
 Always mention risk level (Low/Medium/High). Use RM currency.
-Keep responses concise and under 150 words.`,
+${STRUCTURED_SCHEMA}`,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -101,9 +139,23 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing message or agentId' }, { status: 400 });
         }
 
+        // ── Layer 2: Server-side off-topic guard (free, no API token burned) ──
+        if (isOffTopic(message)) {
+            return NextResponse.json({
+                structured: {
+                    headline: 'Finance questions only.',
+                    status: 'neutral',
+                    insight: 'Ask me about your budget, savings, spending limits, or bills.',
+                    metric: null,
+                    action: null,
+                    actionType: null,
+                },
+                fallback: false,
+            });
+        }
+
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            // No API key configured — return a signal so frontend can fall back
             return NextResponse.json({ 
                 reply: null, 
                 fallback: true,
@@ -139,10 +191,10 @@ export async function POST(req: NextRequest) {
         const requestBody: any = {
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-            generationConfig: { maxOutputTokens: 512, temperature: 0.7 },
+            // Lower temperature for consistent JSON output; small token budget since replies are short
+            generationConfig: { maxOutputTokens: 256, temperature: 0.4 },
         };
 
-        // Only include tools for agents that should trigger actions
         if (shouldIncludeTools) {
             requestBody.tools = [{ functionDeclarations: TOOL_DECLARATIONS }];
         }
@@ -172,17 +224,16 @@ export async function POST(req: NextRequest) {
 
         if (!candidate?.parts?.length) {
             return NextResponse.json({ 
-                reply: 'I\'m having trouble thinking right now. Let\'s try again.',
+                reply: "I'm having trouble thinking right now. Let's try again.",
                 fallback: false 
             });
         }
 
-        // Check if Gemini returned a function call
+        // Check if Gemini returned a function call (tool use takes priority)
         const functionCallPart = candidate.parts.find((p: any) => p.functionCall);
         const textPart = candidate.parts.find((p: any) => p.text);
 
         if (functionCallPart) {
-            // Gemini wants to call a function — return the structured call to the frontend
             return NextResponse.json({
                 reply: textPart?.text || null,
                 functionCall: {
@@ -193,10 +244,24 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // Plain text response
-        const text = textPart?.text ?? 'No response from AI.';
+        const rawText = textPart?.text ?? '';
 
-        return NextResponse.json({ reply: text, fallback: false });
+        // ── Try to parse structured JSON response ──
+        try {
+            // Gemini sometimes wraps JSON in ```json ... ``` — strip that
+            const cleaned = rawText.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+            const parsed = JSON.parse(cleaned);
+            // Validate it has the expected shape
+            if (parsed.headline && parsed.status && parsed.insight !== undefined) {
+                return NextResponse.json({ structured: parsed, fallback: false });
+            }
+        } catch {
+            // JSON parse failed — fall through to plain text fallback
+        }
+
+        // Fallback: return as plain reply if JSON parsing fails
+        return NextResponse.json({ reply: rawText, fallback: false });
+
     } catch (err) {
         console.error('[AI Chat] Internal error:', err);
         return NextResponse.json({ 

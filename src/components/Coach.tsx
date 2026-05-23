@@ -45,13 +45,23 @@ interface ChatAction {
   payload?: any;
 }
 
+interface StructuredResponse {
+  headline: string;
+  status: 'good' | 'warning' | 'critical' | 'neutral';
+  insight: string;
+  metric?: { label: string; value: string; trend: 'up' | 'down' | 'flat' } | null;
+  action?: string | null;
+  actionType?: 'toggle_spend_guard' | 'go_savings' | 'go_bills' | 'go_transfer' | null;
+}
+
 interface Message {
   role: 'user' | 'assistant';
   agent?: string;
   content: string;
+  structured?: StructuredResponse; // new: structured card response
   actions?: ChatAction[];
-  proposal?: any; // New field for interactive card preview
-  redirect?: { label: string; href: string }; // New field for post-action navigation
+  proposal?: any;
+  redirect?: { label: string; href: string };
 }
 
 export function Coach() {
@@ -634,7 +644,7 @@ export function Coach() {
 
     const triggerFinance = textToSubmit.includes("spend") || textToSubmit.includes("safe") || textToSubmit.includes("limit") || textToSubmit.includes("daily") || textToSubmit.includes("budget") || textToSubmit.includes("money") || textToSubmit.includes("impulse")
     const triggerGrowth = textToSubmit.includes("invest") || textToSubmit.includes("stock") || textToSubmit.includes("crypto") || textToSubmit.includes("gold") || textToSubmit.includes("growth") || textToSubmit.includes("opportunity") || textToSubmit.includes("market")
-    const isListingPockets = textToSubmit.includes("show") || textToSubmit.includes("list") || textToSubmit.includes("what") || textToSubmit.includes("pockets") || textToSubmit.includes("my goals")
+    const isListingPockets = textToSubmit.includes("show") || textToSubmit.includes("list") || textToSubmit.includes("pockets") || textToSubmit.includes("my goals") || (textToSubmit.includes("what") && (textToSubmit.includes("saving") || textToSubmit.includes("pocket") || textToSubmit.includes("goal")))
     
     // Add Funds Parsing
     let isAddFundsTriggered = false;
@@ -651,7 +661,7 @@ export function Coach() {
       }
     }
 
-    const triggerSave = textToSubmit.includes("save") || textToSubmit.includes("goal") || textToSubmit.includes("fund") || textToSubmit.includes("laptop") || textToSubmit.includes("emergency") || isListingPockets || isAddFundsTriggered
+    const triggerSave = !triggerFinance && (textToSubmit.includes("save") || textToSubmit.includes("goal") || textToSubmit.includes("fund") || textToSubmit.includes("laptop") || textToSubmit.includes("emergency") || isListingPockets || isAddFundsTriggered)
     const triggerDebt = textToSubmit.includes("debt") || textToSubmit.includes("bnpl") || textToSubmit.includes("loan") || textToSubmit.includes("risk") || textToSubmit.includes("credit") || textToSubmit.includes("afford") || textToSubmit.includes("buy")
     const triggerBills = textToSubmit.includes("bill") || /\brent\b/.test(textToSubmit) || textToSubmit.includes("autopay") || textToSubmit.includes("commitment") || /\block\b/.test(textToSubmit) || textToSubmit.includes("protected")
     const triggerTransfer = textToSubmit.includes("money move") || textToSubmit.includes("transfer") || textToSubmit.includes("send") || (textToSubmit.includes("pay") && textToSubmit.includes("to"))
@@ -821,6 +831,14 @@ export function Coach() {
                 proposal: result.proposal,
               });
               logChat(agentId, overrideText || input, replyText, data.functionCall.name);
+            } else if (!data.fallback && data.structured) {
+              responses.push({
+                role: 'assistant',
+                agent: agentName,
+                content: data.structured.headline,
+                structured: data.structured,
+              });
+              logChat(agentId, overrideText || input, data.structured.headline);
             } else if (!data.fallback && data.reply) {
               responses.push({
                 role: 'assistant',
@@ -829,7 +847,6 @@ export function Coach() {
               });
               logChat(agentId, overrideText || input, data.reply);
             } else {
-              // Fallback when no API key or API error
               responses.push({
                 role: 'assistant',
                 agent: agentName,
@@ -863,7 +880,15 @@ export function Coach() {
             body: JSON.stringify({ message: overrideText || input, agentId, context: buildAIContext() })
           });
           const data = await res.json();
-          if (!data.fallback && data.reply) {
+          if (!data.fallback && data.structured) {
+            responses.push({
+              role: 'assistant',
+              agent: agentName,
+              content: data.structured.headline,
+              structured: data.structured,
+            });
+            logChat(agentId, overrideText || input, data.structured.headline);
+          } else if (!data.fallback && data.reply) {
             responses.push({
               role: 'assistant',
               agent: agentName,
@@ -909,6 +934,14 @@ export function Coach() {
               proposal: result.proposal,
             });
             logChat(agentId, overrideText || input, replyText, data.functionCall.name);
+          } else if (!data.fallback && data.structured) {
+            responses.push({
+              role: 'assistant',
+              agent: agentName,
+              content: data.structured.headline,
+              structured: data.structured,
+            });
+            logChat(agentId, overrideText || input, data.structured.headline);
           } else if (!data.fallback && data.reply) {
             responses.push({
               role: 'assistant',
@@ -920,7 +953,7 @@ export function Coach() {
             responses.push({
               role: 'assistant',
               agent: agentName,
-              content: `Based on your current balance of RM ${user.currentBalance.toFixed(2)}, your absolute safe limit for today is RM ${safeDailySpend.toFixed(2)}.`
+              content: `Safe daily spend: RM ${safeDailySpend.toFixed(2)}.`
             });
           }
         } catch (err) {
@@ -1141,13 +1174,63 @@ export function Coach() {
                           )}
                         </div>
                         <div className={cn("flex flex-col gap-3 max-w-[90%]", m.role === 'user' ? "items-end" : "items-start")}>
-                          <div className={cn(
-                            "p-3 rounded-2xl text-[11px] leading-relaxed shadow-sm w-fit",
-                            m.role === 'assistant' ? "bg-white/95 border border-pink-100 text-[#221F20]" : "bg-primary text-white font-medium"
-                          )}>
-                            {m.content}
-                            {m.role === 'assistant' && (
-                              <div className="mt-2.5 pt-2 border-t border-pink-100 flex justify-between items-center gap-4">
+                          {m.structured ? (
+                            /* ── Structured AI Response Card ── */
+                            <div className="bg-white/95 border border-pink-100 rounded-2xl shadow-sm overflow-hidden w-fit max-w-[100%]">
+                              {/* Status header strip */}
+                              <div className={cn(
+                                "px-3 py-1.5 flex items-center justify-between gap-2 border-b",
+                                m.structured.status === 'good'     ? "bg-emerald-50 border-emerald-100" :
+                                m.structured.status === 'warning'  ? "bg-amber-50 border-amber-100" :
+                                m.structured.status === 'critical' ? "bg-red-50 border-red-100" :
+                                "bg-slate-50 border-slate-100"
+                              )}>
+                                <span className="text-[11px] font-black text-[#221F20] leading-tight">{m.structured.headline}</span>
+                                <span className={cn(
+                                  "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border shrink-0",
+                                  m.structured.status === 'good'     ? "bg-emerald-100 text-emerald-700 border-emerald-200" :
+                                  m.structured.status === 'warning'  ? "bg-amber-100 text-amber-700 border-amber-200" :
+                                  m.structured.status === 'critical' ? "bg-red-100 text-red-700 border-red-200" :
+                                  "bg-slate-100 text-slate-500 border-slate-200"
+                                )}>
+                                  {m.structured.status === 'good' ? '✓ OK' :
+                                   m.structured.status === 'warning' ? '⚠ Caution' :
+                                   m.structured.status === 'critical' ? '🔴 Alert' : 'Info'}
+                                </span>
+                              </div>
+
+                              <div className="p-3 space-y-2">
+                                {/* Insight sentence */}
+                                <p className="text-[11px] text-[#555555] leading-relaxed">{m.structured.insight}</p>
+
+                                {/* Metric chip */}
+                                {m.structured.metric && (
+                                  <div className="flex items-center gap-1.5 bg-[#F8F8F8] border border-[#E5E7EB] rounded-xl px-2.5 py-1.5 w-fit">
+                                    <span className="text-[9px] font-bold text-[#727272] uppercase tracking-wider">{m.structured.metric.label}</span>
+                                    <span className="text-[10px] font-black text-[#221F20]">{m.structured.metric.value}</span>
+                                    {m.structured.metric.trend === 'up'   && <span className="text-emerald-500 text-[10px]">↑</span>}
+                                    {m.structured.metric.trend === 'down' && <span className="text-red-500 text-[10px]">↓</span>}
+                                    {m.structured.metric.trend === 'flat' && <span className="text-slate-400 text-[10px]">→</span>}
+                                  </div>
+                                )}
+
+                                {/* CTA action button */}
+                                {m.structured.action && (
+                                  <button
+                                    onClick={() => {
+                                      if (m.structured?.actionType === 'toggle_spend_guard') {
+                                        useStore.setState(s => ({ user: { ...s.user, isSpendGuardActive: !s.user.isSpendGuardActive } }));
+                                      }
+                                    }}
+                                    className="w-full mt-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#DF0059] to-[#CC0D5A] text-white text-[10px] font-black hover:opacity-90 active:scale-95 transition-all shadow-sm shadow-[#DF0059]/20 text-left"
+                                  >
+                                    {m.structured.action} →
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Share footer */}
+                              <div className="px-3 py-2 border-t border-pink-100 flex justify-between items-center gap-4 bg-pink-50/30">
                                 <span className="text-[8px] text-[#727272]">Share to get Streak Shield + RM10!</span>
                                 <button
                                   onClick={() => {
@@ -1162,8 +1245,33 @@ export function Coach() {
                                   📢 Share Roast
                                 </button>
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          ) : (
+                            /* ── Plain text bubble ── */
+                            <div className={cn(
+                              "p-3 rounded-2xl text-[11px] leading-relaxed shadow-sm w-fit",
+                              m.role === 'assistant' ? "bg-white/95 border border-pink-100 text-[#221F20]" : "bg-primary text-white font-medium"
+                            )}>
+                              {m.content}
+                              {m.role === 'assistant' && (
+                                <div className="mt-2.5 pt-2 border-t border-pink-100 flex justify-between items-center gap-4">
+                                  <span className="text-[8px] text-[#727272]">Share to get Streak Shield + RM10!</span>
+                                  <button
+                                    onClick={() => {
+                                      useStore.getState().activateStreakShield();
+                                      useStore.setState((s) => ({
+                                        user: { ...s.user, currentBalance: s.user.currentBalance + 10 }
+                                      }));
+                                      alert("Passport generated! 🛡️ Streak Shield activated & RM10 simulated referral bounty added to wallet!");
+                                    }}
+                                    className="px-2 py-0.5 rounded-lg bg-pink-100 text-[#CC0D5A] hover:bg-pink-200 text-[8px] font-extrabold transition-all"
+                                  >
+                                    📢 Share Roast
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
 
                           {/* Redirect Button */}
                           {m.redirect && (

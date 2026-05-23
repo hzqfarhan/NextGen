@@ -1,0 +1,657 @@
+﻿BIMB - Confidential 
+
+ 
+
+ 
+
+ 
+
+B E  U  B Y  B A N K  I S L A M   ×   U M P S A  
+
+ 
+
+HACKATHON X FINTECH FORWARD 
+2026 
+
+ 
+
+Judging Rubric & Assessment Package 
+
+ 
+
+T H E M E  
+
+"Future of Money: Reimagine Finance with AI" 
+
+ 
+Scoring Sheets • Rubric Definitions • Submission Requirements 
+
+Evaluation Flow • Compliance Rules • Judging Guidelines 
+
+ 
+ 
+
+ 
+
+Prepared by Be U by Bank Islam 
+Digital Transformation, Group Digital, Bank Islam
+
+
+
+ BIMB - Confidential 
+
+S C O R I N G S H E E T 
+ 
+
+ 
+All three tracks use the same rubric so we can compare fairly across tracks. Each item is scored from 
+
+0 to 5. The weighted score is calculated as: (Raw Score / 5) x Weight. 
+
+ 
+
+Preliminary Round (Total: 100 marks) 
+
+Based on submitted materials only. No live demo at this stage. 
+
+ 
+
+Pillar Criterion Weight Score (0–5) Weighted 
+
+  
+Technical Clarity of Problem & Solution 25% 
+
+   
+Feasibility & Practicality 20% 
+
+  
+Innovation Uniqueness & Originality 20% 
+
+  
+Design UI/UX & Visual Design 15% 
+
+  
+Business Pitch Effectiveness & Impact 10% 
+
+  
+Relevance Track Alignment & Problem Fit 10% 
+
+  
+TOTAL 100% /100 
+
+ 
+ 
+ 
+Final Round (Total: 100 marks) 
+
+Includes live demo, presentation, Q&A, and code review. 
+
+ 
+
+Pillar Criterion Weight Score (0–5) Weighted 
+
+  
+Technical Functionality & Demo 25% 
+
+   
+Code Quality & Architecture 20% 
+
+  
+Design UX & Visual Polish 15% 
+
+  
+Business Business Model & Viability 15% 
+
+   
+Presentation & Q&A 15% 
+
+  
+Impact Real-World Potential & Scalability 10% 
+
+  
+TOTAL 100% /100 
+
+ 
+
+ 
+
+ 
+
+
+
+ BIMB - Confidential 
+
+R U B R I C : P R E L I M I N A R Y R O U N D 
+ 
+
+ 
+Each item is scored from 0 to 5. Whole numbers only. 
+
+ 
+Clarity of Problem & Solution (25%) 
+
+Pillar: Technical | Does the team clearly define a real problem and present a logical, understandable solution? 
+ 
+
+Score Definition 
+
+0 No clear problem. Solution is missing or does not make sense. 
+
+1 Problem is vague. Solution is hard to follow. 
+
+2 Problem is there but poorly explained. Solution has unclear parts. 
+
+3 Problem is well-defined. Solution mostly makes sense with small gaps. 
+
+4 Problem is sharp and backed by context. Solution is clear and structured. 
+
+5 Exceptional. Problem is framed with real insight. Solution story is tight and convincing. 
+
+ 
+
+ 
+
+Feasibility & Practicality (20%) 
+Pillar: Technical | Is the proposed solution realistic and possible to build? 
+
+ 
+
+Score Definition 
+
+0 Not realistic at all. No way to build this. 
+
+1 Mostly unrealistic. Needs a complete rethink. 
+
+2 Partly possible but major challenges are ignored. 
+
+3 Possible with some changes. Team knows the constraints. 
+
+4 Very doable. Clear approach with the right tools chosen. 
+
+5 Ready to build. Everything is thought through and the path is clear. 
+
+ 
+
+ 
+ 
+
+Uniqueness & Originality (20%) 
+
+Pillar: Innovation | Does the solution bring something fresh? Is it more than a copy of what already exists? 
+ 
+
+Score Definition 
+
+0 Direct copy of something that already exists. 
+
+1 Very little originality. Mostly copied from known solutions. 
+
+2 Some creative bits but the main idea is common. 
+
+3 Clearly original. You can tell this is different from existing stuff. 
+
+
+
+ BIMB - Confidential 
+
+4 Very inventive. A genuinely new way of looking at the problem. 
+
+5 Exceptionally creative. Changes how you think about the problem entirely 
+
+ 
+
+UI/UX & Visual Design (15%) 
+
+Pillar: Design | Are the mockups user-friendly and visually clean? Is the design made for the actual user? 
+ 
+
+Score Definition 
+
+0 No design work shown, or completely unusable. 
+
+1 Poor layout. No thought given to the user. 
+
+2 Basic wireframes but missing usability thinking. Messy visual style. 
+
+3 Decent flow and reasonable visuals. Some care for the user. 
+
+4 Strong UX with clear navigation. Visually polished and consistent. 
+
+5 Beautiful and intuitive. Clear evidence of real user-centred thinking. 
+
+ 
+
+ 
+
+Pitch Effectiveness & Impact (10%) 
+
+Pillar: Business | Does the pitch clearly explain the value? Is the impact story convincing? 
+ 
+
+Score Definition 
+
+0 No pitch deck or materials do not make sense. 
+
+1 Weak structure. Important info is missing. 
+
+2 Basic structure but not engaging. Hard to see the value. 
+
+3 Good pitch with a clear value message. Small gaps in storytelling. 
+
+4 Strong and well-structured. The story makes you care. 
+
+5 Outstanding. Feels professional. Makes you want to use or invest in the product. 
+
+ 
+
+Track Alignment & Problem Fit (10%) 
+Pillar: Relevance | Does the submission fit the chosen track? Is the target audience clearly identified? 
+
+ 
+
+Score Definition 
+
+0 No connection to the chosen track at all. 
+
+1 Very loose connection. Unclear who this is for. 
+
+2 Somewhat related but the track-specific parts feel shallow. 
+
+3 Good fit. The problem suits the track and the audience is clear. 
+
+4 Strong fit. Solution deeply connects with the track and a real audience. 
+
+
+
+ BIMB - Confidential 
+
+5 Perfect match. This is exactly what the track was made for. 
+
+ 
+ 
+ 
+
+R U B R I C : F I N A L R O U N D 
+ 
+
+ 
+Each item is scored from 0 to 5. Whole numbers only. 
+
+ 
+Functionality & Demo (25%) 
+
+Pillar: Technical | Does the prototype work? Can you show it in action? 
+ 
+
+Score Definition 
+
+0 Does not run. Crashes immediately. 
+
+1 Barely works. Major parts are broken. 
+
+2 Runs but with big bugs. Core features only half work. 
+
+3 Core features work. Some small bugs or rough edges. 
+
+4 Works well. Smooth and confident demo. 
+
+5 Flawless. Everything works as planned. Demo is impressive. 
+
+ 
+
+ 
+
+Code Quality & Architecture (20%) 
+Pillar: Technical | Is the code clean, organised, and well thought out? 
+
+ 
+
+Score Definition 
+
+0 No real code or it does not work at all. 
+
+1 Messy. No clear structure or standards. 
+
+2 It works but the code is hard to read and inefficient. 
+
+3 Reasonably organised. Shows some good habits. 
+
+4 Clean and well-structured. Good choices for tools and design. 
+
+5 Excellent. Easy to read, efficient, documented, follows best practices. 
+
+ 
+
+ 
+
+UX & Visual Polish (15%) 
+Pillar: Design | Is the product easy to use and visually professional? 
+
+ 
+
+Score Definition 
+
+0 No usable interface. 
+
+1 Confusing. Looks bad. 
+
+
+
+ BIMB - Confidential 
+
+2 Basic and rough. Inconsistent look. 
+
+3 Generally easy to use with decent visuals. 
+
+4 Polished. Strong visual identity and smooth experience. 
+
+5 Production-level quality. Beautiful, accessible, thoughtful details. 
+
+ 
+
+Business Model & Viability (15%) 
+Pillar: Business | Is there a clear plan for how this could sustain itself or grow? 
+
+ 
+
+Score Definition 
+
+0 No business thinking at all. 
+
+1 Vague mention of making money with no logic behind it. 
+
+2 Basic model but not convincing. 
+
+3 Reasonable plan with clear target market and revenue idea. 
+
+4 Strong case. Clear numbers and adoption strategy. 
+
+5 Investor-ready. Solid market sizing, clear revenue path, realistic plan. 
+
+ 
+
+ 
+
+Presentation & Q&A (15%) 
+Pillar: Business | How well does the team explain and defend their work? 
+
+ 
+
+Score Definition 
+
+0 Cannot present or answer basic questions. 
+
+1 Weak delivery. Struggles with core ideas. 
+
+2 OK but not engaging. Stumbles on harder questions. 
+
+3 Good presentation. Handles most questions well. 
+
+4 Compelling and professional. Strong answers to tough questions. 
+
+5 Exceptional. Every team member shines. Handles everything with depth. 
+
+ 
+
+ 
+ 
+ 
+
+
+
+BIMB  
+H A C K A T H O N  X  F I N T E C H  F O R W A R D  2 0 2 6   
+
+Real-World Potential & Scalability (10%) 
+
+Pillar: Impact | Could this actually be deployed and used by real people? 
+ 
+
+Score Definition 
+
+0 No path to real use. 
+
+1 Too many barriers to ever work in practice. 
+
+2 Some potential but major gaps in feasibility or market. 
+
+3 Could work with more development. Scalability is considered. 
+
+4 Strong potential. Clear need with a realistic path to grow. 
+
+5 Ready for incubation. Clear demand, scalable, real product-market fit. 
+
+ 
+
+T H R E S H O L D  &  T I E - B R E A K E R  
+ 
+
+Minimum Score to Advance 
+
+• Teams need at least 50 out of 100 in the Preliminary Round to move to the Final. 
+
+• Any team that scores 0 on more than one item is automatically out. 
+
+• The top teams advance as decided by the organiser (usually the top 10). 
+
+Tie-Breaker Rules 
+
+If two or more teams have the same score, we go through these steps one by one until the tie is 
+
+broken: 
+
+1. Highest combined Technical pillar score. 
+
+2. Highest score on Uniqueness & Originality (Preliminary) or Functionality & Demo (Final). 
+
+3. Highest score on Feasibility (Preliminary) or Code Quality (Final). 
+
+4. Panel discussion with majority agreement. Head Judge has the final say if needed. 
+
+Judging Across Tracks 
+
+Each track is judged on its own first. Rankings are done within tracks. If there are grand prizes that go 
+
+across all tracks, the same rubric is used so every team is compared fairly. 
+
+ 
+
+S U B M I S S I O N  R E Q U I R E M E N T S  
+ 
+
+Clear deliverables for each round. No surprises. Teams should know exactly what is expected. 
+
+Preliminary Round 
+
+All teams must submit the following by the published deadline: 
+
+ 
+
+Confidential  |  Judging Rubric  |  Page 7 
+
+
+
+BIMB  
+H A C K A T H O N  X  F I N T E C H  F O R W A R D  2 0 2 6   
+
+• Pitch Deck (PDF, max 10 slides): Cover your problem, solution, target users, key features, 
+
+technology approach, and team info. Keep it visual. Walls of text will lose judges. 
+
+• Github Link: Submit your code via a public GitHub repository. Source code for your front-
+
+end, back-end (minimal implementations are acceptable), APIs, database schemas, and 
+
+configuration files. 
+
+• Video Presentation (max 8 minutes): Explain your idea, problem, solution, key features, 
+
+and how your system works. Show your mockup or prototype if possible. Keep it clear, 
+
+simple, and engaging. Too much reading or long explanations may lose judges. 
+
+Final Round 
+
+Teams that make it to the final must submit: 
+
+ 
+• Working Prototype or Demo: A functional prototype showing your core features. Web app, 
+
+mobile app, clickable prototype, or local demo. It must work on stage. 
+
+• Source Code Repository: GitHub or GitLab repo with a README that includes: setup steps, 
+
+technology used, how the system is built, and an "AI Tools Used" section. 
+
+• Updated Pitch Deck (PDF, max 12 slides): Updated to include how the system is built, 
+
+demo screenshots, business model, and what comes next. 
+
+• Live Presentation: 10-minute presentation followed by 2-minute Q&A with the judges. 
+
+• Demo Video: A walkthrough of your prototype as backup in case of tech issues on stage. 
+
+File Naming 
+
+Name all files as: TeamName_Type_Round (example: TeamAlpha_PitchDeck_Preliminary.pdf). 
+
+Upload to the platform by the deadline. Late submissions will not be accepted. 
+
+ 
+
+E V A L U A T I O N  F L O W  
+ 
+
+Preliminary Round 
+
+• Format: Each judge reviews submitted materials on their own. 
+
+• Scoring: Judges score independently. Final score is the average of all judges. 
+
+• Timeline: Judges get 2 to 3 working days to finish all evaluations. 
+
+• Result: Top 10 teams move to the Final Round. 
+
+Final Round: Live Session 
+
+Each team follows the same flow: 
+
+ 
+
+Activity Duration Details 
+
+Connect equipment, confirm demo is ready. Clock has not 
+Team Setup & Tech Check 1 min 
+
+started yet. 
+
+Pitch deck and live demo. Hard stop at 7 minutes. A bell rings 
+Live Presentation + Demo 10 min 
+
+at the 6-minute mark. 
+
+Confidential  |  Judging Rubric  |  Page 8 
+
+
+
+BIMB  
+H A C K A T H O N  X  F I N T E C H  F O R W A R D  2 0 2 6   
+
+Judges ask questions. All team members should be ready to 
+Q&A with Judges 2 min 
+
+answer. 
+
+Each judge fills in their scoring sheet quietly. No discussion 
+Judges Score 2 min 
+
+between judges. 
+
+Total per Team 15 min  
+
+ 
+
+After All Presentations 
+
+• Tie-breaker rules are applied first before any open discussion. 
+
+• Final rankings must be agreed by majority vote before any announcement. 
+
+ 
+
+C O M P L I A N C E  &  D I S Q U A L I F I C A T I O N  
+ 
+
+Originality 
+
+• All work must be original and created during the hackathon. 
+
+• You cannot submit old projects, previous hackathon entries, or commercial products. 
+
+• Open-source libraries and tools are fine, but you must list them in your README and pitch 
+
+deck. 
+
+• Teams keep the rights to what they build unless the organiser says otherwise. 
+
+Plagiarism 
+
+• Submissions may be checked with automated tools and manual review. 
+
+• Copying large amounts of code, designs, or content from other teams or outside sources 
+
+without giving credit means instant disqualification. 
+
+• Judges can ask any team to walk through their code at any time. 
+
+AI Tools 
+
+AI is encouraged (see Case Study for full details). The short version: 
+
+• Use any AI tools you want. List them in your README under "AI Tools Used." 
+
+• You must be able to explain your own code during Q&A. If you cannot, judges will lower your 
+
+score. 
+
+• Code that is clearly just AI output with no real understanding behind it will be flagged. 
+
+Team Rules 
+
+• Follow the organiser’s rules on team size (check UMPSA registration guidelines). 
+
+• All members must be registered. No swaps after the deadline without organiser approval. 
+
+• You can only be on one team. 
+
+Instant Disqualification 
+
+Any of the following will get your team removed immediately: 
+
+1. Plagiarism or submitting old work. 
+
+Confidential  |  Judging Rubric  |  Page 9 
+
+
+
+BIMB  
+H A C K A T H O N  X  F I N T E C H  F O R W A R D  2 0 2 6   
+
+2. Missing the submission deadline. 
+
+3. Bad behaviour, harassment, or intimidation toward anyone at the event. 
+
+4. Trying to influence or bribe judges. 
+
+5. Lying about team members or who did what. 
+
+6. Breaking any other rules set by the organiser. 
+
+ 
+
+ 
+
+End of Judging Rubric & Assessment Package 
+Be U by Bank Islam  |  Hackathon X Fintech Forward 2026 
+
+Confidential  |  Judging Rubric  |  Page 10
