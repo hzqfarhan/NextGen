@@ -542,11 +542,26 @@ const useStoreBase = create<NextGenState>()(
           const totalSavedToday = preSavingTx + amount;
 
           const isFirstTimeMeetingQuota = totalSavedToday >= 1.0 && preSavingTx < 1.0;
-          const petMessage = isFirstTimeMeetingQuota
-            ? `Awesome save! You've met today's savings quota of RM 1.00 and protected your streak! 🔥`
-            : `Nice save! Moving RM ${amount.toFixed(2)} to ${pocketName}. Your daily quota remains stable for today, and your NextGen Score is fully protected!`;
+          let streakUpdated = state.currentStreak;
+          let highest = state.highestStreak;
+          let tier = state.membershipTier;
+          let petMessage = `Nice save! Moving RM ${amount.toFixed(2)} to ${pocketName}. Your daily quota remains stable for today, and your NextGen Score is fully protected!`;
+          let petAnimation = "happy";
 
-          const petAnimation = isFirstTimeMeetingQuota ? "excited" : "happy";
+          if (isFirstTimeMeetingQuota) {
+            streakUpdated += 1;
+            highest = Math.max(highest, streakUpdated);
+            if (streakUpdated >= 30) tier = 'Gold';
+            else if (streakUpdated >= 7) tier = 'Silver';
+            
+            petMessage = `Awesome save! You've met today's savings quota of RM 1.00 and protected your streak! Your streak is now ${streakUpdated} days! 🔥`;
+            petAnimation = "excited";
+            
+            if (tier !== state.membershipTier) {
+              if (tier === 'Silver') petMessage += ` You unlocked Silver Saver Tier! 🥈`;
+              if (tier === 'Gold') petMessage += ` You unlocked Gold Guardian Tier! 🥇`;
+            }
+          }
 
           return {
             savingsPockets: nextPockets,
@@ -554,6 +569,9 @@ const useStoreBase = create<NextGenState>()(
             user: { ...state.user, currentBalance: state.user.currentBalance - amount },
             safeDailySpend: safeDailyAfter,
             initialSafeDaily: safeDailyAfter,
+            currentStreak: streakUpdated,
+            highestStreak: highest,
+            membershipTier: tier,
             pet: {
               message: petMessage,
               animation: petAnimation
@@ -843,9 +861,9 @@ const useStoreBase = create<NextGenState>()(
         let petMessage = '';
 
         if (todaySavings >= 1.0) {
-          streakUpdated += 1;
+          // Streak was already incremented instantly during the save
           petAnimation = 'excited';
-          petMessage = `Awesome! You successfully saved RM ${todaySavings.toFixed(2)} today (met the RM 1.00 daily quota). Your saving streak is now ${streakUpdated} days! 🔥`;
+          petMessage = `A new day begins! You kept your streak going yesterday with RM ${todaySavings.toFixed(2)} saved. Your streak is ${streakUpdated} days! 🔥`;
         } else {
           if (shieldActive) {
             shieldActive = false;

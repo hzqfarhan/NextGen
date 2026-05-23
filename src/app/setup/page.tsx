@@ -1,7 +1,7 @@
 "use client"
 
 import { useStore, initialStoreState } from "@/store/useStore"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import {
@@ -321,6 +321,17 @@ export default function SetupPage() {
 
   // Calculate Progress Percentage
   const progressPercent = step * 20
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        handleNext()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleNext])
 
   return (
     <div className="min-h-screen bg-[#FFF7FA] text-slate-950 flex flex-col items-center justify-between p-6 sm:p-8 overflow-hidden relative font-sans transition-colors duration-300 [color-scheme:light]">
