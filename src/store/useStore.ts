@@ -1192,6 +1192,58 @@ const useStoreBase = create<NextGenState>()(
   )
 );
 
+// Client-side subscriber to sync state with PostgreSQL database
+if (typeof window !== 'undefined') {
+  let lastSyncStr = '';
+  useStoreBase.subscribe((state) => {
+    const { user, nextGenScore, currentStreak, transactions, savingsPockets, bills } = state;
+    if (!user || !user.name) return;
+
+    const currentSyncObj = {
+      userName: user.name,
+      balance: user.currentBalance,
+      nextGenScore,
+      streak: currentStreak,
+      stateData: {
+        user,
+        nextGenScore,
+        currentStreak,
+        transactions,
+        savingsPockets,
+        bills,
+        language: state.language,
+        membershipTier: state.membershipTier,
+        streakShieldActive: state.streakShieldActive,
+        isSpendGuardActive: state.isSpendGuardActive,
+        isSurvivalModeActive: state.isSurvivalModeActive,
+        isAutoSaveActive: state.isAutoSaveActive,
+        autoSaveFrequency: state.autoSaveFrequency,
+        autoSaveAmount: state.autoSaveAmount,
+        isRoundUpActive: state.isRoundUpActive,
+      }
+    };
+
+    const currentSyncStr = JSON.stringify({
+      userName: currentSyncObj.userName,
+      balance: currentSyncObj.balance,
+      nextGenScore: currentSyncObj.nextGenScore,
+      streak: currentSyncObj.streak,
+      transactionsCount: (transactions || []).length,
+      pocketsCount: (savingsPockets || []).length,
+      billsCount: (bills || []).length,
+    });
+
+    if (currentSyncStr !== lastSyncStr) {
+      lastSyncStr = currentSyncStr;
+      fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(currentSyncObj)
+      }).catch((err) => console.error('[Zustand DB Sync] error:', err));
+    }
+  });
+}
+
 interface UseStoreHook {
   (): NextGenState;
   <T>(selector: (state: NextGenState) => T): T;

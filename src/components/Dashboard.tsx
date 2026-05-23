@@ -391,12 +391,12 @@ export function Dashboard() {
       <div className="grid grid-cols-4 gap-1">
         {[
           { icon: History, label: strings.actionTransaction, href: "/transactions", color: "text-[#237AF9]", bg: "bg-[#237AF9]/10" },
-          { icon: Send, label: strings.actionTransfer, href: "/transfer", color: "text-[#CC0D5A]", bg: "bg-primary/10" },
-          { icon: CalendarClock, label: strings.billsHeader, href: "/bills", color: "text-primary", bg: "bg-primary/10", isBills: true },
-          { icon: Wallet, label: strings.actionTopUp, href: "#", color: "text-[#CC0D5A]", bg: "bg-primary/10" },
+          { icon: Send, label: strings.actionTransfer, href: "/transfer", color: "text-[#CC0D5A]", bg: "bg-[#CC0D5A]/10" },
+          { icon: CalendarClock, label: strings.billsHeader, href: "/bills", color: "text-[#DF0059]", bg: "bg-[#DF0059]/10", isBills: true },
+          { icon: Wallet, label: strings.actionTopUp, href: "#", color: "text-[#FFC107]", bg: "bg-[#FFC107]/10" },
         ].map((action) => {
           const isTopUp = action.label === strings.actionTopUp;
-          const label = action.isBills ? strings.billsHeader.split(' ')[0] : action.label;
+          const label = action.isBills ? (language === 'ms' ? 'Bil' : 'Bills') : action.label;
           const content = (
             <div className="flex flex-col items-center gap-2 group cursor-pointer">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${action.bg} ${action.color} group-hover:scale-105 transition-transform`}>

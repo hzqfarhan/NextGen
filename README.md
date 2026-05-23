@@ -28,7 +28,7 @@ BeU NextGen separates money into what the user has, what must be protected, and 
 - Impulse Negotiator
 - Future-Me Visualizer
 - NextGen Companion
-- Savings Missions
+- Savings Goals
 - Squad Goals
 
 ## Tech Stack
@@ -45,7 +45,7 @@ BeU NextGen separates money into what the user has, what must be protected, and 
 ## Architecture
 
 - `src/app` contains App Router pages, metadata, manifest, and setup flow.
-- `src/components` contains the dashboard, Smart Bill Lock, Cards Hub, Transfer, Pay Scanner, Insights, Savings Missions, and NextGen AI Council UI.
+- `src/components` contains the dashboard, Smart Bill Lock, Cards Hub, Transfer, Pay Scanner, Insights, Savings Goals, and NextGen AI Council UI.
 - `src/store/useStore.ts` contains the simulated wallet, financial state, protected commitments, Safe Daily Spend, NextGen Score, bills, savings, and companion mood state.
 - `src/lib` contains financial helpers, bill templates, translations, and shared utilities.
 
@@ -74,7 +74,7 @@ NEXT_PUBLIC_BASE_PATH=
 4. Use Pay Scanner and choose a risky demo purchase.
 5. Watch the NextGen AI Council evaluate risk, show the Impulse Negotiator, generate a local Roast & Toast message, and preview Future-Me impact.
 6. Move the purchase into a Cooling-Off Pocket or pay anyway for demo contrast.
-7. Add funds to a Savings Mission and watch the companion celebrate progress.
+7. Add funds to a Savings Goal and watch the companion celebrate progress.
 
 ## Libraries & Credits
 

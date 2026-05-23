@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
         const tablesResult = await client.query(`
             SELECT tablename 
             FROM pg_tables 
-            WHERE schemaname = 'public' AND tablename IN ('chat_logs', 'user_sync');
+            WHERE schemaname = 'public' AND tablename IN ('chat_logs', 'users', 'savings', 'transfers', 'bills');
         `);
         
         const tables = tablesResult.rows.map((r: any) => r.tablename);
@@ -53,7 +53,10 @@ export async function GET(req: NextRequest) {
             latency: `${latency}ms`,
             tables,
             chatLogsExist: tables.includes('chat_logs'),
-            userSyncExist: tables.includes('user_sync')
+            usersExist: tables.includes('users'),
+            savingsExist: tables.includes('savings'),
+            transfersExist: tables.includes('transfers'),
+            billsExist: tables.includes('bills')
         });
     } catch (err: any) {
         return NextResponse.json({

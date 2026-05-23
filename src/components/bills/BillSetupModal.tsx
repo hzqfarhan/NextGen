@@ -75,13 +75,33 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
     e.preventDefault()
     if (!formData.name || !formData.amount) return
 
+    // Calculate due dates based on dueDay
+    const dueDayNum = Number(formData.dueDay) || 1
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    
+    let nextDue = new Date(year, month, dueDayNum)
+    // If the due day has already passed this month, move to next month
+    if (nextDue.getTime() < now.getTime()) {
+      nextDue = new Date(year, month + 1, dueDayNum)
+    }
+    const nextDueDateStr = nextDue.toISOString()
+
+    const preparedData = {
+      ...formData,
+      dueDay: dueDayNum,
+      dueDate: nextDueDateStr,
+      nextDueDate: nextDueDateStr,
+    }
+
     if (editingBill) {
-      updateBill(editingBill.id, { ...formData, updatedAt: new Date().toISOString() })
+      updateBill(editingBill.id, { ...preparedData, updatedAt: new Date().toISOString() })
     } else {
       const newBill: Bill = {
         id: Math.random().toString(36).substring(7),
         createdAt: new Date().toISOString(),
-        ...formData,
+        ...preparedData,
       } as Bill
       addBill(newBill)
     }

@@ -13,6 +13,10 @@ interface DiagnosticResult {
     tables?: string[];
     chatLogsExist?: boolean;
     userSyncExist?: boolean;
+    usersExist?: boolean;
+    savingsExist?: boolean;
+    transfersExist?: boolean;
+    billsExist?: boolean;
     response?: string;
 }
 
@@ -56,8 +60,11 @@ export default function DiagnosticsPage() {
     // Database Tables Data State
     const [chatLogs, setChatLogs] = useState<ChatLog[]>([]);
     const [userSyncs, setUserSyncs] = useState<UserSync[]>([]);
+    const [savingsList, setSavingsList] = useState<any[]>([]);
+    const [transfersList, setTransfersList] = useState<any[]>([]);
+    const [billsList, setBillsList] = useState<any[]>([]);
     const [loadingData, setLoadingData] = useState(false);
-    const [activeTab, setActiveTab] = useState<'chat' | 'sync'>('chat');
+    const [activeTab, setActiveTab] = useState<'chat' | 'sync' | 'savings' | 'transfers' | 'bills'>('chat');
 
     // Quota usage metrics
     const [usage, setUsage] = useState<UsageInfo>({
@@ -104,6 +111,9 @@ export default function DiagnosticsPage() {
             if (data.success) {
                 setChatLogs(data.chatLogs || []);
                 setUserSyncs(data.userSyncs || []);
+                setSavingsList(data.savings || []);
+                setTransfersList(data.transfers || []);
+                setBillsList(data.bills || []);
                 if (data.usage) {
                     setUsage(data.usage);
                 }
@@ -129,7 +139,11 @@ export default function DiagnosticsPage() {
                 host: dbData.host,
                 tables: dbData.tables,
                 chatLogsExist: dbData.chatLogsExist,
-                userSyncExist: dbData.userSyncExist
+                userSyncExist: dbData.userSyncExist,
+                usersExist: dbData.usersExist,
+                savingsExist: dbData.savingsExist,
+                transfersExist: dbData.transfersExist,
+                billsExist: dbData.billsExist
             });
         } catch (err: any) {
             setDbResult({
@@ -291,10 +305,40 @@ export default function DiagnosticsPage() {
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="flex items-center gap-1 font-medium text-slate-300">
-                                                <CheckCircle2 className={`w-3 h-3 ${dbResult.userSyncExist ? 'text-emerald-400' : 'text-slate-600'}`} />
-                                                user_sync
+                                                <CheckCircle2 className={`w-3 h-3 ${dbResult.usersExist ? 'text-emerald-400' : 'text-slate-600'}`} />
+                                                users
                                             </span>
-                                            {dbResult.userSyncExist ? 
+                                            {dbResult.usersExist ? 
+                                                <span className="text-[9px] font-bold text-emerald-400">FOUND</span> : 
+                                                <span className="text-[9px] font-bold text-rose-400">MISSING</span>
+                                            }
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="flex items-center gap-1 font-medium text-slate-300">
+                                                <CheckCircle2 className={`w-3 h-3 ${dbResult.savingsExist ? 'text-emerald-400' : 'text-slate-600'}`} />
+                                                savings
+                                            </span>
+                                            {dbResult.savingsExist ? 
+                                                <span className="text-[9px] font-bold text-emerald-400">FOUND</span> : 
+                                                <span className="text-[9px] font-bold text-rose-400">MISSING</span>
+                                            }
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="flex items-center gap-1 font-medium text-slate-300">
+                                                <CheckCircle2 className={`w-3 h-3 ${dbResult.transfersExist ? 'text-emerald-400' : 'text-slate-600'}`} />
+                                                transfers
+                                            </span>
+                                            {dbResult.transfersExist ? 
+                                                <span className="text-[9px] font-bold text-emerald-400">FOUND</span> : 
+                                                <span className="text-[9px] font-bold text-rose-400">MISSING</span>
+                                            }
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="flex items-center gap-1 font-medium text-slate-300">
+                                                <CheckCircle2 className={`w-3 h-3 ${dbResult.billsExist ? 'text-emerald-400' : 'text-slate-600'}`} />
+                                                bills
+                                            </span>
+                                            {dbResult.billsExist ? 
                                                 <span className="text-[9px] font-bold text-emerald-400">FOUND</span> : 
                                                 <span className="text-[9px] font-bold text-rose-400">MISSING</span>
                                             }
@@ -448,7 +492,7 @@ export default function DiagnosticsPage() {
                     </div>
 
                     {/* Tab Selectors */}
-                    <div className="flex gap-2 p-1 rounded-2xl bg-slate-950/60 border border-slate-800/50 w-fit">
+                    <div className="flex flex-wrap gap-2 p-1 rounded-2xl bg-slate-950/60 border border-slate-800/50 w-fit">
                         <button
                             onClick={() => setActiveTab('chat')}
                             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'chat' ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
@@ -461,7 +505,28 @@ export default function DiagnosticsPage() {
                             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'sync' ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
                         >
                             <UserCheck className="w-3.5 h-3.5" />
-                            user_sync ({userSyncs.length})
+                            users ({userSyncs.length})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('savings')}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'savings' ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                        >
+                            <BarChart3 className="w-3.5 h-3.5" />
+                            savings ({savingsList.length})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('transfers')}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'transfers' ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                        >
+                            <Activity className="w-3.5 h-3.5" />
+                            transfers ({transfersList.length})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('bills')}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'bills' ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                        >
+                            <Database className="w-3.5 h-3.5" />
+                            bills ({billsList.length})
                         </button>
                     </div>
 
@@ -515,10 +580,10 @@ export default function DiagnosticsPage() {
                                     </tbody>
                                 </table>
                             )
-                        ) : (
+                        ) : activeTab === 'sync' ? (
                             userSyncs.length === 0 ? (
                                 <div className="p-12 text-center text-xs text-slate-500 font-medium">
-                                    No records found in table <code className="text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded">user_sync</code>.<br />
+                                    No records found in table <code className="text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded">users</code>.<br />
                                     The state will sync when database transactions occur.
                                 </div>
                             ) : (
@@ -541,6 +606,150 @@ export default function DiagnosticsPage() {
                                                 <td className="p-3 font-bold text-amber-500">{sync.streak} days</td>
                                                 <td className="p-3 text-slate-400 font-mono">
                                                     {new Date(sync.updated_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )
+                        ) : activeTab === 'savings' ? (
+                            savingsList.length === 0 ? (
+                                <div className="p-12 text-center text-xs text-slate-500 font-medium">
+                                    No records found in table <code className="text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded">savings</code>.<br />
+                                    Create a savings goal in the app to sync records.
+                                </div>
+                            ) : (
+                                <table className="w-full text-left border-collapse text-[10px]">
+                                    <thead>
+                                        <tr className="border-b border-slate-800 bg-slate-900/60 font-bold text-slate-400 uppercase tracking-wider">
+                                            <th className="p-3 font-semibold">ID</th>
+                                            <th className="p-3 font-semibold">User</th>
+                                            <th className="p-3 font-semibold">Goal Name</th>
+                                            <th className="p-3 font-semibold">Target Amount</th>
+                                            <th className="p-3 font-semibold">Saved Balance</th>
+                                            <th className="p-3 font-semibold">Icon</th>
+                                            <th className="p-3 font-semibold">Mode</th>
+                                            <th className="p-3 font-semibold">Risk Level</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-800/50">
+                                        {savingsList.map((item) => (
+                                            <tr key={item.id} className="hover:bg-slate-900/30 transition-colors">
+                                                <td className="p-3 text-slate-500 font-mono select-none">{item.id}</td>
+                                                <td className="p-3 font-bold text-slate-300">{item.user_name}</td>
+                                                <td className="p-3 font-bold text-slate-200">{item.name}</td>
+                                                <td className="p-3 font-mono text-slate-400">RM {parseFloat(item.target_amount || '0').toFixed(2)}</td>
+                                                <td className="p-3 font-bold font-mono text-emerald-400">RM {parseFloat(item.current_amount || '0').toFixed(2)}</td>
+                                                <td className="p-3 text-sm select-none">{item.icon}</td>
+                                                <td className="p-3 uppercase text-slate-400 font-bold">{item.mode}</td>
+                                                <td className="p-3">
+                                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[8px] border ${
+                                                        item.risk_level === 'high' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                                                        item.risk_level === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                                        'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                    }`}>
+                                                        {item.risk_level}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )
+                        ) : activeTab === 'transfers' ? (
+                            transfersList.length === 0 ? (
+                                <div className="p-12 text-center text-xs text-slate-500 font-medium">
+                                    No records found in table <code className="text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded">transfers</code>.<br />
+                                    Perform a transfer or money move to register a record.
+                                </div>
+                            ) : (
+                                <table className="w-full text-left border-collapse text-[10px]">
+                                    <thead>
+                                        <tr className="border-b border-slate-800 bg-slate-900/60 font-bold text-slate-400 uppercase tracking-wider">
+                                            <th className="p-3 font-semibold">ID</th>
+                                            <th className="p-3 font-semibold">User</th>
+                                            <th className="p-3 font-semibold">Title</th>
+                                            <th className="p-3 font-semibold">Amount</th>
+                                            <th className="p-3 font-semibold">Type</th>
+                                            <th className="p-3 font-semibold">Category</th>
+                                            <th className="p-3 font-semibold">Confidence</th>
+                                            <th className="p-3 font-semibold">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-800/50">
+                                        {transfersList.map((item) => (
+                                            <tr key={item.id} className="hover:bg-slate-900/30 transition-colors">
+                                                <td className="p-3 text-slate-500 font-mono select-none">{item.id}</td>
+                                                <td className="p-3 font-bold text-slate-300">{item.user_name}</td>
+                                                <td className="p-3 font-bold text-slate-200">{item.title}</td>
+                                                <td className="p-3 font-bold font-mono text-rose-400">RM {parseFloat(item.amount || '0').toFixed(2)}</td>
+                                                <td className="p-3 select-none">
+                                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[8px] border ${
+                                                        item.type === 'expense' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                                                        item.type === 'income' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                                        'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                                    }`}>
+                                                        {item.type}
+                                                    </span>
+                                                </td>
+                                                <td className="p-3 text-slate-300">{item.category}</td>
+                                                <td className="p-3 font-mono text-slate-400">{((parseFloat(item.confidence) || 1) * 100).toFixed(0)}%</td>
+                                                <td className="p-3 text-slate-400 font-mono">
+                                                    {new Date(item.date).toLocaleDateString([], { month: 'short', day: 'numeric' })} {new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )
+                        ) : (
+                            billsList.length === 0 ? (
+                                <div className="p-12 text-center text-xs text-slate-500 font-medium">
+                                    No records found in table <code className="text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded">bills</code>.<br />
+                                    Setup a smart bill lock commitment to see data.
+                                </div>
+                            ) : (
+                                <table className="w-full text-left border-collapse text-[10px]">
+                                    <thead>
+                                        <tr className="border-b border-slate-800 bg-slate-900/60 font-bold text-slate-400 uppercase tracking-wider">
+                                            <th className="p-3 font-semibold">ID</th>
+                                            <th className="p-3 font-semibold">User</th>
+                                            <th className="p-3 font-semibold">Bill Name</th>
+                                            <th className="p-3 font-semibold">Category</th>
+                                            <th className="p-3 font-semibold">Amount</th>
+                                            <th className="p-3 font-semibold">Due Day</th>
+                                            <th className="p-3 font-semibold">Next Due Date</th>
+                                            <th className="p-3 font-semibold">Smart Lock</th>
+                                            <th className="p-3 font-semibold">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-800/50">
+                                        {billsList.map((item) => (
+                                            <tr key={item.id} className="hover:bg-slate-900/30 transition-colors">
+                                                <td className="p-3 text-slate-500 font-mono select-none">{item.id}</td>
+                                                <td className="p-3 font-bold text-slate-300">{item.user_name}</td>
+                                                <td className="p-3 font-bold text-slate-200">{item.name}</td>
+                                                <td className="p-3 uppercase text-slate-400 font-bold">{item.category}</td>
+                                                <td className="p-3 font-bold font-mono text-slate-200">RM {parseFloat(item.amount || '0').toFixed(2)}</td>
+                                                <td className="p-3 font-mono text-slate-400">{item.due_day || 'N/A'}</td>
+                                                <td className="p-3 font-mono text-slate-300">
+                                                    {new Date(item.next_due_date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </td>
+                                                <td className="p-3">
+                                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[8px] border ${
+                                                        item.is_locked ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-800'
+                                                    }`}>
+                                                        {item.is_locked ? 'LOCKED 🔒' : 'UNLOCKED'}
+                                                    </span>
+                                                </td>
+                                                <td className="p-3">
+                                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[8px] border ${
+                                                        item.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                                        item.status === 'missed' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                                                        'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                                    }`}>
+                                                        {item.status}
+                                                    </span>
                                                 </td>
                                             </tr>
                                         ))}
