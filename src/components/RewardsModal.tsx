@@ -4,9 +4,10 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { X, Gift, Lock, Unlock, Ticket, Award, Calendar, Coffee, Coins, Check, HelpCircle } from "lucide-react"
+import { X, Gift, Lock, Unlock, Ticket, Award, Calendar, Coffee, Coins, Check, HelpCircle, Flame } from "lucide-react"
 import { useStore } from "@/store/useStore"
 import { t } from "@/lib/translations"
+import { cn } from "@/lib/utils"
 
 interface RewardsModalProps {
   isOpen: boolean
@@ -128,10 +129,27 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
 
                 {/* Header */}
                 <div className="space-y-1 text-center">
-                  <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-2">
-                    <Gift className="w-6 h-6 text-primary" />
+                  <div className="mx-auto w-12 h-12 rounded-2xl flex items-center justify-center mb-2">
+                    {currentStreak === 0 ? (
+                      <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
+                        <Flame className="w-6 h-6 text-slate-400 shrink-0" />
+                      </div>
+                    ) : (
+                      <img
+                        src="/assets/API-streak.gif"
+                        alt="Streak Mascot"
+                        className="w-12 h-12 object-contain"
+                        style={{
+                          filter: currentStreak < 7
+                            ? "hue-rotate(15deg) saturate(2.5) drop-shadow(0 0 6px rgba(249, 115, 22, 0.4))"
+                            : currentStreak < 30
+                            ? "hue-rotate(200deg) saturate(2.2) drop-shadow(0 0 6px rgba(37, 99, 235, 0.4))"
+                            : "hue-rotate(280deg) saturate(2.5) brightness(1.1) drop-shadow(0 0 8px rgba(168, 85, 247, 0.5))"
+                        }}
+                      />
+                    )}
                   </div>
-                  <h2 className="text-xl font-black text-black">BeU NextGen Rewards Hub</h2>
+                  <h2 className="text-xl font-black text-black">NextGen Rewards Hub</h2>
                   <p className="text-xs text-slate-500">
                     Your savings streak defines your tier and unlocks institutional privileges.
                   </p>
@@ -145,7 +163,12 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                   </div>
                   <div>
                     <span className="text-slate-400 font-medium">Your Tier:</span>
-                    <Badge className="ml-1 bg-primary text-white border-none font-bold text-[9px]">
+                    <Badge className={cn(
+                      "ml-1 font-bold text-[9px] px-2 py-0.5 rounded-lg border",
+                      membershipTier === 'Gold' ? "bg-purple-100 text-purple-700 border-purple-200" :
+                      membershipTier === 'Silver' ? "bg-blue-100 text-blue-700 border-blue-200" :
+                      "bg-orange-100 text-orange-700 border-orange-200"
+                    )}>
                       {membershipTier === 'Gold' ? 'Legend' : membershipTier === 'Silver' ? 'Pro' : 'Novice'}
                     </Badge>
                   </div>

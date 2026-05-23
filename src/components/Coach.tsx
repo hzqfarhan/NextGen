@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Shield, Brain, Target, TrendingUp, Send, ChevronLeft, ChevronRight, ExternalLink, ShoppingBag, Store, Globe } from "lucide-react"
+import { Shield, Brain, Target, TrendingUp, Send, ChevronLeft, ChevronRight, ExternalLink, ShoppingBag, Store, Globe, Flame, Sparkles, Gift } from "lucide-react"
+import { RewardsModal } from "./RewardsModal"
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
@@ -38,7 +39,7 @@ interface Message {
 }
 
 export function Coach() {
-  const { user, safeDailySpend, initialSafeDaily, transactions, resilienceScore, language, addSavingsPocket, savingsPockets, bills, addTransaction, pet } = useStore()
+  const { user, safeDailySpend, initialSafeDaily, transactions, resilienceScore, language, addSavingsPocket, savingsPockets, bills, addTransaction, pet, currentStreak, membershipTier, streakShieldActive, awfarDrawTickets } = useStore()
   const strings = t[language]
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -49,6 +50,7 @@ export function Coach() {
   const [isThinking, setIsThinking] = useState(false)
   const [isExecuting, setIsExecuting] = useState(false)
   const [isAtBottom, setIsAtBottom] = useState(true)
+  const [showRewardsModal, setShowRewardsModal] = useState(false)
 
   // Affordability state
   const [affordItem, setAffordItem] = useState("")
@@ -747,9 +749,45 @@ export function Coach() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="flex flex-col justify-center h-full pt-10"
+                className="flex flex-col justify-start h-full pt-2"
               >
                 <div className="mb-8">
+                  {/* Dynamic Streak, Tier, and Rewards Pills */}
+                  <div className="flex items-center justify-between gap-2 mb-6 w-full">
+                    {/* Streak Pill */}
+                    <div className={cn(
+                      "flex-1 px-2.5 py-1.5 rounded-full border text-center flex items-center justify-center gap-1.5 text-[9.5px] font-extrabold transition-all duration-300 whitespace-nowrap backdrop-blur-md shadow-sm",
+                      currentStreak < 7 ? "bg-gradient-to-r from-[#FFFAEA]/80 to-[#FFE9F2]/60 border-[#FFF4D5] text-[#CBA024]" :
+                      currentStreak < 30 ? "bg-gradient-to-r from-[#E9F2FE]/80 to-[#FFE9F2]/60 border-[#D3E4FE] text-[#1C62C7]" :
+                      "bg-gradient-to-r from-[#FAE7EF]/80 to-[#FFE9F2]/60 border-[#F3C7D8] text-[#CC0D5A]"
+                    )}>
+                      <span>🔥 {currentStreak} {language === 'en' ? 'Day Streak' : 'Hari Streak'}</span>
+                    </div>
+
+                    {/* Tier Pill */}
+                    <div className={cn(
+                      "flex-1 px-2.5 py-1.5 rounded-full border text-center flex items-center justify-center gap-1.5 text-[9.5px] font-extrabold transition-all duration-300 whitespace-nowrap backdrop-blur-md shadow-sm",
+                      membershipTier === 'Gold' ? "bg-gradient-to-r from-[#FAE7EF]/80 to-[#FFE9F2]/60 border-[#F3C7D8] text-[#DF0059]" :
+                      membershipTier === 'Silver' ? "bg-gradient-to-r from-[#E9F2FE]/80 to-[#FFE9F2]/60 border-[#D3E4FE] text-[#1C62C7]" :
+                      "bg-gradient-to-r from-[#FFFAEA]/80 to-[#FFE9F2]/60 border-[#FFF4D5] text-[#CBA024]"
+                    )}>
+                      <span>
+                        {membershipTier === 'Gold' ? '🏆 Legend' :
+                         membershipTier === 'Silver' ? '🥈 Pro' :
+                         '🥉 Novice'}
+                      </span>
+                    </div>
+
+                    {/* Rewards & Perks Interactive Pill */}
+                    <button 
+                      onClick={() => setShowRewardsModal(true)}
+                      className="flex-1 px-2.5 py-1.5 rounded-full border bg-gradient-to-r from-[#DF0059]/10 via-[#CC0D5A]/15 to-[#E06E9C]/10 border-[#E06E9C]/30 text-[#CC0D5A] shadow-sm flex items-center justify-center gap-1.5 text-[9.5px] font-extrabold hover:bg-gradient-to-r hover:from-[#DF0059]/20 hover:to-[#CC0D5A]/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap backdrop-blur-md"
+                    >
+                      <Sparkles className="w-3 h-3 text-[#DF0059] animate-pulse" />
+                      <span>{language === 'en' ? 'Rewards & Perks ✨' : 'Ganjaran ✨'}</span>
+                    </button>
+                  </div>
+
                   <h2 className="text-xl font-medium text-[#727272] mb-1">Hi {user.name}</h2>
                   <h1 className="text-3xl font-black tracking-tight text-[#221F20]">Where should we start?</h1>
                 </div>
@@ -1532,6 +1570,11 @@ export function Coach() {
           </Button>
         </div>
       </div>
+
+      <RewardsModal
+        isOpen={showRewardsModal}
+        onClose={() => setShowRewardsModal(false)}
+      />
     </div>
   )
 }

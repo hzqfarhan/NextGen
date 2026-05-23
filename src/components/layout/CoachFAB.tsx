@@ -58,13 +58,13 @@ export function CoachFAB() {
               initial={{ opacity: 0, y: 10, scale: 0.8 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.8 }}
-              className="absolute -top-4 -left-12 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm px-2 py-1.5 rounded-xl rounded-br-none shadow-lg border border-slate-200 dark:border-white/10 whitespace-nowrap pointer-events-none"
+              className="absolute -top-4 -left-12 bg-[#FFE9F2]/95 backdrop-blur-sm px-2 py-1.5 rounded-xl rounded-br-none shadow-lg border border-[#F3C7D8] whitespace-nowrap pointer-events-none"
             >
-              <p className="text-[6px] font-bold text-primary tracking-tight" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+              <p className="text-[6px] font-bold text-[#CC0D5A] tracking-tight" style={{ fontFamily: "'Press Start 2P', cursive" }}>
                 {message}
               </p>
               {/* Bubble Tail */}
-              <div className="absolute -bottom-1 right-0 w-2 h-2 bg-white/90 dark:bg-zinc-800/90 border-r border-b border-slate-200 dark:border-white/10 rotate-45" />
+              <div className="absolute -bottom-1 right-0 w-2 h-2 bg-[#FFE9F2]/95 border-r border-b border-[#F3C7D8] rotate-45" />
             </motion.div>
           </AnimatePresence>
 

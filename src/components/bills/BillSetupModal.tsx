@@ -94,7 +94,7 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[450px] rounded-[2rem] p-0 overflow-hidden border border-white/10 glass-card shadow-2xl text-white">
+      <DialogContent className="sm:max-w-[450px] rounded-[2rem] p-0 overflow-hidden border border-slate-200/60 glass-card shadow-2xl text-slate-900">
         <AnimatePresence mode="wait">
           {!selectedTemplate && !editingBill ? (
             <motion.div
@@ -105,8 +105,8 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
               className="p-6 space-y-6"
             >
               <DialogHeader>
-                <DialogTitle className="text-xl font-black text-white">{strings.billsAdd}</DialogTitle>
-                <DialogDescription className="text-xs font-medium text-white/50">Choose a template to get started</DialogDescription>
+                <DialogTitle className="text-xl font-black text-slate-900">{strings.billsAdd}</DialogTitle>
+                <DialogDescription className="text-xs font-medium text-slate-500">Choose a template to get started</DialogDescription>
               </DialogHeader>
 
               <div className="grid grid-cols-2 gap-2 max-h-[400px] overflow-y-auto pr-1">
@@ -114,13 +114,13 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
                   <button
                     key={tpl.category}
                     onClick={() => handleSelectTemplate(tpl)}
-                    className="flex items-center gap-2 p-2 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all group w-full"
+                    className="flex items-center gap-2 p-2 rounded-2xl bg-slate-50 border border-slate-200/60 hover:bg-slate-100 hover:border-slate-300 transition-all group w-full shadow-sm"
                   >
-                    <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-lg group-hover:scale-110 transition-transform flex-shrink-0">
+                    <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-lg group-hover:scale-110 transition-transform flex-shrink-0 shadow-sm border border-slate-100">
                       {tpl.icon}
                     </div>
                     <div className="text-left flex-1 min-w-0">
-                      <p className="text-[10px] font-black text-white leading-tight truncate">{tpl.title}</p>
+                      <p className="text-[10px] font-black text-slate-800 leading-tight truncate">{tpl.title}</p>
                     </div>
                   </button>
                 ))}
@@ -140,40 +140,40 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
                       <button 
                         type="button"
                         onClick={() => setSelectedTemplate(null)}
-                        className="p-2 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-white"
+                        className="p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-900 transition-colors"
                       >
                         <ChevronLeft className="w-4 h-4" />
                       </button>
                     )}
                     <div>
-                      <DialogTitle className="text-xl font-black text-white">
+                      <DialogTitle className="text-xl font-black text-slate-900">
                         {editingBill ? strings.billsEdit : `Setup ${selectedTemplate?.title}`}
                       </DialogTitle>
-                      <DialogDescription className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+                      <DialogDescription className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                         {selectedTemplate?.description}
                       </DialogDescription>
                     </div>
                   </DialogHeader>
 
                   <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                    {/* Setup Fields */}
+                     {/* Setup Fields */}
                     <div className="space-y-4">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-primary/70">Bill Setup</Label>
                       <div className="grid grid-cols-1 gap-4">
                         {selectedTemplate?.setupFields.map(field => (
                           <div key={field.name} className="space-y-1.5">
-                            <Label className="text-[10px] font-bold text-white/50 ml-1">{field.label}</Label>
+                            <Label className="text-[10px] font-bold text-slate-500 ml-1">{field.label}</Label>
                             {field.type === 'select' ? (
                               <Select 
                                 value={(formData[field.name as keyof Bill] as string) ?? ""} 
                                 onValueChange={val => setFormData(p => ({ ...p, [field.name]: val }))}
                               >
-                                <SelectTrigger className="rounded-2xl border-white/10 bg-white/5 text-white h-11 focus:ring-primary/50">
+                                <SelectTrigger className="rounded-2xl border-slate-200 bg-slate-50 text-slate-900 h-11 focus:ring-primary/50">
                                   <SelectValue placeholder={`Select ${field.label}`} />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-2xl shadow-lg">
                                   {field.options?.map(opt => (
-                                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    <SelectItem key={opt} value={opt} className="focus:bg-slate-50 cursor-pointer">{opt}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
@@ -183,7 +183,7 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
                                 value={formData[field.name as keyof Bill] as string || ""}
                                 onChange={e => setFormData(p => ({ ...p, [field.name]: field.type === 'number' ? Number(e.target.value) : e.target.value }))}
                                 placeholder={field.placeholder}
-                                className="rounded-2xl border-white/10 bg-white/5 text-white h-11 placeholder:text-white/20 focus:border-primary/50"
+                                className="rounded-2xl border-slate-200 bg-slate-50 text-slate-900 h-11 placeholder:text-slate-400 focus:border-primary/50"
                                 required={field.required}
                               />
                             )}
@@ -205,38 +205,38 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
                             </div>
                           )}
                         </div>
-                        <div className="grid grid-cols-1 gap-4 p-4 rounded-[2rem] bg-white/5 border border-white/10">
+                        <div className="grid grid-cols-1 gap-4 p-4 rounded-[2rem] bg-slate-50 border border-slate-200/60 shadow-inner">
                           {selectedTemplate.category === 'phone' ? (
                             <>
                               <div className="space-y-1.5">
-                                <Label className="text-[10px] font-bold text-white/40 ml-1">Mobile Number</Label>
+                                <Label className="text-[10px] font-bold text-slate-500 ml-1">Mobile Number</Label>
                                 <Input 
                                   value={formData.referenceNumber || ""}
                                   onChange={e => setFormData(p => ({ ...p, referenceNumber: e.target.value }))}
                                   placeholder="01x-xxx xxxx"
-                                  className="rounded-xl border-white/10 bg-white/5 text-white h-10 text-xs placeholder:text-white/20"
+                                  className="rounded-xl border-slate-200 bg-white text-slate-900 h-10 text-xs placeholder:text-slate-400 focus:border-emerald-500/50 focus:ring-emerald-500/30"
                                   required={formData.autopayEnabled}
                                 />
                               </div>
                               {formData.productType === 'Postpaid' && (
                                 <>
                                   <div className="space-y-1.5">
-                                    <Label className="text-[10px] font-bold text-white/40 ml-1">JomPAY Biller Code</Label>
+                                    <Label className="text-[10px] font-bold text-slate-500 ml-1">JomPAY Biller Code</Label>
                                     <Input 
                                       value={formData.billerCode || ""}
                                       onChange={e => setFormData(p => ({ ...p, billerCode: e.target.value }))}
                                       placeholder="e.g. 1234"
-                                      className="rounded-xl border-white/10 bg-white/5 text-white h-10 text-xs placeholder:text-white/20"
+                                      className="rounded-xl border-slate-200 bg-white text-slate-900 h-10 text-xs placeholder:text-slate-400 focus:border-emerald-500/50 focus:ring-emerald-500/30"
                                       required={formData.autopayEnabled}
                                     />
                                   </div>
                                   <div className="space-y-1.5">
-                                    <Label className="text-[10px] font-bold text-white/40 ml-1">Account Number</Label>
+                                    <Label className="text-[10px] font-bold text-slate-500 ml-1">Account Number</Label>
                                     <Input 
                                       value={formData.accountNumber || ""}
                                       onChange={e => setFormData(p => ({ ...p, accountNumber: e.target.value }))}
                                       placeholder="•••• ••••"
-                                      className="rounded-xl border-white/10 bg-white/5 text-white h-10 text-xs placeholder:text-white/20"
+                                      className="rounded-xl border-slate-200 bg-white text-slate-900 h-10 text-xs placeholder:text-slate-400 focus:border-emerald-500/50 focus:ring-emerald-500/30"
                                       required={formData.autopayEnabled}
                                     />
                                   </div>
@@ -246,18 +246,18 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
                           ) : (
                             selectedTemplate.paymentFields.map(field => (
                               <div key={field.name} className="space-y-1.5">
-                                <Label className="text-[10px] font-bold text-white/40 ml-1">{field.label}</Label>
+                                <Label className="text-[10px] font-bold text-slate-500 ml-1">{field.label}</Label>
                                 {field.type === 'select' ? (
                                   <Select 
                                     value={(formData[field.name as keyof Bill] as string) ?? ""} 
                                     onValueChange={val => setFormData(p => ({ ...p, [field.name]: val }))}
                                   >
-                                    <SelectTrigger className="rounded-xl border-white/10 bg-white/5 text-white h-10 text-xs">
+                                    <SelectTrigger className="rounded-xl border-slate-200 bg-white text-slate-900 h-10 text-xs">
                                       <SelectValue placeholder={`Select ${field.label}`} />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-xl shadow-lg">
                                       {field.options?.map(opt => (
-                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                        <SelectItem key={opt} value={opt} className="focus:bg-slate-50 cursor-pointer">{opt}</SelectItem>
                                       ))}
                                     </SelectContent>
                                   </Select>
@@ -267,7 +267,7 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
                                     value={formData[field.name as keyof Bill] as string || ""}
                                     onChange={e => setFormData(p => ({ ...p, [field.name]: e.target.value }))}
                                     placeholder={field.placeholder}
-                                    className="rounded-xl border-white/10 bg-white/5 text-white h-10 text-xs placeholder:text-white/20 focus:border-emerald-500/50"
+                                    className="rounded-xl border-slate-200 bg-white text-slate-900 h-10 text-xs placeholder:text-slate-400 focus:border-emerald-500/50 focus:ring-emerald-500/30"
                                     required={field.required && formData.autopayEnabled}
                                   />
                                 )}
@@ -280,12 +280,12 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
 
                     {/* Safety & Controls */}
                     <div className="space-y-4 pt-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-white/30">Safety & Rules</Label>
-                      <div className="space-y-3 p-4 rounded-[2rem] bg-white/5 border border-white/10">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Safety & Rules</Label>
+                      <div className="space-y-3 p-4 rounded-[2rem] bg-slate-50 border border-slate-200/60 shadow-inner">
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
-                            <Label className="text-xs font-bold text-white">Smart Bill Lock</Label>
-                            <p className="text-[9px] text-white/40">Protect money for this bill first</p>
+                            <Label className="text-xs font-bold text-slate-800">Smart Bill Lock</Label>
+                            <p className="text-[9px] text-slate-500">Protect money for this bill first</p>
                           </div>
                           <Switch 
                             checked={formData.isLocked} 
@@ -294,10 +294,10 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
                         </div>
 
                         {isSimulatedAutoPay && (
-                          <div className="flex items-center justify-between border-t border-white/5 pt-3">
+                          <div className="flex items-center justify-between border-t border-slate-200/60 pt-3">
                             <div className="space-y-0.5">
-                              <Label className="text-xs font-bold text-white">Enable AutoPay</Label>
-                              <p className="text-[9px] text-white/40">Pay automatically when safe</p>
+                              <Label className="text-xs font-bold text-slate-800">Enable AutoPay</Label>
+                              <p className="text-[9px] text-slate-500">Pay automatically when safe</p>
                             </div>
                             <Switch 
                               checked={formData.autopayEnabled} 
@@ -307,10 +307,10 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
                         )}
 
                         {isAutoTrack && (
-                          <div className="flex items-center justify-between border-t border-white/5 pt-3">
+                          <div className="flex items-center justify-between border-t border-slate-200/60 pt-3">
                             <div className="space-y-0.5">
-                              <Label className="text-xs font-bold text-white">Auto-track</Label>
-                              <p className="text-[9px] text-white/40">Detect payment from bank history</p>
+                              <Label className="text-xs font-bold text-slate-800">Auto-track</Label>
+                              <p className="text-[9px] text-slate-500">Detect payment from bank history</p>
                             </div>
                             <Switch 
                               checked={formData.autoTrackEnabled} 
@@ -323,11 +323,11 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
                   </div>
                 </div>
 
-                <DialogFooter className="p-6 bg-white/5 border-t border-white/10">
-                  <Button type="button" variant="ghost" onClick={onClose} className="rounded-2xl font-bold text-white/50 hover:text-white hover:bg-white/5">
+                <DialogFooter className="p-6 bg-slate-50 border-t border-slate-200/60">
+                  <Button type="button" variant="ghost" onClick={onClose} className="rounded-2xl font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100">
                     {strings.billsCancel}
                   </Button>
-                  <Button type="submit" className="rounded-2xl bg-primary hover:bg-primary/80 text-white font-black px-10 shadow-lg shadow-primary/20">
+                  <Button type="submit" className="rounded-2xl bg-primary hover:bg-primary/95 text-white font-black px-10 shadow-lg shadow-primary/20">
                     {editingBill ? strings.billsSave : 'Confirm Bill'}
                   </Button>
                 </DialogFooter>
