@@ -16,7 +16,7 @@
 | Animation | Framer Motion | Micro-animations, page transitions, Voice UI |
 | State Management | Zustand | Global financial state, user wallet, session |
 | Charts | Recharts | Spending insights and score visualizations |
-| AI Model | Google Gemini 2.5 Flash | Multi-agent financial coaching (via REST API) |
+| AI Model | Google Gemini 3.1 Flash Lite | Multi-agent financial coaching (via REST API) |
 | Database | PostgreSQL (Neon/cloud) | Persistent user, savings, transfers, bills records |
 | Icons | Lucide React | Interface iconography |
 
@@ -253,7 +253,7 @@ Companion animations: `idle`, `walk`, `happy`, `excited`, `think`, `blink`
 
 | Tool | Purpose |
 |---|---|
-| Google Gemini 2.5 Flash | AI financial coaching, structured JSON responses, function calling |
+| Google Gemini 3.1 Flash Lite | AI financial coaching, structured JSON responses, function calling |
 | Antigravity (AI coding assistant) | Architecture design, component implementation, DB schema, API routes |
 
 ---
