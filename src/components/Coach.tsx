@@ -353,19 +353,19 @@ export function Coach() {
           const nextSafeDaily = oldState.calculateDailyLimitForBalance(oldState.user.currentBalance - parsedAmount);
 
           if (nextSafeDaily < 10.0) {
-            throw new Error(`Money Move blocked. Sending RM ${parsedAmount.toFixed(2)} would reduce your safe daily spending to RM ${nextSafeDaily.toFixed(2)}/day, which is below the RM 10.00 survival limit.`);
+            throw new Error(`Transfer blocked. Sending RM ${parsedAmount.toFixed(2)} would reduce your safe daily spending to RM ${nextSafeDaily.toFixed(2)}/day, which is below the RM 10.00 survival limit.`);
           }
 
           addTransaction({
             id: `txn-${Date.now()}`,
-            title: `Money Move to ${action.payload.recipient}`,
+            title: `Transfer to ${action.payload.recipient}`,
             amount: parsedAmount,
-            category: 'Money Move',
+            category: 'Transfer',
             date: new Date().toISOString(),
             type: 'expense',
             confidence: 1.0
           });
-          responseText = `Money Move complete. RM ${parsedAmount.toFixed(2)} has been successfully sent to ${action.payload.recipient}. The transaction is now logged in your history.`;
+          responseText = `Transfer complete. RM ${parsedAmount.toFixed(2)} has been successfully sent to ${action.payload.recipient}. The transaction is now logged in your history.`;
           redirect = { label: "View Transactions", href: "/transactions" };
           useStore.setState({ pet: { ...useStore.getState().pet, animation: "excited" } });
         } catch (error: any) {
@@ -588,9 +588,9 @@ export function Coach() {
         responses.push({
           role: 'assistant',
           agent: 'Finance Strategist',
-          content: "I can help with that. I've prepared a Money Move proposal based on your recent activity. Review the details below:",
+          content: "I can help with that. I've prepared a transfer proposal based on your recent activity. Review the details below:",
           proposal: {
-            name: 'Money Move to Aizat',
+            name: 'Transfer to Aizat',
             type: 'transfer',
             amount: 50,
             recipient: 'Aizat',
@@ -599,13 +599,13 @@ export function Coach() {
           },
           actions: [
             {
-              id: 'approve_Money Move',
+              id: 'approve_transfer',
               label: 'Approve & Send',
               type: 'transfer',
               payload: { amount: 50, recipient: 'Aizat' }
             },
             {
-              id: 'postpone_Money Move',
+              id: 'postpone_transfer',
               label: 'Decline',
               type: 'postpone'
             }
@@ -1594,7 +1594,7 @@ export function Coach() {
                                       </div>
                                       <div className="flex-1">
                                         <div className="flex items-center gap-2">
-                                          <p className="text-xs font-bold text-[#221F20]">{m.proposal.name || (m.proposal.type === 'transfer' ? 'Money Move' : 'Pocket')}</p>
+                                          <p className="text-xs font-bold text-[#221F20]">{m.proposal.name || (m.proposal.type === 'transfer' ? 'Transfer' : 'Pocket')}</p>
                                           <Badge className="text-[7px] h-3 bg-primary/20 text-primary border-primary/20 px-1 font-black">
                                             {m.proposal.type === 'transfer' ? 'Verified' : 'Managed'}
                                           </Badge>
