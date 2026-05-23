@@ -120,8 +120,20 @@ export function Dashboard() {
     <div className="p-4 space-y-6 pb-24 max-w-lg mx-auto">
       <header className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">NextGen</h1>
-          <p className="text-muted-foreground text-sm font-medium text-primary/80">{strings.dashGreeting}, {user.name} · {getPlanName()}</p>
+          <h1
+            className="text-2xl font-black tracking-tight"
+            style={{
+              background: 'linear-gradient(135deg, #DF0059 0%, #CC0D5A 52%, #221F20 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              textShadow: 'none',
+              filter: 'drop-shadow(0 12px 30px rgba(223,0,89,0.22))'
+            }}
+          >
+            NextGen
+          </h1>
+          <p className="text-sm font-medium text-black">{strings.dashGreeting}, {user.name} · {getPlanName()}</p>
         </div>
         <div className="flex items-center gap-3">
 
@@ -164,10 +176,7 @@ export function Dashboard() {
             </CardHeader>
             <CardContent className="p-4 pt-3 flex-1 flex flex-col justify-center">
               <div>
-                <p className={cn(
-                  "text-xl font-black tracking-tight leading-none transition-colors duration-300",
-                  showSpendOnly ? "text-emerald-500" : "text-foreground"
-                )}>
+                <p className="text-xl font-black tracking-tight leading-none transition-colors duration-300 text-black">
                   {hideBalance ? "••••••" : `RM ${(showSpendOnly ? spendableBalance : totalAssets).toFixed(2)}`}
                 </p>
                 <div className="flex items-center gap-1.5 mt-2">
@@ -372,7 +381,7 @@ function PromoCarousel() {
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <div className="w-1 h-3.5 rounded-full bg-primary" />
-          <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Demo Flow</h3>
+          <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">HIGHLIGHTS</h3>
         </div>
         <span className="text-[9px] text-muted-foreground/60 font-medium tabular-nums">{index + 1}/{slides.length}</span>
       </div>

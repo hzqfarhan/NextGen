@@ -335,7 +335,7 @@ export default function SetupPage() {
       <header className="w-full max-w-sm sm:max-w-md z-10 flex items-center justify-between">
         <div>
           <span className="text-[11px] font-extrabold tracking-widest text-primary uppercase">
-            BeU NextGen Setup
+            NextGen Setup
           </span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight mt-1 leading-tight">
             Build your NextGen Cockpit
