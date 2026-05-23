@@ -4,12 +4,19 @@ import React, { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { useStore } from "@/store/useStore"
 
+const getAbsoluteUrl = (path: string) => {
+  if (typeof window === 'undefined') return path;
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  return `${window.location.origin}${basePath}${path}`;
+};
+
 export type PetAnimation = "idle" | "walk" | "run" | "wave" | "excited" | "sad" | "happy" | "angry" | "think" | "blink"
 
 interface PetProps {
   animation?: PetAnimation
   size?: number
   className?: string
+  companionId?: string
 }
 
 const ANIMATIONS: Record<PetAnimation, { row: number; frames: number }> = {
@@ -28,11 +35,36 @@ const ANIMATIONS: Record<PetAnimation, { row: number; frames: number }> = {
 const ROWS = 10
 const COLS = 8
 
-export function Pet({ animation = "idle", size = 64, className }: PetProps) {
-  const { petOffsets } = useStore()
+export function Pet({ animation = "idle", size = 64, className, companionId }: PetProps) {
+  const { petOffsets, selectedCompanion } = useStore()
   const [frame, setFrame] = useState(0)
   const anim = ANIMATIONS[animation]
   const currentOffset = petOffsets[animation] || { offsetY: 0, scale: 800 }
+
+  const companionName = companionId || selectedCompanion || 'uteh'
+  const originalUrl = getAbsoluteUrl(`/assets/nextgen-companion/${companionName}.webp`)
+  const [imgSrc, setImgSrc] = useState<string>("")
+
+  useEffect(() => {
+    let active = true
+    const load = async () => {
+      try {
+        const res = await fetch(originalUrl)
+        const blob = await res.blob()
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          if (active) setImgSrc(reader.result as string)
+        }
+        reader.readAsDataURL(blob)
+      } catch (e) {
+        if (active) setImgSrc(originalUrl)
+      }
+    }
+    load()
+    return () => {
+      active = false
+    }
+  }, [originalUrl])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -57,16 +89,21 @@ export function Pet({ animation = "idle", size = 64, className }: PetProps) {
         height: size,
       }}
     >
-      <div
-        className="absolute w-full h-full"
-        style={{
-          backgroundImage: `url('${process.env.NEXT_PUBLIC_BASE_PATH || ""}/assets/nextgen-companion/spritesheet.webp')`,
-          backgroundSize: `${currentOffset.scale}% auto`,
-          backgroundPosition: `${xOffset}px ${yOffset}px`,
-        }}
-      />
+      {imgSrc && (
+        <img
+          src={imgSrc}
+          alt="Pet Spritesheet"
+          className="absolute max-w-none pointer-events-none"
+          style={{
+            width: size * (currentOffset.scale / 100),
+            height: 'auto',
+            left: xOffset,
+            top: yOffset,
+          }}
+        />
+      )}
     </div>
   )
 }
 
-export const NextGenCompanion = Pet
+export const NextGenCompanion = Pet;

@@ -14,7 +14,7 @@ export function Navbar() {
   const { language, hasNotificationSave } = useStore()
   const strings = t[language]
 
-  if (pathname === '/' || pathname === '/coach' || pathname === '/setup') return null
+  if (pathname === '/' || pathname === '/coach' || pathname === '/setup' || pathname === '/diagnostics') return null
 
   const leftNavItems = [
     { icon: Home, label: strings.navHome, href: "/dashboard" },

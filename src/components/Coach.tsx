@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Shield, Brain, Target, TrendingUp, Send, ChevronLeft, ChevronRight, ExternalLink, ShoppingBag, Store, Globe, Flame, Sparkles, Gift } from "lucide-react"
+import { Shield, Brain, Target, TrendingUp, Send, ChevronLeft, ChevronRight, ExternalLink, ShoppingBag, Store, Globe, Flame, Sparkles, Gift, X, Mic, MicOff } from "lucide-react"
 import { RewardsModal } from "./RewardsModal"
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -14,6 +14,22 @@ import { cn } from "@/lib/utils"
 import { t } from "@/lib/translations"
 import { Pet } from "@/components/ui/Pet"
 import Link from "next/link"
+
+const COMPANIONS = [
+  { id: 'uteh', name: 'Uteh', tierRequired: 'Novice', label: 'Novice' },
+  { id: 'zuko', name: 'Zuko', tierRequired: 'Pro', label: 'Pro' },
+  { id: 'oreo', name: 'Oreo', tierRequired: 'Pro', label: 'Pro' },
+  { id: 'oyen', name: 'Oyen', tierRequired: 'Legend', label: 'Legend' },
+  { id: 'yunn', name: 'Yunn', tierRequired: 'Legend', label: 'Legend' },
+  { id: 'lico', name: 'Lico', tierRequired: 'Legend', label: 'Legend' },
+]
+
+function canUnlockCompanion(tierRequired: string, userTier: string) {
+  if (tierRequired === 'Novice') return true;
+  if (tierRequired === 'Pro') return userTier === 'Pro' || userTier === 'Legend';
+  if (tierRequired === 'Legend') return userTier === 'Legend';
+  return false;
+}
 
 const AGENTS = [
   { id: 'save', name: 'Savings Sentinel', icon: Target, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
@@ -39,7 +55,7 @@ interface Message {
 }
 
 export function Coach() {
-  const { user, safeDailySpend, initialSafeDaily, transactions, nextGenScore, language, addSavingsPocket, savingsPockets, bills, addTransaction, pet, currentStreak, membershipTier, streakShieldActive, awfarDrawTickets } = useStore()
+  const { user, safeDailySpend, initialSafeDaily, transactions, nextGenScore, language, addSavingsPocket, savingsPockets, bills, addTransaction, pet, currentStreak, membershipTier, streakShieldActive, awfarDrawTickets, selectedCompanion, setSelectedCompanion } = useStore()
   const strings = t[language]
   
   const todayStr = new Date().toDateString();
@@ -57,6 +73,95 @@ export function Coach() {
   const [isExecuting, setIsExecuting] = useState(false)
   const [isAtBottom, setIsAtBottom] = useState(true)
   const [showRewardsModal, setShowRewardsModal] = useState(false)
+  const [showCompanionModal, setShowCompanionModal] = useState(false)
+
+  // Speech Recognition states & ref
+  const [isListening, setIsListening] = useState(false)
+  const [interimTranscript, setInterimTranscript] = useState("")
+  const recognitionRef = useRef<any>(null)
+  const transcriptRef = useRef("")
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const rec = new SpeechRecognition();
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.lang = 'en-US';
+
+        rec.onstart = () => {
+          setIsListening(true);
+          setInterimTranscript("");
+          transcriptRef.current = "";
+        };
+
+        rec.onend = () => {
+          setIsListening(false);
+          const finalPrompt = transcriptRef.current.trim();
+          if (finalPrompt) {
+            sendMessage(finalPrompt);
+            transcriptRef.current = "";
+          }
+        };
+
+        rec.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          setIsListening(false);
+          if (event.error === 'not-allowed') {
+            alert('Microphone access blocked! Since you are accessing the app over HTTP, please either use HTTPS or enable "Insecure origins treated as secure" in chrome://flags.');
+          } else if (event.error === 'network') {
+            alert('Speech recognition network error! Chrome requires a secure context (HTTPS/localhost) and active internet connection to communicate with Google Speech APIs.');
+          }
+        };
+
+        rec.onresult = (event: any) => {
+          let interim = "";
+          let final = "";
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const transcriptText = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              final += transcriptText;
+            } else {
+              interim += transcriptText;
+            }
+          }
+
+          if (final) {
+            setInput(prev => {
+              const base = prev.trim();
+              const updated = base ? `${base} ${final}` : final;
+              transcriptRef.current = updated;
+              return updated;
+            });
+            setInterimTranscript("");
+          } else if (interim) {
+            setInterimTranscript(interim);
+          }
+        };
+
+        recognitionRef.current = rec;
+      }
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome or Safari.');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      try {
+        recognitionRef.current.start();
+      } catch (err) {
+        console.error('Failed to start speech recognition:', err);
+      }
+    }
+  };
 
   // Affordability state
   const [affordItem, setAffordItem] = useState("")
@@ -353,19 +458,19 @@ export function Coach() {
           const nextSafeDaily = oldState.calculateDailyLimitForBalance(oldState.user.currentBalance - parsedAmount);
 
           if (nextSafeDaily < 10.0) {
-            throw new Error(`Money Move blocked. Sending RM ${parsedAmount.toFixed(2)} would reduce your safe daily spending to RM ${nextSafeDaily.toFixed(2)}/day, which is below the RM 10.00 survival limit.`);
+            throw new Error(`Transfer blocked. Sending RM ${parsedAmount.toFixed(2)} would reduce your safe daily spending to RM ${nextSafeDaily.toFixed(2)}/day, which is below the RM 10.00 survival limit.`);
           }
 
           addTransaction({
             id: `txn-${Date.now()}`,
-            title: `Money Move to ${action.payload.recipient}`,
+            title: `Transfer to ${action.payload.recipient}`,
             amount: parsedAmount,
-            category: 'Money Move',
+            category: 'Transfer',
             date: new Date().toISOString(),
             type: 'expense',
             confidence: 1.0
           });
-          responseText = `Money Move complete. RM ${parsedAmount.toFixed(2)} has been successfully sent to ${action.payload.recipient}. The transaction is now logged in your history.`;
+          responseText = `Transfer complete. RM ${parsedAmount.toFixed(2)} has been successfully sent to ${action.payload.recipient}. The transaction is now logged in your history.`;
           redirect = { label: "View Transactions", href: "/transactions" };
           useStore.setState({ pet: { ...useStore.getState().pet, animation: "excited" } });
         } catch (error: any) {
@@ -588,9 +693,9 @@ export function Coach() {
         responses.push({
           role: 'assistant',
           agent: 'Finance Strategist',
-          content: "I can help with that. I've prepared a Money Move proposal based on your recent activity. Review the details below:",
+          content: "I can help with that. I've prepared a transfer proposal based on your recent activity. Review the details below:",
           proposal: {
-            name: 'Money Move to Aizat',
+            name: 'Transfer to Aizat',
             type: 'transfer',
             amount: 50,
             recipient: 'Aizat',
@@ -599,13 +704,13 @@ export function Coach() {
           },
           actions: [
             {
-              id: 'approve_Money Move',
+              id: 'approve_transfer',
               label: 'Approve & Send',
               type: 'transfer',
               payload: { amount: 50, recipient: 'Aizat' }
             },
             {
-              id: 'postpone_Money Move',
+              id: 'postpone_transfer',
               label: 'Decline',
               type: 'postpone'
             }
@@ -874,18 +979,65 @@ export function Coach() {
               <h1 className="text-lg font-bold leading-tight text-[#221F20]">{strings.coachHeader}</h1>
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <p className="text-[10px] text-[#727272] uppercase tracking-widest font-bold">Active</p>
+                <p className="text-[10px] text-[#727272] uppercase tracking-widest font-bold">
+                  {COMPANIONS.find(c => c.id === selectedCompanion)?.name || "Uteh"}
+                </p>
               </div>
             </div>
           </div>
-          <Badge variant="outline" className="text-[10px] bg-emerald-500/10 border-emerald-500/20 text-emerald-500 font-bold px-2 py-1">
-            HEALTH: {nextGenScore}%
+          <Badge 
+            variant="outline" 
+            className="text-[9px] font-black text-white tracking-widest px-2.5 py-1 rounded-full cursor-pointer transition-all duration-300 border-none bg-gradient-to-r from-[#DF0059] via-[#CC0D5A] to-[#FF6B6B] shadow-md shadow-[#DF0059]/40 hover:shadow-lg hover:shadow-[#DF0059]/60 hover:scale-110 active:scale-95 flex items-center gap-1 animate-pulse"
+            style={{ animationDuration: '3s' }}
+            onClick={() => setShowCompanionModal(true)}
+          >
+            <Sparkles className="w-2.5 h-2.5 animate-spin" style={{ animationDuration: '4s' }} />
+            CUSTOM
           </Badge>
         </div>
       </header>
 
       {/* Chat Area — wrapped in relative for the floating button */}
-      <div className="flex-1 overflow-hidden relative z-10">
+      <div className="flex-1 overflow-hidden relative z-10 flex flex-col">
+        {/* Dynamic Streak, Tier, and Rewards Pills (Sticky Top Status Bar) */}
+        <div className="px-4 py-2.5 bg-white/60 backdrop-blur-md border-b border-pink-100/40 shadow-sm shrink-0 z-20">
+          <div className="flex items-center justify-between gap-2 w-full">
+            {/* Streak Pill */}
+            <div className={cn(
+              "flex-1 px-2.5 py-1.5 rounded-full border text-center flex items-center justify-center gap-1.5 text-[9.5px] font-extrabold transition-all duration-300 whitespace-nowrap backdrop-blur-md shadow-sm",
+              todaySavings < 1.0 ? "bg-slate-100/80 border-slate-200 text-slate-400 grayscale opacity-70" :
+              currentStreak < 7 ? "bg-gradient-to-r from-[#FFFAEA]/80 to-[#FFE9F2]/60 border-[#FFF4D5] text-[#CBA024]" :
+              currentStreak < 30 ? "bg-gradient-to-r from-[#E9F2FE]/80 to-[#FFE9F2]/60 border-[#D3E4FE] text-[#1C62C7]" :
+              "bg-gradient-to-r from-[#FAE7EF]/80 to-[#FFE9F2]/60 border-[#F3C7D8] text-[#CC0D5A]"
+            )}>
+              <span>🔥 {currentStreak} {language === 'en' ? 'Day Streak' : 'Hari Streak'}</span>
+            </div>
+
+            {/* Tier Pill */}
+            <div className={cn(
+              "flex-1 px-2.5 py-1.5 rounded-full border text-center flex items-center justify-center gap-1.5 text-[9.5px] font-extrabold transition-all duration-300 whitespace-nowrap backdrop-blur-md shadow-sm",
+              membershipTier === 'Legend' ? "bg-gradient-to-r from-[#FAE7EF]/80 to-[#FFE9F2]/60 border-[#F3C7D8] text-[#DF0059]" :
+              membershipTier === 'Pro' ? "bg-gradient-to-r from-[#E9F2FE]/80 to-[#FFE9F2]/60 border-[#D3E4FE] text-[#1C62C7]" :
+              "bg-gradient-to-r from-[#FFFAEA]/80 to-[#FFE9F2]/60 border-[#FFF4D5] text-[#CBA024]"
+            )}>
+              <span>
+                {membershipTier === 'Legend' ? '🏆 Legend' :
+                 membershipTier === 'Pro' ? '🥈 Pro' :
+                 '🥉 Novice'}
+              </span>
+            </div>
+
+            {/* Rewards & Perks Interactive Pill */}
+            <button 
+              onClick={() => setShowRewardsModal(true)}
+              className="flex-1 px-2.5 py-1.5 rounded-full border bg-gradient-to-r from-[#DF0059]/10 via-[#CC0D5A]/15 to-[#E06E9C]/10 border-[#E06E9C]/30 text-[#CC0D5A] shadow-sm flex items-center justify-center gap-1.5 text-[9.5px] font-extrabold hover:bg-gradient-to-r hover:from-[#DF0059]/20 hover:to-[#CC0D5A]/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap backdrop-blur-md"
+            >
+              <Sparkles className="w-3 h-3 text-[#DF0059] animate-pulse" />
+              <span>{language === 'en' ? 'Rewards & Perks ✨' : 'Ganjaran ✨'}</span>
+            </button>
+          </div>
+        </div>
+
         {/* Scroll-to-bottom floating button */}
         <AnimatePresence>
           {!isAtBottom && (
@@ -907,7 +1059,7 @@ export function Coach() {
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="h-full overflow-y-auto px-4 scroll-smooth bg-transparent"
+          className="flex-1 overflow-y-auto px-4 scroll-smooth bg-transparent"
         >
           <div className="space-y-6 py-6 min-h-full flex flex-col">
 
@@ -921,43 +1073,6 @@ export function Coach() {
                 className="flex flex-col justify-start h-full pt-2"
               >
                 <div className="mb-8">
-                  {/* Dynamic Streak, Tier, and Rewards Pills */}
-                  <div className="flex items-center justify-between gap-2 mb-6 w-full">
-                    {/* Streak Pill */}
-                    <div className={cn(
-                      "flex-1 px-2.5 py-1.5 rounded-full border text-center flex items-center justify-center gap-1.5 text-[9.5px] font-extrabold transition-all duration-300 whitespace-nowrap backdrop-blur-md shadow-sm",
-                      todaySavings < 1.0 ? "bg-slate-100/80 border-slate-200 text-slate-400 grayscale opacity-70" :
-                      currentStreak < 7 ? "bg-gradient-to-r from-[#FFFAEA]/80 to-[#FFE9F2]/60 border-[#FFF4D5] text-[#CBA024]" :
-                      currentStreak < 30 ? "bg-gradient-to-r from-[#E9F2FE]/80 to-[#FFE9F2]/60 border-[#D3E4FE] text-[#1C62C7]" :
-                      "bg-gradient-to-r from-[#FAE7EF]/80 to-[#FFE9F2]/60 border-[#F3C7D8] text-[#CC0D5A]"
-                    )}>
-                      <span>🔥 {currentStreak} {language === 'en' ? 'Day Streak' : 'Hari Streak'}</span>
-                    </div>
-
-                    {/* Tier Pill */}
-                    <div className={cn(
-                      "flex-1 px-2.5 py-1.5 rounded-full border text-center flex items-center justify-center gap-1.5 text-[9.5px] font-extrabold transition-all duration-300 whitespace-nowrap backdrop-blur-md shadow-sm",
-                      membershipTier === 'Gold' ? "bg-gradient-to-r from-[#FAE7EF]/80 to-[#FFE9F2]/60 border-[#F3C7D8] text-[#DF0059]" :
-                      membershipTier === 'Silver' ? "bg-gradient-to-r from-[#E9F2FE]/80 to-[#FFE9F2]/60 border-[#D3E4FE] text-[#1C62C7]" :
-                      "bg-gradient-to-r from-[#FFFAEA]/80 to-[#FFE9F2]/60 border-[#FFF4D5] text-[#CBA024]"
-                    )}>
-                      <span>
-                        {membershipTier === 'Gold' ? '🏆 Legend' :
-                         membershipTier === 'Silver' ? '🥈 Pro' :
-                         '🥉 Novice'}
-                      </span>
-                    </div>
-
-                    {/* Rewards & Perks Interactive Pill */}
-                    <button 
-                      onClick={() => setShowRewardsModal(true)}
-                      className="flex-1 px-2.5 py-1.5 rounded-full border bg-gradient-to-r from-[#DF0059]/10 via-[#CC0D5A]/15 to-[#E06E9C]/10 border-[#E06E9C]/30 text-[#CC0D5A] shadow-sm flex items-center justify-center gap-1.5 text-[9.5px] font-extrabold hover:bg-gradient-to-r hover:from-[#DF0059]/20 hover:to-[#CC0D5A]/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap backdrop-blur-md"
-                    >
-                      <Sparkles className="w-3 h-3 text-[#DF0059] animate-pulse" />
-                      <span>{language === 'en' ? 'Rewards & Perks ✨' : 'Ganjaran ✨'}</span>
-                    </button>
-                  </div>
-
                   <h2 className="text-xl font-medium text-[#727272] mb-1">Hi {user.name}</h2>
                   <h1 className="text-3xl font-black tracking-tight text-[#221F20]">Where should we start?</h1>
                 </div>
@@ -1594,7 +1709,7 @@ export function Coach() {
                                       </div>
                                       <div className="flex-1">
                                         <div className="flex items-center gap-2">
-                                          <p className="text-xs font-bold text-[#221F20]">{m.proposal.name || (m.proposal.type === 'transfer' ? 'Money Move' : 'Pocket')}</p>
+                                          <p className="text-xs font-bold text-[#221F20]">{m.proposal.name || (m.proposal.type === 'transfer' ? 'Transfer' : 'Pocket')}</p>
                                           <Badge className="text-[7px] h-3 bg-primary/20 text-primary border-primary/20 px-1 font-black">
                                             {m.proposal.type === 'transfer' ? 'Verified' : 'Managed'}
                                           </Badge>
@@ -1723,13 +1838,27 @@ export function Coach() {
 
         <div className="relative group">
           <Input
-            placeholder={isThinking || isExecuting ? "Wait for the council..." : strings.coachInputPlaceholder}
+            placeholder={isThinking || isExecuting ? "Wait for the council..." : (isListening ? "Listening... Speak now!" : strings.coachInputPlaceholder)}
             disabled={isThinking || isExecuting}
-            className="pr-12 bg-white border-pink-100 h-12 rounded-2xl text-xs text-[#221F20] placeholder:text-[#727272] shadow-sm shadow-pink-100/60 focus:border-primary focus:ring-primary/20 disabled:bg-[#F8F8F8]"
+            className="pr-24 bg-white border-pink-100 h-12 rounded-2xl text-xs text-[#221F20] placeholder:text-[#727272] shadow-sm shadow-pink-100/60 focus:border-primary focus:ring-primary/20 disabled:bg-[#F8F8F8]"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
           />
+          <Button
+            size="icon"
+            type="button"
+            onClick={toggleListening}
+            disabled={isThinking || isExecuting}
+            className={cn(
+              "absolute right-12 top-1 w-10 h-10 rounded-xl transition-all active:scale-95 border",
+              isListening 
+                ? "bg-red-500 hover:bg-red-600 text-white animate-pulse border-red-600" 
+                : "bg-slate-50 hover:bg-slate-100 text-slate-500 border-pink-50/50"
+            )}
+          >
+            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </Button>
           <Button
             size="icon"
             disabled={isThinking || isExecuting || !input.trim()}
@@ -1741,10 +1870,185 @@ export function Coach() {
         </div>
       </div>
 
+      {showCompanionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col"
+          >
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <div>
+                <h3 className="font-bold text-slate-800">Customize Companion</h3>
+                <p className="text-[10px] text-slate-500">Unlock more as you rank up!</p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowCompanionModal(false)} className="rounded-full w-8 h-8 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-4 grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto">
+              {COMPANIONS.map(c => {
+                const unlocked = canUnlockCompanion(c.tierRequired, membershipTier);
+                const isSelected = selectedCompanion === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    disabled={!unlocked}
+                    onClick={() => {
+                      setSelectedCompanion(c.id);
+                      setShowCompanionModal(false);
+                    }}
+                    className={cn(
+                      "relative flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all duration-300",
+                      isSelected ? "border-emerald-500 bg-emerald-50/50" : unlocked ? "border-slate-100 hover:border-slate-300 hover:bg-slate-50" : "border-slate-100 opacity-50 grayscale cursor-not-allowed bg-slate-50"
+                    )}
+                  >
+                    <div className="w-14 h-14 relative flex items-center justify-center overflow-hidden">
+                      <Pet animation="walk" companionId={c.id} size={56} />
+                    </div>
+                    <div className="text-center w-full">
+                      <p className="text-sm font-black text-slate-800">{c.name}</p>
+                      <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-1 inline-block",
+                        c.tierRequired === 'Novice' ? "bg-orange-100 text-orange-700" :
+                        c.tierRequired === 'Pro' ? "bg-blue-100 text-blue-700" :
+                        "bg-pink-100 text-pink-700"
+                      )}>
+                        {c.label} {unlocked ? "" : "🔒"}
+                      </span>
+                    </div>
+                    {isSelected && (
+                      <div className="absolute top-2 right-2 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center shadow-sm">
+                        <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       <RewardsModal
         isOpen={showRewardsModal}
         onClose={() => setShowRewardsModal(false)}
       />
+
+      {/* Voice Chat Overlay Screen (Aura AI style) */}
+      <AnimatePresence>
+        {isListening && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[99] flex flex-col justify-between p-6 text-center select-none overflow-hidden"
+          >
+            {/* Background bot.gif with soft light-mode gradient wash */}
+            <img
+              src={`${basePath}/assets/bot.gif`}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover z-0 opacity-22 mix-blend-overlay pointer-events-none"
+            />
+            <div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(circle_at_50%_48%,rgba(223,0,89,0.14),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,233,242,0.92))]" />
+
+            {/* Custom slow-spin styles */}
+            <style>{`
+              @keyframes spin-slow {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+              .animate-spin-slow {
+                animation: spin-slow 15s linear infinite;
+              }
+            `}</style>
+
+            {/* Top header */}
+            <div className="flex justify-between items-center w-full mt-4 z-10">
+              <span className="text-xs font-mono text-[#CC0D5A] uppercase tracking-widest font-black">Voice Assistant Mode</span>
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-[#FFE9F2] text-[#DF0059] border border-[#F3C7D8] shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-[#DF0059] animate-ping"></span>
+                Recording
+              </span>
+            </div>
+
+            {/* Main content area */}
+            <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 z-10">
+              {/* Glowing animated orb (Aura style in light mode) */}
+              <div className="relative w-48 h-48 flex items-center justify-center">
+                {/* Swirling, organic liquid glow aura */}
+                <motion.div 
+                  className="absolute inset-0 rounded-full bg-gradient-to-r from-[#DF0059] via-[#E06E9C] to-[#237AF9] blur-3xl pointer-events-none"
+                  animate={{
+                    scale: [1.2, 1.45, 1.15, 1.38, 1.2],
+                    rotate: [0, 90, 180, 270, 360],
+                    opacity: [0.22, 0.38, 0.18, 0.32, 0.22]
+                  }}
+                  transition={{
+                    duration: 7,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+                {/* Medium glowing spinning orb */}
+                <div className="absolute inset-2 rounded-full bg-gradient-to-tr from-[#DF0059] via-[#CC0D5A] to-[#FFC107] opacity-40 blur-md animate-spin-slow"></div>
+                {/* Core glass-looking orb */}
+                <div className="absolute inset-4 rounded-full bg-white/80 border border-white/60 shadow-xl backdrop-blur-md flex items-center justify-center">
+                  <Mic className="w-10 h-10 text-[#DF0059] animate-pulse" />
+                </div>
+              </div>
+
+              {/* Bouncing Soundwave Equalizer */}
+              <div className="flex items-end justify-center gap-1.5 h-16 w-full max-w-[220px] mt-2">
+                {[0.2, 0.4, 0.6, 0.8, 0.95, 0.75, 0.5, 0.3, 0.5, 0.75, 0.95, 0.8, 0.6, 0.4, 0.2].map((multiplier, i) => (
+                  <motion.div
+                    key={i}
+                    className="w-1.5 rounded-full bg-gradient-to-t from-[#DF0059] via-[#CC0D5A] to-[#E06E9C]"
+                    style={{
+                      height: '8px'
+                    }}
+                    animate={{
+                      height: ['8px', `${multiplier * 44 + 8}px`, '8px']
+                    }}
+                    transition={{
+                      duration: 0.55 + (i % 4) * 0.08,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                      delay: i * 0.035
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Status and transcription */}
+              <div className="space-y-4 max-w-sm w-full">
+                <p className="text-xs text-[#E06E9C] font-black uppercase tracking-widest">Listening...</p>
+                <div className="min-h-16 flex items-center justify-center">
+                  <p className="text-lg font-black leading-relaxed text-[#221F20] break-words transition-all duration-300">
+                    {interimTranscript || (input ? input : "Start speaking your financial query...")}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom actions */}
+            <div className="mb-8 flex flex-col items-center gap-4 z-10">
+              <button
+                type="button"
+                onClick={() => {
+                  if (recognitionRef.current) {
+                    recognitionRef.current.stop();
+                  }
+                  setIsListening(false);
+                }}
+                className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#DF0059] to-[#CC0D5A] hover:from-[#CC0D5A] hover:to-[#DF0059] text-white flex items-center justify-center shadow-lg shadow-[#DF0059]/25 hover:scale-105 active:scale-95 transition-all border border-[#F5CFDE] z-50 cursor-pointer"
+              >
+                <MicOff className="w-6 h-6" />
+              </button>
+              <p className="text-[10px] text-[#727272] uppercase tracking-widest font-extrabold">Tap to stop & send</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

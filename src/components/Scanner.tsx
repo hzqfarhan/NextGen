@@ -320,7 +320,7 @@ export function Scanner() {
                       <p className="mt-1 text-[11px] font-semibold text-amber-900 leading-relaxed">
                         {quotaAfterPurchase < 10
                           ? `Bossku, RM${scannedItem.amount.toFixed(2)} masa safe spend tinggal RM${currentQuotaRemaining.toFixed(2)}? Style ada, tapi bajet tengah tinggal separuh nyawa.`
-                          : "Cun, masih dalam kawalan. NextGen approve, tapi jangan lupa mission simpanan hari ni."}
+                          : "Cun, masih dalam kawalan. NextGen approve, tapi jangan lupa matlamat simpanan hari ni."}
                       </p>
                       <p className="mt-2 text-[10px] font-bold text-amber-700">Next action: Move this into a 24-hour Cooling-Off Pocket.</p>
                       <div className="flex justify-between items-center mt-3 pt-2 border-t border-amber-200/50">

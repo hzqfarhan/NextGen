@@ -40,11 +40,35 @@ export async function GET(req: NextRequest) {
             LIMIT 10;
         `);
 
-        // Query last 10 user syncs
+        // Query last 10 users from the new relational table
         const userSyncRes = await client.query(`
-            SELECT user_name, balance, resilience_score, streak, updated_at 
-            FROM user_sync 
+            SELECT username AS user_name, current_balance AS balance, nextgen_score AS resilience_score, current_streak AS streak, updated_at 
+            FROM users 
             ORDER BY updated_at DESC 
+            LIMIT 10;
+        `);
+
+        // Query last 10 savings goals
+        const savingsRes = await client.query(`
+            SELECT id, user_name, name, target_amount, current_amount, icon, mode, risk_level 
+            FROM savings 
+            ORDER BY created_at DESC 
+            LIMIT 10;
+        `);
+
+        // Query last 10 transfers
+        const transfersRes = await client.query(`
+            SELECT id, user_name, title, amount, type, category, confidence, date 
+            FROM transfers 
+            ORDER BY date DESC 
+            LIMIT 10;
+        `);
+
+        // Query last 10 bills
+        const billsRes = await client.query(`
+            SELECT id, user_name, name, category, amount, due_day, next_due_date, is_locked, status 
+            FROM bills 
+            ORDER BY next_due_date ASC 
             LIMIT 10;
         `);
 
@@ -67,6 +91,9 @@ export async function GET(req: NextRequest) {
             success: true,
             chatLogs: chatLogsRes.rows,
             userSyncs: userSyncRes.rows,
+            savings: savingsRes.rows,
+            transfers: transfersRes.rows,
+            bills: billsRes.rows,
             usage: {
                 model,
                 rpdUsed: rpdRes.rows[0]?.count || 0,

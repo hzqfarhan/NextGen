@@ -40,7 +40,10 @@ export function Dashboard() {
     highestStreak,
     membershipTier,
     streakShieldActive,
-    simulateNextDay
+    moveFundsToAwfarNest,
+    simulateNextDay,
+    simulateNextTier,
+    selectedCompanion
   } = useStore()
   const bills = useStore(state => state.bills)
 
@@ -65,16 +68,51 @@ export function Dashboard() {
     if (!shareCardRef.current) return;
     try {
       setIsGenerating(true);
-      const domtoimage = (await import('dom-to-image')).default;
-      const dataUrl = await domtoimage.toPng(shareCardRef.current, { quality: 1.0 });
+      const { toPng } = await import('html-to-image');
+      
+      // WebKit/Safari rendering cache workaround: Trigger a pre-render to force browser caching of inlined base64 SVG resources
+      await toPng(shareCardRef.current, {
+        pixelRatio: 2,
+        width: 360,
+        height: 450,
+        style: {
+          width: '360px',
+          height: '450px',
+          transform: 'none',
+          margin: '0',
+          padding: '0',
+          boxShadow: 'none',
+        }
+      });
+
+      // Secondary capture retrieves fully cached and painted image structures on all mobile and desktop devices
+      const dataUrl = await toPng(shareCardRef.current, {
+        pixelRatio: 2,
+        width: 360,
+        height: 450,
+        style: {
+          width: '360px',
+          height: '450px',
+          transform: 'none',
+          margin: '0',
+          padding: '0',
+          boxShadow: 'none',
+        }
+      });
 
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], 'streak.png', { type: 'image/png' });
 
+      const companionName = selectedCompanion
+        ? selectedCompanion.charAt(0).toUpperCase() + selectedCompanion.slice(1)
+        : 'Uteh';
+
+      const shareText = `I just hit a ${currentStreak}-day savings streak with ${companionName} on Be U: NextGen! 🐾🔥\n\nJoin Be U: NextGen today and unlock more interactive companions when you sign up and start your savings streak with your own AI digital companion.\n\n✅ Explore NextGen:\nhttps://nextgen.haziqfarhan.my\n\n✅ Use Code:\nTEAMITC\n\nStart your journey with Be U: NextGen and experience banking done right!\n\nT&Cs apply.`;
+
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: 'My Saving Streak',
-          text: `I just hit a ${currentStreak}-day streak on Be U: NextGen! 🚀`,
+          text: shareText,
           files: [file]
         });
       } else {
@@ -94,8 +132,37 @@ export function Dashboard() {
     if (!shareCardRef.current) return;
     try {
       setIsGenerating(true);
-      const domtoimage = (await import('dom-to-image')).default;
-      const dataUrl = await domtoimage.toPng(shareCardRef.current, { quality: 1.0 });
+      const { toPng } = await import('html-to-image');
+      
+      // WebKit/Safari rendering cache workaround: Trigger a pre-render to force browser caching of inlined base64 SVG resources
+      await toPng(shareCardRef.current, {
+        pixelRatio: 2,
+        width: 360,
+        height: 450,
+        style: {
+          width: '360px',
+          height: '450px',
+          transform: 'none',
+          margin: '0',
+          padding: '0',
+          boxShadow: 'none',
+        }
+      });
+
+      // Secondary capture retrieves fully cached and painted image structures on all mobile and desktop devices
+      const dataUrl = await toPng(shareCardRef.current, {
+        pixelRatio: 2,
+        width: 360,
+        height: 450,
+        style: {
+          width: '360px',
+          height: '450px',
+          transform: 'none',
+          margin: '0',
+          padding: '0',
+          boxShadow: 'none',
+        }
+      });
 
       const link = document.createElement('a');
       link.download = 'my-streak.png';
@@ -324,12 +391,12 @@ export function Dashboard() {
       <div className="grid grid-cols-4 gap-1">
         {[
           { icon: History, label: strings.actionTransaction, href: "/transactions", color: "text-[#237AF9]", bg: "bg-[#237AF9]/10" },
-          { icon: Send, label: strings.actionTransfer, href: "/transfer", color: "text-[#CC0D5A]", bg: "bg-primary/10" },
-          { icon: CalendarClock, label: strings.billsHeader, href: "/bills", color: "text-primary", bg: "bg-primary/10", isBills: true },
-          { icon: Wallet, label: strings.actionTopUp, href: "#", color: "text-[#CC0D5A]", bg: "bg-primary/10" },
+          { icon: Send, label: strings.actionTransfer, href: "/transfer", color: "text-[#CC0D5A]", bg: "bg-[#CC0D5A]/10" },
+          { icon: CalendarClock, label: strings.billsHeader, href: "/bills", color: "text-[#DF0059]", bg: "bg-[#DF0059]/10", isBills: true },
+          { icon: Wallet, label: strings.actionTopUp, href: "#", color: "text-[#FFC107]", bg: "bg-[#FFC107]/10" },
         ].map((action) => {
           const isTopUp = action.label === strings.actionTopUp;
-          const label = action.isBills ? strings.billsHeader.split(' ')[0] : action.label;
+          const label = action.isBills ? (language === 'ms' ? 'Bil' : 'Bills') : action.label;
           const content = (
             <div className="flex flex-col items-center gap-2 group cursor-pointer">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${action.bg} ${action.color} group-hover:scale-105 transition-transform`}>
@@ -367,22 +434,26 @@ export function Dashboard() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {currentStreak === 0 ? (
-                  <Flame className="w-12 h-12 text-slate-300 shrink-0" />
+                  <button onClick={() => simulateNextTier()} className="outline-none hover:scale-110 active:scale-95 transition-transform duration-300 cursor-pointer">
+                    <Flame className="w-12 h-12 text-slate-300 shrink-0" />
+                  </button>
                 ) : (
-                  <img
-                    src="/assets/API-streak.gif"
-                    alt="Streak Icon"
-                    className="w-12 h-12 object-contain transition-all duration-500"
-                    style={{
-                      filter: todaySavings < 1.0
-                        ? "grayscale(1) opacity(0.4)"
-                        : currentStreak < 7
-                          ? "hue-rotate(15deg) saturate(2.5) drop-shadow(0 0 8px rgba(249, 115, 22, 0.5))"
-                          : currentStreak < 30
-                            ? "hue-rotate(200deg) saturate(2.2) drop-shadow(0 0 8px rgba(37, 99, 235, 0.6))"
-                            : "hue-rotate(280deg) saturate(2.5) brightness(1.1) drop-shadow(0 0 12px rgba(168, 85, 247, 0.7))"
-                    }}
-                  />
+                  <button onClick={() => simulateNextTier()} className="outline-none hover:scale-110 active:scale-95 transition-transform duration-300 cursor-pointer">
+                    <img
+                      src="/assets/API-streak.gif"
+                      alt="Streak Icon"
+                      className="w-12 h-12 object-contain transition-all duration-500"
+                      style={{
+                        filter: todaySavings < 1.0
+                          ? "grayscale(1) opacity(0.4)"
+                          : currentStreak < 7
+                            ? "hue-rotate(15deg) saturate(2.5) drop-shadow(0 0 8px rgba(249, 115, 22, 0.5))"
+                            : currentStreak < 30
+                              ? "hue-rotate(200deg) saturate(2.2) drop-shadow(0 0 8px rgba(37, 99, 235, 0.6))"
+                              : "hue-rotate(280deg) saturate(2.5) brightness(1.1) drop-shadow(0 0 12px rgba(168, 85, 247, 0.7))"
+                      }}
+                    />
+                  </button>
                 )}
                 <div>
                   <div className="flex items-center gap-2">
@@ -397,12 +468,12 @@ export function Dashboard() {
               <div className="text-right">
                 <Badge className={cn(
                   "font-bold text-xs px-2.5 py-1 rounded-lg border shadow-sm",
-                  membershipTier === 'Gold' ? "bg-purple-100 text-purple-700 border-purple-300" :
-                    membershipTier === 'Silver' ? "bg-blue-100 text-blue-700 border-blue-200" :
+                  membershipTier === 'Legend' ? "bg-purple-100 text-purple-700 border-purple-300" :
+                    membershipTier === 'Pro' ? "bg-blue-100 text-blue-700 border-blue-200" :
                       "bg-orange-100 text-orange-700 border-orange-300"
                 )}>
-                  {membershipTier === 'Gold' ? '🏆 Legend' :
-                    membershipTier === 'Silver' ? '🥈 Pro' :
+                  {membershipTier === 'Legend' ? '🏆 Legend' :
+                    membershipTier === 'Pro' ? '🥈 Pro' :
                       '🥉 Novice'}
                 </Badge>
               </div>
@@ -420,12 +491,12 @@ export function Dashboard() {
                   <Send className="w-4 h-4" />
                 </motion.button>
 
-                {/* 1:1 Circle Simulate Next Day button */}
+                {/* 1:1 Circle Simulate Next Tier button */}
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => simulateNextDay()}
+                  onClick={() => simulateNextTier()}
                   className="w-9 h-9 shrink-0 rounded-full bg-[#221F20] text-white flex items-center justify-center hover:bg-[#221F20]/90 transition-colors shadow-sm"
-                  title={language === 'en' ? 'Simulate Next Day' : 'Simulasi Hari Seterusnya'}
+                  title={language === 'en' ? 'Simulate Next Tier' : 'Simulasi Tahap Seterusnya'}
                 >
                   <CalendarClock className="w-4 h-4" />
                 </motion.button>
@@ -545,7 +616,7 @@ export function Dashboard() {
                 </div>
 
                 {/* Card Container with responsive scaling */}
-                <div className="scale-[0.65] sm:scale-75 origin-center my-[-90px] shadow-lg rounded-[2.5rem]">
+                <div className="scale-[0.8] sm:scale-90 origin-center my-2 shadow-lg rounded-[2.5rem]">
                   <StreakShareCard
                     currentStreak={currentStreak}
                     highestStreak={highestStreak}
@@ -586,7 +657,8 @@ export function Dashboard() {
         )}
       </AnimatePresence>
 
-      <div className="absolute left-[-9999px] top-[-9999px]">
+      {/* Off-screen rendering container to ensure browsers (especially mobile Safari) fully layout and render image assets without opacity clipping */}
+      <div className="fixed -left-[400px] top-0 pointer-events-none z-[-100] overflow-hidden">
         <StreakShareCard
           ref={shareCardRef}
           currentStreak={currentStreak}
