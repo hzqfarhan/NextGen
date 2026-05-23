@@ -31,6 +31,7 @@ import { maskAccountNumber } from "@/lib/billEngine"
 import { useState } from "react"
 import { BillDeleteConfirmModal } from "./BillDeleteConfirmModal"
 import { BillPaymentConfirmModal } from "./BillPaymentConfirmModal"
+import { cn } from "@/lib/utils"
 
 interface BillCardProps {
   bill: Bill
@@ -70,18 +71,18 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
     >
-      <Card className={`glass-card overflow-hidden transition-all border-white/10 ${bill.isLocked && !isPaid ? 'ring-1 ring-pink-600/50' : ''}`}>
+      <Card className={`glass-card overflow-hidden transition-all duration-300 ${bill.isLocked && !isPaid ? 'ring-2 ring-pink-500/40 border-pink-500/30' : ''}`}>
         <CardContent className="p-4 space-y-4">
           {/* Top Row: Name and Menu */}
           <div className="flex justify-between items-start">
             <div className="flex gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-xl shadow-inner">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200/60 flex items-center justify-center text-xl shadow-inner">
                 {BILL_TEMPLATES.find(t => t.category === bill.category)?.icon || '🧾'}
               </div>
               <div>
-                <h3 className="text-sm font-black text-white">{bill.name}</h3>
+                <h3 className="text-sm font-black text-slate-900">{bill.name}</h3>
                 <div className="flex items-center gap-2">
-                  <p className="text-[9px] text-white/50 uppercase font-black tracking-widest leading-tight">
+                  <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest leading-tight">
                     {bill.category} {bill.accountNumber && `• ${maskAccountNumber(bill.accountNumber)}`}
                   </p>
                   {bill.mode === 'auto_track' && (
@@ -97,23 +98,23 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-white/30 hover:text-white hover:bg-white/5">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors">
                     <MoreVertical className="w-4 h-4" />
                   </Button>
                 }
               />
-              <DropdownMenuContent className="rounded-xl border-white/10 bg-slate-900/95 backdrop-blur-xl">
+              <DropdownMenuContent className="rounded-xl border-slate-200 bg-white/95 backdrop-blur-xl shadow-lg">
                 <DropdownMenuItem 
-                  className="text-xs font-bold gap-2 text-white/70 hover:text-white"
+                  className="text-xs font-bold gap-2 text-slate-700 hover:text-slate-900 focus:bg-slate-50 cursor-pointer"
                   onClick={() => onEdit(bill)}
                 >
-                  <Pencil className="w-3 h-3" /> {strings.billsEdit}
+                  <Pencil className="w-3.5 h-3.5" /> {strings.billsEdit}
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  className="text-xs font-bold gap-2 text-rose-400 focus:text-rose-300"
+                  className="text-xs font-bold gap-2 text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer"
                   onClick={() => setShowDeleteModal(true)}
                 >
-                  <Trash2 className="w-3 h-3" /> {strings.billsDelete}
+                  <Trash2 className="w-3.5 h-3.5" /> {strings.billsDelete}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -122,38 +123,40 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
           {/* Middle Row: Amount and Status */}
           <div className="flex justify-between items-end">
             <div>
-              <p className="text-2xl font-black text-white">RM {bill.amount.toFixed(2)}</p>
+              <p className="text-2xl font-black text-slate-900">RM {bill.amount.toFixed(2)}</p>
               {!isPaid && (
-                <p className="text-[10px] font-bold text-white/40">
+                <p className="text-[10px] font-bold text-slate-500">
                   {strings.billsNext}: {new Date(bill.nextDueDate).toLocaleDateString(language === 'ms' ? 'ms-MY' : 'en-MY', { day: 'numeric', month: 'short' })}
                 </p>
               )}
             </div>
             <div className="flex flex-col items-end gap-1.5">
-              <Badge variant="outline" className={`rounded-lg border-transparent px-2 py-1 text-[10px] font-black uppercase flex gap-1 ${status.color.replace('text-emerald-600', 'text-emerald-400').replace('text-amber-600', 'text-amber-400').replace('text-rose-600', 'text-rose-400').replace('text-blue-600', 'text-blue-400')}`}>
+              <Badge variant="outline" className={cn("rounded-lg border-transparent px-2 py-1 text-[10px] font-black uppercase flex gap-1 items-center", status.color)}>
                 <StatusIcon className="w-3 h-3" />
                 {status.label}
               </Badge>
               {bill.mode === 'simulated_autopay' && bill.autopayEnabled && (
-                <span className="text-[8px] font-black text-emerald-400 uppercase tracking-tighter">AutoPay Ready</span>
+                <span className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter">AutoPay Ready</span>
               )}
             </div>
           </div>
 
           {/* Bottom Row: Actions */}
-          <div className="pt-3 flex items-center justify-between border-t border-white/5">
+          <div className="pt-3 flex items-center justify-between border-t border-slate-200/60">
             <div className="flex gap-4">
               <div className="flex flex-col items-center gap-1.5">
                 <button 
                   onClick={() => toggleBillLock(bill.id)}
                   disabled={isPaid}
                   className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                    bill.isLocked ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/40 scale-110' : 'bg-white/5 text-white/20 border border-white/5'
+                    bill.isLocked 
+                      ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/30 scale-110' 
+                      : 'bg-slate-100 text-slate-400 border border-slate-200/60 hover:bg-slate-200/60'
                   } ${isPaid ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}`}
                 >
                   {bill.isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
                 </button>
-                <span className="text-[9px] font-black uppercase tracking-tighter text-white/40">{strings.billsLock}</span>
+                <span className="text-[9px] font-black uppercase tracking-tighter text-slate-500">{strings.billsLock}</span>
               </div>
 
               <div className="flex flex-col items-center gap-1.5">
@@ -161,12 +164,14 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
                   onClick={() => toggleBillAutopay(bill.id)}
                   disabled={isPaid}
                   className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                    bill.autopayEnabled ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/40 scale-110' : 'bg-white/5 text-white/20 border border-white/5'
+                    bill.autopayEnabled 
+                      ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-110' 
+                      : 'bg-slate-100 text-slate-400 border border-slate-200/60 hover:bg-slate-200/60'
                   } ${isPaid ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}`}
                 >
                   <Zap className="w-4 h-4" />
                 </button>
-                <span className="text-[9px] font-black uppercase tracking-tighter text-white/40">{strings.billsAutoPay}</span>
+                <span className="text-[9px] font-black uppercase tracking-tighter text-slate-500">{strings.billsAutoPay}</span>
               </div>
             </div>
 
@@ -181,7 +186,7 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
             )}
 
             {isPaid && bill.lastPaidAt && (
-              <div className="text-[10px] font-black text-emerald-400 flex items-center gap-1.5 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
+              <div className="text-[10px] font-black text-emerald-600 flex items-center gap-1.5 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 PAID {new Date(bill.lastPaidAt).toLocaleDateString()}
               </div>
@@ -189,7 +194,7 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
           </div>
           
           {needsSetup && !isPaid && (
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-400 font-bold flex items-center gap-2 animate-pulse">
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-600 font-bold flex items-center gap-2 animate-pulse">
               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
               {strings.billsNoAcc}
             </div>

@@ -18,12 +18,12 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#DF0059',
     icons: [
       {
-        src: path('/icon-192x192.png'),
+        src: path('/assets/NEXTGEN.png'),
         sizes: '192x192',
         type: 'image/png',
       },
       {
-        src: path('/icon-512x512.png'),
+        src: path('/assets/NEXTGEN.png'),
         sizes: '512x512',
         type: 'image/png',
       },

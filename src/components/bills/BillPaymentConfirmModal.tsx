@@ -27,7 +27,7 @@ export function BillPaymentConfirmModal({ isOpen, onClose, onConfirm, billName, 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[400px] glass-card border-white/10 text-white">
+      <DialogContent className="sm:max-w-[400px] glass-card border-slate-200 text-slate-900">
         <div className="space-y-6 py-4">
           <DialogHeader className="flex flex-col items-center text-center space-y-4">
             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/20">
@@ -35,20 +35,20 @@ export function BillPaymentConfirmModal({ isOpen, onClose, onConfirm, billName, 
             </div>
             <div className="space-y-1">
               <DialogTitle className="text-2xl font-black">{strings.billsPayNow}?</DialogTitle>
-              <DialogDescription className="text-xs text-white/50 uppercase font-bold tracking-widest">
+              <DialogDescription className="text-xs text-slate-500 uppercase font-black tracking-widest">
                 {billName}
               </DialogDescription>
             </div>
           </DialogHeader>
 
-          <div className="bg-white/5 rounded-2xl p-6 border border-white/10 flex flex-col items-center gap-2">
-            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Total Amount</p>
-            <p className="text-4xl font-black text-white">RM {amount.toFixed(2)}</p>
+          <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200/60 flex flex-col items-center gap-2 shadow-inner">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Amount</p>
+            <p className="text-4xl font-black text-slate-900">RM {amount.toFixed(2)}</p>
           </div>
 
           <div className="flex gap-3 items-start p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-            <ShieldCheck className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-            <p className="text-[10px] text-emerald-500/80 font-medium leading-tight">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+            <p className="text-[10px] text-emerald-600/80 font-medium leading-tight">
               Paying this bill will update your balance and record this transaction in your history.
             </p>
           </div>
@@ -58,7 +58,7 @@ export function BillPaymentConfirmModal({ isOpen, onClose, onConfirm, billName, 
               type="button" 
               variant="ghost" 
               onClick={onClose}
-              className="rounded-xl border border-white/10 text-white/50 hover:text-white hover:bg-white/5 font-bold"
+              className="rounded-xl border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100 font-bold"
             >
               {strings.billsCancel}
             </Button>

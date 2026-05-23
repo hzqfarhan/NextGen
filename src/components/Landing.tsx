@@ -65,7 +65,19 @@ export default function Landing() {
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center gap-1"
         >
-          <span className="text-2xl font-black tracking-tight text-primary">BeU NextGen</span>
+          <h1
+            className="text-4xl font-black tracking-tight mb-2"
+            style={{
+              background: 'linear-gradient(135deg, #DF0059 0%, #CC0D5A 52%, #221F20 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              textShadow: 'none',
+              filter: 'drop-shadow(0 12px 30px rgba(223,0,89,0.22))'
+            }}
+          >
+            NextGen
+          </h1>
           <div className="w-1.5 h-1.5 bg-secondary rounded-full mt-2" />
         </motion.div>
         

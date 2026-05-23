@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select"
 
 export function Settings() {
-  const { user, language, setLanguage, petOffsets, updatePetOffset } = useStore()
+  const { user, language, setLanguage, petOffsets, updatePetOffset, resetStreak } = useStore()
   const router = useRouter()
   const strings = t[language]
   const [showLogout, setShowLogout] = useState(false)
@@ -100,6 +100,24 @@ export function Settings() {
                 </div>
                 <Switch defaultChecked />
               </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="space-y-2">
+          <h3 className="text-[10px] uppercase font-bold text-muted-foreground px-2 tracking-widest">Streak Controls</h3>
+          <Card className="glass-card">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-bold text-slate-800">{language === 'en' ? 'Savings Streak' : 'Streak Simpanan'}</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{language === 'en' ? 'Manage your gamification momentum records.' : 'Urus rekod momentum gamifikasi anda.'}</p>
+              </div>
+              <button
+                onClick={() => resetStreak()}
+                className="px-3 py-1.5 bg-rose-50 border border-rose-200 text-[10px] font-bold text-rose-600 rounded-xl hover:bg-rose-100 transition-colors uppercase tracking-wider flex items-center gap-1 active:scale-95"
+              >
+                ⚠️ {language === 'en' ? 'Reset Streak' : 'Set Semula Streak'}
+              </button>
             </CardContent>
           </Card>
         </section>
@@ -258,7 +276,7 @@ export function Settings() {
       </div>
 
       <div className="text-center pt-8">
-        <p className="text-[10px] text-muted-foreground font-medium">Resilience Agent System v1.0.4-alpha</p>
+        <p className="text-[10px] text-muted-foreground font-medium">NextGen Agent System v1.0.4-alpha</p>
         <p className="text-[10px] text-muted-foreground mt-1">Made with 🧬 in Malaysia</p>
       </div>
 

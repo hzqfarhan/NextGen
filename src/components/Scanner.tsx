@@ -323,6 +323,21 @@ export function Scanner() {
                           : "Cun, masih dalam kawalan. NextGen approve, tapi jangan lupa mission simpanan hari ni."}
                       </p>
                       <p className="mt-2 text-[10px] font-bold text-amber-700">Next action: Move this into a 24-hour Cooling-Off Pocket.</p>
+                      <div className="flex justify-between items-center mt-3 pt-2 border-t border-amber-200/50">
+                        <span className="text-[9px] text-amber-600 font-medium">Share to get Streak Shield + RM10!</span>
+                        <button
+                          onClick={() => {
+                            useStore.getState().activateStreakShield();
+                            useStore.setState((s) => ({
+                              user: { ...s.user, currentBalance: s.user.currentBalance + 10 }
+                            }));
+                            alert("Passport generated! 🛡️ Streak Shield activated & RM10 simulated referral bounty added to wallet!");
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-amber-600 text-white font-extrabold text-[9px] hover:bg-amber-700 transition-colors shadow-sm flex items-center gap-1"
+                        >
+                          📢 Share My Roast
+                        </button>
+                      </div>
                     </div>
                   </div>
 

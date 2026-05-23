@@ -43,7 +43,7 @@ export function BillDeleteConfirmModal({ isOpen, onClose, onConfirm, title }: Bi
               type="button" 
               variant="outline" 
               onClick={onClose}
-              className="rounded-xl border-white/10 hover:bg-white/5"
+              className="rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700 hover:text-slate-900"
             >
               {strings.billsCancel}
             </Button>

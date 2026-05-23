@@ -3,8 +3,8 @@
 import { useStore } from "@/store/useStore"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts'
 import { TrendingUp, Award, Calendar, Target, Shield, ArrowUpRight, ArrowDownRight } from "lucide-react"
@@ -37,7 +37,7 @@ const marketData = [
 ]
 
 export function Insights() {
-  const { resilienceScore, language, debtRiskScore, savingsPockets } = useStore()
+  const { nextGenScore, language, debtRiskScore, savingsPockets } = useStore()
   const bills = useStore(state => state.bills)
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
@@ -56,34 +56,34 @@ export function Insights() {
     return fallback
   })
 
-  // 2. Dynamic Debt Health based on Dashboard Resilience Score
-  let resilienceRating = "At Risk"
-  if (resilienceScore >= 75) {
-    resilienceRating = "Strong"
-  } else if (resilienceScore >= 50) {
-    resilienceRating = "Healthy"
+  // 2. Dynamic Debt Health based on Dashboard NextGen Score
+  let nextGenRating = "At Risk"
+  if (nextGenScore >= 75) {
+    nextGenRating = "Strong"
+  } else if (nextGenScore >= 50) {
+    nextGenRating = "Healthy"
   } else {
-    resilienceRating = "Weak"
+    nextGenRating = "Weak"
   }
 
-  // 3. Dynamic Resilience Trend Graph tracking Today's Score
+  // 3. Dynamic NextGen Trend Graph tracking Today's Score
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   const todayName = dayNames[new Date().getDay()]
 
   const dynamicSpendingData = spendingData.map(item => {
     if (item.name === todayName) {
-      return { ...item, amount: resilienceScore }
+      return { ...item, amount: nextGenScore }
     }
     return item
   })
-  
+
   const lockedAmount = bills
     .filter(b => b.isLocked && b.status !== 'paid')
     .reduce((sum, b) => sum + b.amount, 0);
   const paidCount = bills.filter(b => b.status === 'paid').length;
   const nextBill = bills.filter(b => b.status !== 'paid')
     .sort((a, b) => new Date(a.nextDueDate).getTime() - new Date(b.nextDueDate).getTime())[0];
-  
+
   const strings = t[language]
 
   return (
@@ -113,25 +113,25 @@ export function Insights() {
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center justify-between">
               <Shield className="w-4 h-4 text-pink-600" />
-              <Badge className="text-[8px] bg-pink-600/10 text-pink-600 border-none">{resilienceRating}</Badge>
+              <Badge className="text-[8px] bg-pink-600/10 text-pink-600 border-none">{nextGenRating}</Badge>
             </div>
             <p className="text-[10px] font-bold">Debt Health</p>
             <div className="space-y-1.5 pt-2">
               <div className="flex justify-between text-[8px] font-bold">
                 <span>Score</span>
-                <span>{resilienceScore}/100</span>
+                <span>{nextGenScore}/100</span>
               </div>
-              <Progress value={resilienceScore} className="h-1 bg-pink-600/10" />
+              <Progress value={nextGenScore} className="h-1 bg-pink-600/10" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Resilience Trend */}
+      {/* NextGen Trend */}
       <Card className="glass-card overflow-hidden">
         <CardHeader className="p-4 pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" /> Resilience Trend
+            <TrendingUp className="w-4 h-4 text-primary" /> NextGen Trend
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0 h-48 w-full">
@@ -139,17 +139,17 @@ export function Insights() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={dynamicSpendingData} margin={{ top: 20, right: 30, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff10" />
-                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
-                <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
-                <Tooltip 
+                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8' }} />
+                <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8' }} />
+                <Tooltip
                   contentStyle={{ backgroundColor: '#111114', border: '1px solid #ffffff10', borderRadius: '12px', fontSize: '10px' }}
                   itemStyle={{ color: '#818cf8' }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="amount" 
-                  stroke="#6366f1" 
-                  strokeWidth={3} 
+                <Line
+                  type="monotone"
+                  dataKey="amount"
+                  stroke="#6366f1"
+                  strokeWidth={3}
                   dot={{ fill: '#6366f1', strokeWidth: 2, r: 4 }}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                 />

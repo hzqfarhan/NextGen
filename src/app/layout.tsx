@@ -12,6 +12,11 @@ const inter = { className: "font-sans" };
 export const metadata: Metadata = {
   title: "BeU NextGen",
   description: "AI-powered financial companion for youth money habits.",
+  icons: {
+    icon: "/assets/NEXTGEN.png",
+    shortcut: "/assets/NEXTGEN.png",
+    apple: "/assets/NEXTGEN.png",
+  },
   openGraph: {
     title: "BeU NextGen",
     description: "Spend smarter, save better, and understand money before it becomes a problem.",
