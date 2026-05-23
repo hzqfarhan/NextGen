@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Database, Sparkles, CheckCircle2, XCircle, RefreshCw, ArrowLeft, Terminal, AlertCircle, MessageSquare, UserCheck, Eye, EyeOff } from 'lucide-react';
+import { ShieldAlert, Database, Sparkles, CheckCircle2, XCircle, RefreshCw, ArrowLeft, Terminal, AlertCircle, MessageSquare, UserCheck, Activity, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 
 interface DiagnosticResult {
@@ -34,6 +34,14 @@ interface UserSync {
     updated_at: string;
 }
 
+interface UsageInfo {
+    model: string;
+    rpdUsed: number;
+    rpdLimit: number;
+    rpmUsed: number;
+    rpmLimit: number;
+}
+
 export default function DiagnosticsPage() {
     const [dbResult, setDbResult] = useState<DiagnosticResult>({ success: false, loading: false });
     const [geminiResult, setGeminiResult] = useState<DiagnosticResult>({ success: false, loading: false });
@@ -50,6 +58,15 @@ export default function DiagnosticsPage() {
     const [userSyncs, setUserSyncs] = useState<UserSync[]>([]);
     const [loadingData, setLoadingData] = useState(false);
     const [activeTab, setActiveTab] = useState<'chat' | 'sync'>('chat');
+
+    // Quota usage metrics
+    const [usage, setUsage] = useState<UsageInfo>({
+        model: 'gemini-2.5-flash',
+        rpdUsed: 0,
+        rpdLimit: 20,
+        rpmUsed: 0,
+        rpmLimit: 15
+    });
 
     useEffect(() => {
         // Query environment check on mount
@@ -87,6 +104,9 @@ export default function DiagnosticsPage() {
             if (data.success) {
                 setChatLogs(data.chatLogs || []);
                 setUserSyncs(data.userSyncs || []);
+                if (data.usage) {
+                    setUsage(data.usage);
+                }
             }
         } catch (e) {
             console.error('Failed to load table data:', e);
@@ -142,6 +162,10 @@ export default function DiagnosticsPage() {
         // Refresh database tables logs
         fetchTableData();
     };
+
+    // Helper to calculate usage percentage
+    const rpdPercent = Math.min((usage.rpdUsed / usage.rpdLimit) * 100, 100);
+    const rpmPercent = Math.min((usage.rpmUsed / usage.rpmLimit) * 100, 100);
 
     return (
         <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-4 md:p-12 relative overflow-hidden flex flex-col items-center">
@@ -307,7 +331,7 @@ export default function DiagnosticsPage() {
                                 </div>
                                 <div className="space-y-1">
                                     <h3 className="text-sm font-black text-slate-200">Google Gemini API</h3>
-                                    <p className="text-[10px] text-slate-400 font-medium">Sends a mini test query to Gemini 2.5 Flash.</p>
+                                    <p className="text-[10px] text-slate-400 font-medium">Sends a mini test query to Gemini 2.5/3.1.</p>
                                 </div>
                             </div>
                             
@@ -348,6 +372,63 @@ export default function DiagnosticsPage() {
                         )}
                     </div>
                 </div>
+
+                {/* Quota Usage Monitor Card */}
+                {envCheck.dbUrlSet && (
+                    <div className="p-6 rounded-[2rem] bg-slate-900/40 border border-slate-800/80 space-y-4">
+                        <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+                            <Activity className="w-5 h-5 text-emerald-400" />
+                            <h2 className="text-sm font-black text-slate-200">Real-Time API Quota Monitor</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* RPD Progress Bar */}
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-[11px] font-bold">
+                                    <span className="text-slate-400">Requests Per Day (RPD)</span>
+                                    <span className={usage.rpdUsed >= usage.rpdLimit ? 'text-rose-400' : 'text-emerald-400'}>
+                                        {usage.rpdUsed} / {usage.rpdLimit}
+                                    </span>
+                                </div>
+                                <div className="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800/60 p-0.5">
+                                    <div 
+                                        className={`h-full rounded-full transition-all duration-500 ${
+                                            rpdPercent > 90 ? 'bg-gradient-to-r from-red-500 to-rose-500' :
+                                            rpdPercent > 60 ? 'bg-gradient-to-r from-amber-400 to-amber-500' :
+                                            'bg-gradient-to-r from-emerald-500 to-teal-400'
+                                        }`} 
+                                        style={{ width: `${rpdPercent}%` }}
+                                    />
+                                </div>
+                                <p className="text-[9px] text-slate-500 font-medium">
+                                    Active Model: <code className="text-slate-300 font-bold bg-slate-950 px-1 py-0.5 rounded">{usage.model}</code>
+                                </p>
+                            </div>
+
+                            {/* RPM Progress Bar */}
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-[11px] font-bold">
+                                    <span className="text-slate-400">Requests Per Minute (RPM)</span>
+                                    <span className={usage.rpmUsed >= usage.rpmLimit ? 'text-rose-400 font-black animate-pulse' : 'text-emerald-400'}>
+                                        {usage.rpmUsed} / {usage.rpmLimit}
+                                    </span>
+                                </div>
+                                <div className="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800/60 p-0.5">
+                                    <div 
+                                        className={`h-full rounded-full transition-all duration-500 ${
+                                            rpmPercent > 80 ? 'bg-gradient-to-r from-amber-400 to-red-500' :
+                                            'bg-gradient-to-r from-emerald-500 to-teal-400'
+                                        }`} 
+                                        style={{ width: `${rpmPercent}%` }}
+                                    />
+                                </div>
+                                <p className="text-[9px] text-slate-500 font-medium">
+                                    Automatically resets every minute.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Database Table Row Viewer */}
                 <div className="p-6 rounded-[2rem] bg-slate-900/40 border border-slate-800/80 space-y-5">
