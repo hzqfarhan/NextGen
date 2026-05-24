@@ -48,7 +48,7 @@ BeU NextGen separates money into **what the user has**, **what must be protected
 
 ## Core Feature Showcase (Pitch Video Add-ons)
 
-These additional high-fidelity features were successfully implemented in the functional prototype but were omitted from the 3-minute pitch video due to time constraints:
+These additional high-fidelity features were successfully implemented in the functional prototype but were omitted from the 8-minute pitch video due to time constraints:
 
 | Interface / Feature | Detailed System Capabilities & Pitch Video Explanations |
 | :---: | --- |
