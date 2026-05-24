@@ -1,9 +1,13 @@
-# BeU NextGen
-
-> **Be U by Bank Islam × UMPSA | Hackathon X Fintech Forward 2026**  
-> Theme: *"Future of Money: Reimagine Finance with AI"*
-
-AI-powered financial companion for youth money habits.
+<div align="center">
+  <img src="public/assets/NEXTGEN.png" alt="BeU NextGen Logo" width="220" style="border-radius: 1.5rem; margin-bottom: 1rem; box-shadow: 0 10px 30px rgba(223,0,89,0.15);" />
+  
+  # BeU NextGen
+  
+  <h3><strong>Be U by Bank Islam × UMPSA | Hackathon X Fintech Forward 2026</strong></h3>
+  <p>Theme: <em>"Future of Money: Reimagine Finance with AI"</em></p>
+  
+  <p><em>AI-powered financial companion for youth money habits.</em></p>
+</div>
 
 ---
 
@@ -42,6 +46,21 @@ BeU NextGen separates money into **what the user has**, **what must be protected
 
 ---
 
+## Core Feature Showcase (Pitch Video Add-ons)
+
+These additional high-fidelity features were successfully implemented in the functional prototype but were omitted from the 3-minute pitch video due to time constraints:
+
+| Interface / Feature | Detailed System Capabilities & Pitch Video Explanations |
+| :---: | --- |
+| <img src="public/assets/git-img/main dashboard.PNG" width="360" alt="Main Dashboard" /> | **1. Core Financial Command Center (Main Dashboard)**<br><br>• **Safe Daily Spend Calculation:** Instantly calculates exactly what is safe to spend per day, protecting future bill locks and savings pockets.<br>• **Unified Visual Indicators:** Tracks streaks, membership progress, and real-time financial health without the user having to guess.<br>• **Quick Action Center:** Integrates QR scanner, rapid transfers, and smart bill management in one screen.<br><br>👉 **🌟 Key User Benefit:** **Eliminates the "Mental Math" Trap!** Never guess if you can afford lunch; your exact spendable balance is visible instantly, saving you from end-of-month panic! |
+| <img src="public/assets/git-img/smartbill.jpg" width="360" alt="Smart Bill Lock" /> | **2. Smart Bill Lock (Commitment Shield)**<br><br>• **Auto-Shield Subscriptions:** Dynamically locks funds for recurring utility bills, student loans (PTPTN), or standard subscriptions.<br>• **Protected Wallet Slices:** Locked funds are subtracted from the spendable balance and visually isolated in a beautiful vault card interface.<br>• **Visual Progression Trackers:** Shows due dates, lock status, and historical lock completion records.<br><br>👉 **🛡️ Key User Benefit:** **Zero-Effort Commitment Protection!** Automatically guarantees you never accidentally spend your rent or phone bill money, keeping you in Bank Islam's good books! |
+| <img src="public/assets/git-img/companion.jpg" width="360" alt="Companion System" /> | **3. Gamified NextGen Companion System**<br><br>• **Interactive Avatars:** 6 animated virtual companions (including Oyen, Zuko, Oreo, Yunn) matching the user's financial habits.<br>• **Tier-Gated Unlocks:** Encourages sound savings disciplines by unlocking higher-status companions at Pro and Legend tiers.<br>• **Micro-Roasts & Prompts:** The companion serves as the reactive visual frontend of the multi-agent AI Council, cheering or roasting user decisions.<br><br>👉 **🤝 Key User Benefit:** **Finance Made Addictive!** Turns money management into a cute game—encouraging healthy savings habits through customizable companions that roast your bad spends and celebrate your savings! |
+| <img src="public/assets/git-img/insights.jpg" width="360" alt="Dynamic Insights" /> | **4. Recharts Advanced Spending Insights**<br><br>• **High-Contrast Data Visuals:** Modern custom light-mode analytics showing spending trends and weekly fluctuations.<br>• **Categorized Spend Breakdown:** Color-coded categorical Recharts grids highlighting dynamic budget deviations and savings allocations.<br>• **Streak Metrics:** Visualized progression of habit streak consistency and gamified scores.<br><br>👉 **📊 Key User Benefit:** **Spot Hidden Money Leaks Instantly!** Beautiful high-contrast visual charts pinpoint exactly where your funds are slipping away, so you can optimize budgets with absolute clarity. |
+| <img src="public/assets/git-img/voicemode.jpg" width="360" alt="Voice Assistant UI" /> | **5. Smart Voice Assistant Mode**<br><br>• **Speech-to-Text Processing:** Low-latency localized voice input matching the Malaysian accent and financial context.<br>• **Interactive Visual Aura:** Floating glowing gradient orb animations syncing real-time voice capture states.<br>• **Hands-Free AI Council Queries:** Quick vocal prompts like *"Can I afford bubble tea today?"* instantly yield structured JSON feedback.<br><br>👉 **🎙️ Key User Benefit:** **Vocalize Your Financial Queries!** Skip the typing and speak naturally—ask the AI Council complex questions on-the-go and get visual cards instantly. |
+| <img src="public/assets/git-img/sharestreak.jpg" width="360" alt="Streak Sharing & Rewards" /> | **6. Social Streak Sharing & Rewards**<br><br>• **Viral Malaysian Themes:** Shareable streak generation badges supporting custom backgrounds (WhatsApp, Telegram, IG Stories).<br>• **AWFAR Draw Gating:** Unlocks free entries into Bank Islam's AWFAR draws directly from streak achievements.<br>• **Streak Shield Protection:** Gamified shields preventing streak breaks during emergency spend periods.<br><br>👉 **🎁 Key User Benefit:** **Get Rewarded for Discipline!** Turn consistency into real-world value—share your progress with beautiful designs, use Streak Shields, and win cash prizes via AWFAR tickets! |
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -64,6 +83,10 @@ BeU NextGen separates money into **what the user has**, **what must be protected
 BeU NextGen is built on a highly resilient, modern web stack featuring real-time client-state sync, relational database persistence, and a multi-agent AI framework. Below is the comprehensive high-level system mapping.
 
 ### High-Level Architecture Diagram
+
+<div align="center">
+  <img src="public/assets/git-img/systemarchitecture.png" alt="System Architecture Diagram" width="700" style="border-radius: 1rem; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 1.5rem;" />
+</div>
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -141,6 +164,10 @@ To guarantee transparency and verify platform resilience for hackathon judges, B
 ![System Diagnostics Overview](https://img.shields.io/badge/System-Healthy-49B9B3?style=for-the-badge&logo=postgresql)
 ![AI Connection](https://img.shields.io/badge/Gemini_AI-Online-DF0059?style=for-the-badge&logo=google-gemini)
 
+<div align="center">
+  <img src="public/assets/git-img/diagnostic.png" alt="Diagnostics Panel Showcase" width="700" style="border-radius: 1rem; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-top: 1rem; margin-bottom: 1.5rem;" />
+</div>
+
 This panel allows real-time execution testing and environment diagnostics of every core cloud integration:
 
 ### 1. Cloud Infrastructure Integration Checks
@@ -160,6 +187,10 @@ A fully integrated, live explorer of relational table data directly inside the c
 
 ### 4. Interactive ERD Schema Map 🗺️
 A visual schematic showing the relational schema of our database. It highlights how the centralized `users` table links via 1-to-many (`1:N`) relationships (foreign keys) directly into the `savings`, `transfers`, `bills`, and `chat_logs` tables—offering clear proof of data engineering rigour.
+
+<div align="center">
+  <img src="public/assets/git-img/erd.png" alt="Database ERD Schema Map" width="700" style="border-radius: 1rem; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-top: 1rem; margin-bottom: 1.5rem;" />
+</div>
 
 ---
 
