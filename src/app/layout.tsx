@@ -32,9 +32,9 @@ export const metadata: Metadata = {
     siteName: "BeU NextGen",
     images: [
       {
-        url: "/assets/NEXTGEN.png",
+        url: "/assets/NEXTGEN-og.jpg",
         width: 1200,
-        height: 630,
+        height: 1200,
         alt: "BeU NextGen Logo",
       },
     ],
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "BeU NextGen",
     description: "Spend smarter, save better, and understand money before it becomes a problem.",
-    images: ["/assets/NEXTGEN.png"],
+    images: ["/assets/NEXTGEN-og.jpg"],
   },
   appleWebApp: {
     title: "BeU NextGen",
