@@ -966,11 +966,18 @@ const useStoreBase = create<NextGenState>()(
         // Add/remove mock transaction for today savings to activate/deactivate the fire
         let updatedTransactions = [...state.transactions];
         const todayStr = new Date().toDateString();
+
+        // Always remove existing simulated transactions first to avoid duplication
+        updatedTransactions = updatedTransactions.filter(
+          t => !t.id.toString().startsWith('simulated-saving-')
+        );
+
         if (nextStreak > 0) {
-          const alreadySaved = updatedTransactions.some(
-            t => t.type === 'saving' && new Date(t.date).toDateString() === todayStr
-          );
-          if (!alreadySaved) {
+          const realTodaySavings = updatedTransactions
+            .filter(t => t.type === 'saving' && new Date(t.date).toDateString() === todayStr)
+            .reduce((sum, t) => sum + t.amount, 0);
+
+          if (realTodaySavings < 1.0) {
             updatedTransactions.push({
               id: 'simulated-saving-' + Date.now(),
               title: 'Simulated Saving (Streak Active)',
@@ -980,11 +987,6 @@ const useStoreBase = create<NextGenState>()(
               type: 'saving'
             });
           }
-        } else {
-          // Remove simulated saving transactions for today to let it be gray
-          updatedTransactions = updatedTransactions.filter(
-            t => !(t.type === 'saving' && new Date(t.date).toDateString() === todayStr)
-          );
         }
 
         set((s) => ({
