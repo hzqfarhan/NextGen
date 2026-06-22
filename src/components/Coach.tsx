@@ -862,14 +862,44 @@ export function Coach() {
           }
         }
       } else if (triggerDebt || textToSubmit.includes("afford") || textToSubmit.includes("buy")) {
-        responses.push({
-          role: 'assistant',
-          agent: 'Commitment Shield',
-          content: "I can help you simulate the impact of a purchase on your financial health. What are you planning to buy?",
-          proposal: {
-            type: 'affordability'
+        let agentId = 'debt';
+        let agentName = 'Commitment Shield';
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: overrideText || input, agentId, context: buildAIContext() })
+          });
+          const data = await res.json();
+          if (!data.fallback && data.structured) {
+            responses.push({
+              role: 'assistant',
+              agent: agentName,
+              content: data.structured.headline,
+              structured: data.structured,
+            });
+            logChat(agentId, overrideText || input, data.structured.headline);
+          } else if (!data.fallback && data.reply) {
+            responses.push({
+              role: 'assistant',
+              agent: agentName,
+              content: data.reply,
+            });
+            logChat(agentId, overrideText || input, data.reply);
+          } else {
+            responses.push({
+              role: 'assistant',
+              agent: agentName,
+              content: "I'm having trouble analyzing your request right now. Let's try again in a bit."
+            });
           }
-        })
+        } catch (err) {
+          responses.push({
+            role: 'assistant',
+            agent: agentName,
+            content: `Based on your current balance, please be careful about taking on new commitments or impulse purchases.`
+          });
+        }
       } else if (triggerGrowth) {
         let agentId = 'invest';
         let agentName = 'Growth Guru';
