@@ -223,7 +223,7 @@ export default function SetupPage() {
         { id: 'b1', name: 'Rent / Hostel', amount: rent, category: 'Housing', icon: '🏠' },
         { id: 'b2', name: 'Phone Bill', amount: phoneBill, category: 'Utilities', icon: '📱' },
         { id: 'b3', name: 'Transport', amount: transport, category: 'Transport', icon: '🚗' },
-        { id: 'b4', name: 'PTPTN', amount: ptptn, category: 'Education', icon: '🎓' },
+        { id: 'b4', name: 'Loan', amount: ptptn, category: 'Education', icon: '🎓' },
         { id: 'b5', name: 'Subscriptions', amount: subscriptions, category: 'Entertainment', icon: '📺' },
       ].filter(b => b.amount > 0).map(b => ({
         ...b,
@@ -403,7 +403,7 @@ export default function SetupPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Employment Status</label>
+                    <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Status</label>
                     <div className="grid grid-cols-3 gap-2">
                       {(["Student", "Employed", "Unemployed"] as const).map((status) => (
                         <button
@@ -753,7 +753,7 @@ export default function SetupPage() {
 
                     {/* Rent */}
                     <div className="flex justify-between items-center h-8">
-                      <span className="text-xs font-bold text-slate-700">Rent</span>
+                      <span className="text-xs font-bold text-slate-700">House Rent</span>
                       <div className="relative w-24">
                         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-[10px]">RM</span>
                         <input
@@ -796,9 +796,9 @@ export default function SetupPage() {
                       </div>
                     </div>
 
-                    {/* PTPTN */}
+                    {/* Loan */}
                     <div className="flex justify-between items-center h-8">
-                      <span className="text-xs font-bold text-slate-700 font-mono">PTPTN</span>
+                      <span className="text-xs font-bold text-slate-700 font-mono">Loan</span>
                       <div className="relative w-24">
                         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-[10px]">RM</span>
                         <input

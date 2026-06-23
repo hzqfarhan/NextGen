@@ -1,11 +1,42 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { motion } from "framer-motion"
-import { ArrowUpRight, ShieldCheck } from "lucide-react"
-import Link from "next/link"
+import { ArrowUpRight, ShieldCheck, Loader2 } from "lucide-react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useStore } from "@/store/useStore"
 
 export default function Landing() {
+  const router = useRouter();
+  const [nameInput, setNameInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleStart = async () => {
+    const finalName = nameInput.trim() || "Aiman";
+    setIsLoading(true);
+    
+    try {
+      useStore.setState((state) => ({ user: { ...state.user, name: finalName } }));
+      
+      const res = await fetch(`/api/sync?username=${encodeURIComponent(finalName)}`);
+      const data = await res.json();
+      
+      if (data.success && data.data) {
+        useStore.setState(data.data);
+        router.push('/dashboard');
+      } else {
+        router.push('/setup');
+      }
+    } catch (e) {
+      console.error(e);
+      router.push('/setup');
+    }
+    
+    setIsLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-transparent text-foreground flex flex-col items-center justify-between p-8 overflow-hidden relative font-sans">
       
@@ -118,12 +149,25 @@ export default function Landing() {
           transition={{ delay: 0.4 }}
           className="w-full flex items-center gap-4"
         >
-          <Link href="/setup" className="flex-1">
-            <Button className="w-full h-16 bg-foreground text-background hover:bg-foreground/90 rounded-[2rem] text-lg font-bold flex items-center justify-between px-8 group">
-              Start NextGen
-              <ArrowUpRight className="w-6 h-6 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+          <div className="flex-1 flex flex-col gap-3">
+            <Input 
+              placeholder="Enter your name (e.g. Aiman)" 
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              className="h-14 rounded-2xl bg-white/50 backdrop-blur-sm border-foreground/10 text-lg px-6"
+            />
+            <Button 
+              onClick={handleStart}
+              disabled={isLoading}
+              className="w-full h-16 bg-foreground text-background hover:bg-foreground/90 rounded-[2rem] text-lg font-bold flex items-center justify-between px-8 group"
+            >
+              {isLoading ? (
+                <>Loading Profile... <Loader2 className="w-6 h-6 animate-spin" /></>
+              ) : (
+                <>Start NextGen <ArrowUpRight className="w-6 h-6 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" /></>
+              )}
             </Button>
-          </Link>
+          </div>
           
           <div className="flex gap-3">
             <Button variant="outline" size="icon" className="w-16 h-16 rounded-full border-foreground/10 bg-background/50 backdrop-blur-xl hover:bg-foreground/5">
