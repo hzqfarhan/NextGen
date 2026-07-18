@@ -27,7 +27,7 @@ export function StoreSyncHandler() {
       state.setSyncStatus('syncing');
 
       try {
-        const username = state.user.name || 'Aiman';
+        const username = (state.user.name || 'Aiman').trim().toLowerCase();
         const passcode = state.user.passcode || '';
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);

@@ -4,7 +4,7 @@ export async function GET(req: NextRequest) {
     try {
         const dbUrl = process.env.DATABASE_URL;
         const { searchParams } = new URL(req.url);
-        const userName = searchParams.get('username') || 'Aiman';
+        const userName = (searchParams.get('username') || 'Aiman').trim().toLowerCase();
 
         if (!dbUrl) {
             return NextResponse.json({ success: false, reason: 'Database connection missing' }, { status: 500 });

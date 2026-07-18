@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     try {
         const dbUrl = process.env.DATABASE_URL;
         const { searchParams } = new URL(req.url);
-        const userName = searchParams.get('username') || 'Aiman';
+        const userName = (searchParams.get('username') || 'Aiman').trim().toLowerCase();
 
         if (!dbUrl) {
             return NextResponse.json({ 
@@ -38,18 +38,26 @@ export async function GET(req: NextRequest) {
             );
 
             if (result.rows.length === 0) {
-                client.release();
                 return NextResponse.json({ success: true, data: null });
             }
 
             const stateData = result.rows[0].state_data;
             const storedPasscode = stateData?.user?.passcode;
+            const clientPasscode = searchParams.get('passcode');
+
+            // If passcode is set but client hasn't provided one yet (initial check), return success without exposing stateData
+            if (storedPasscode && clientPasscode === null) {
+                return NextResponse.json({ 
+                    success: true, 
+                    exists: true, 
+                    requiresPasscode: true, 
+                    data: null 
+                });
+            }
 
             // Enforce passcode check if one is saved
             if (storedPasscode) {
-                const clientPasscode = searchParams.get('passcode') || '';
                 if (clientPasscode !== storedPasscode) {
-                    client.release();
                     return NextResponse.json({ 
                         success: false, 
                         reason: 'unauthorized', 
@@ -82,7 +90,8 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { userName, balance, nextGenScore, streak, stateData } = body;
+        const { userName: rawUserName, balance, nextGenScore, streak, stateData } = body;
+        const userName = (rawUserName || '').trim().toLowerCase();
 
         if (!userName || stateData === undefined) {
             return NextResponse.json(

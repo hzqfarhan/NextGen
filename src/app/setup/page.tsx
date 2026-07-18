@@ -57,12 +57,13 @@ export default function SetupPage() {
   const [showPasscodePreview, setShowPasscodePreview] = useState(false)
   const [employmentStatus, setEmploymentStatus] = useState<"Student" | "Employed" | "Unemployed">("Student")
 
+  const storeName = useStore((state) => state.user?.name);
+
   useEffect(() => {
-    const actualName = useStore.getState().user?.name;
-    if (actualName) {
-      setName(actualName);
+    if (storeName) {
+      setName(storeName);
     }
-  }, [])
+  }, [storeName]);
 
   // Step 2: Income Source selection ("fixed" | "lump-sum" | "irregular" | "none")
   const [incomeSource, setIncomeSource] = useState<"fixed" | "lump-sum" | "irregular" | "none">("fixed")

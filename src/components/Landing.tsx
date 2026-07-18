@@ -39,7 +39,7 @@ export default function Landing() {
 
       const data = await res.json();
       
-      if (data.success && data.data) {
+      if (data.success && (data.data || data.exists)) {
         // User exists! Show passcode modal for authorization
         setIsLoading(false);
         setShowPasscodeModal(true);
