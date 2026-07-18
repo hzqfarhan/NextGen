@@ -211,6 +211,11 @@ interface NextGenState {
   setSyncStatus: (status: 'synced' | 'syncing' | 'offline' | 'error' | 'disabled') => void;
   simulatedDayOffset?: number;
 
+  // Coach multi-session chat state
+  coachSessions: any[];
+  coachMessagesMap: Record<string, any[]>;
+  coachCurrentSessionId: string;
+
   // Gamification & BIMB Transition State
   currentStreak: number;
   highestStreak: number;
@@ -417,6 +422,9 @@ export const initialStoreState = {
   lastQuotaUpdateDate: null,
   syncStatus: 'synced' as const,
   simulatedDayOffset: 0,
+  coachSessions: [],
+  coachMessagesMap: {},
+  coachCurrentSessionId: 'default',
   currentStreak: 0,
   highestStreak: 0,
   lastCalculatedDate: '',
@@ -1353,6 +1361,9 @@ if (typeof window !== 'undefined') {
         autoSaveFrequency: state.autoSaveFrequency,
         autoSaveAmount: state.autoSaveAmount,
         isRoundUpActive: state.isRoundUpActive,
+        coachSessions: state.coachSessions,
+        coachMessagesMap: state.coachMessagesMap,
+        coachCurrentSessionId: state.coachCurrentSessionId,
       }
     };
 
@@ -1364,6 +1375,8 @@ if (typeof window !== 'undefined') {
       transactionsCount: (transactions || []).length,
       pocketsCount: (savingsPockets || []).length,
       billsCount: (bills || []).length,
+      coachSessionsCount: (state.coachSessions || []).length,
+      coachMessagesKeysCount: Object.keys(state.coachMessagesMap || {}).length,
     });
 
     if (currentSyncStr !== lastSyncStr) {

@@ -12,7 +12,6 @@ export function useCoachChat() {
   const { user, safeDailySpend, transactions, nextGenScore, addSavingsPocket, savingsPockets, bills, addTransaction } = useStore();
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
-  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
@@ -20,9 +19,34 @@ export function useCoachChat() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [undoToast, setUndoToast] = useState<{ message: string; onUndo: () => void } | null>(null);
 
-  // Multi-session chat states
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [currentSessionId, setCurrentSessionId] = useState<string>("default");
+  // Multi-session chat state bound to Zustand for Supabase Sync
+  const sessions = useStore(s => s.coachSessions) || [];
+  const coachMessagesMap = useStore(s => s.coachMessagesMap) || {};
+  const currentSessionId = useStore(s => s.coachCurrentSessionId) || 'default';
+  
+  const messages = coachMessagesMap[currentSessionId] || [];
+
+  const setSessions = (newSessions: any[]) => {
+    useStore.setState({ coachSessions: newSessions });
+  };
+
+  const setCurrentSessionId = (newId: string) => {
+    useStore.setState({ coachCurrentSessionId: newId });
+  };
+
+  const setMessages = (newMessages: Message[] | ((prev: Message[]) => Message[])) => {
+    const currentMap = useStore.getState().coachMessagesMap || {};
+    const currentId = useStore.getState().coachCurrentSessionId || 'default';
+    const oldMessages = currentMap[currentId] || [];
+    const resolvedMessages = typeof newMessages === 'function' ? newMessages(oldMessages) : newMessages;
+    
+    useStore.setState({
+      coachMessagesMap: {
+        ...currentMap,
+        [currentId]: resolvedMessages
+      }
+    });
+  };
 
   // Speech Recognition states
   const [isListening, setIsListening] = useState(false);
@@ -72,32 +96,36 @@ export function useCoachChat() {
   // Load persisted sessions and active chat
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // 1. Initialize sessions list
-      const savedSessions = localStorage.getItem('coach_sessions');
-      let loadedSessions = [];
-      if (savedSessions) {
-        try {
-          loadedSessions = JSON.parse(savedSessions);
-        } catch (e) {
-          console.error(e);
+      // 1. Initialize sessions list from Zustand or localStorage
+      let loadedSessions = useStore.getState().coachSessions || [];
+      if (loadedSessions.length === 0) {
+        const savedSessions = localStorage.getItem('coach_sessions');
+        if (savedSessions) {
+          try {
+            loadedSessions = JSON.parse(savedSessions);
+          } catch (e) {
+            console.error(e);
+          }
         }
       }
       if (!Array.isArray(loadedSessions) || loadedSessions.length === 0) {
         loadedSessions = [{ id: 'default', title: 'Sembang Utama / Main Chat', createdAt: new Date().toISOString() }];
-        localStorage.setItem('coach_sessions', JSON.stringify(loadedSessions));
       }
 
       // 2. Initialize current session ID
-      const savedCurrentSessionId = localStorage.getItem('coach_current_session_id') || 'default';
+      const savedCurrentSessionId = localStorage.getItem('coach_current_session_id') || useStore.getState().coachCurrentSessionId || 'default';
 
       // 2b. If the current session already has user messages, start a fresh session for this new visit!
-      const currentMessagesSaved = localStorage.getItem(`coach_messages_${savedCurrentSessionId}`);
       let hasUserMessages = false;
+      const currentMessagesSaved = localStorage.getItem(`coach_messages_${savedCurrentSessionId}`);
       if (currentMessagesSaved) {
         try {
           const parsed = JSON.parse(currentMessagesSaved);
           hasUserMessages = Array.isArray(parsed) && parsed.some((m: any) => m.role === 'user');
         } catch (e) {}
+      } else {
+        const zustandMsgs = (useStore.getState().coachMessagesMap || {})[savedCurrentSessionId] || [];
+        hasUserMessages = zustandMsgs.some((m: any) => m.role === 'user');
       }
 
       let activeId = savedCurrentSessionId;
@@ -119,7 +147,11 @@ export function useCoachChat() {
       // Clean loaded sessions list: keep the current active one, and any other session that has at least one user message
       const cleanedSessions = loadedSessions.filter((s: any) => {
         if (s.id === activeId) return true;
-        const savedMessages = localStorage.getItem(`coach_messages_${s.id}`);
+        let savedMessages = localStorage.getItem(`coach_messages_${s.id}`);
+        if (!savedMessages) {
+          const zMsgs = (useStore.getState().coachMessagesMap || {})[s.id];
+          if (zMsgs) savedMessages = JSON.stringify(zMsgs);
+        }
         if (!savedMessages) return false;
         try {
           const parsed = JSON.parse(savedMessages);
@@ -129,11 +161,14 @@ export function useCoachChat() {
         }
       });
 
-      // Clear empty messages from localStorage for pruned sessions
+      // Clear empty messages from localStorage and Zustand for pruned sessions
       loadedSessions.forEach((s: any) => {
         const stillExists = cleanedSessions.some((cs: any) => cs.id === s.id);
         if (!stillExists && s.id !== activeId) {
           localStorage.removeItem(`coach_messages_${s.id}`);
+          const currentMap = { ...(useStore.getState().coachMessagesMap || {}) };
+          delete currentMap[s.id];
+          useStore.setState({ coachMessagesMap: currentMap });
         }
       });
 
@@ -144,7 +179,14 @@ export function useCoachChat() {
       setSessions(cleanedSessions);
 
       // 3. Load messages for the current session
-      const savedMessages = localStorage.getItem(`coach_messages_${activeId}`);
+      let savedMessages = localStorage.getItem(`coach_messages_${activeId}`);
+      if (!savedMessages) {
+        const zustandMsgs = (useStore.getState().coachMessagesMap || {})[activeId];
+        if (zustandMsgs && zustandMsgs.length > 0) {
+          savedMessages = JSON.stringify(zustandMsgs);
+        }
+      }
+
       if (savedMessages) {
         try {
           const parsed = JSON.parse(savedMessages);
@@ -181,7 +223,6 @@ export function useCoachChat() {
   useEffect(() => {
     if (isLoaded && typeof window !== 'undefined' && currentSessionId) {
       localStorage.setItem(`coach_messages_${currentSessionId}`, JSON.stringify(messages));
-      // Keep single 'coach_messages' updated for backward compatibility / fallback
       if (currentSessionId === 'default') {
         localStorage.setItem('coach_messages', JSON.stringify(messages));
       }
@@ -190,10 +231,10 @@ export function useCoachChat() {
       const hasUserMsg = messages.some(m => m.role === 'user');
       if (hasUserMsg) {
         // Check if this session is currently marked as uncommitted in the state list
-        const sessionIndex = sessions.findIndex(s => s.id === currentSessionId);
+        const sessionIndex = sessions.findIndex((s: any) => s.id === currentSessionId);
         if (sessionIndex !== -1 && sessions[sessionIndex].isUncommitted) {
           // Commit it!
-           const updatedSessions = sessions.map((s: any) => 
+          const updatedSessions = sessions.map((s: any) => 
             s.id === currentSessionId ? { ...s, isUncommitted: false } : s
           );
           setSessions(updatedSessions);

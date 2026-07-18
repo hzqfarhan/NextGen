@@ -80,6 +80,9 @@ export function StoreSyncHandler() {
             savingsPockets: mergedPockets,
             transactions: mergedTransactions,
             bills: mergedBills,
+            coachSessions: dbState.coachSessions !== undefined ? dbState.coachSessions : localState.coachSessions,
+            coachMessagesMap: dbState.coachMessagesMap !== undefined ? dbState.coachMessagesMap : localState.coachMessagesMap,
+            coachCurrentSessionId: dbState.coachCurrentSessionId !== undefined ? dbState.coachCurrentSessionId : localState.coachCurrentSessionId,
             user: {
               ...(dbState.user || localState.user),
               currentBalance
