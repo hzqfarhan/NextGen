@@ -2,11 +2,23 @@
 
 import { useEffect } from 'react';
 import { useStore } from '@/store/useStore';
+import { useRouter, usePathname } from 'next/navigation';
 
 export function StoreSyncHandler() {
+  const router = useRouter();
+  const pathname = usePathname();
+
   useEffect(() => {
     const syncFromDB = async () => {
       const state = useStore.getState();
+      const isSetup = !!state.user?.setupDate;
+
+      // Force unauthenticated users back to Landing page to prevent viewing mock Aiman profile
+      if (!isSetup && pathname !== '/' && pathname !== '/setup') {
+        router.push('/');
+        return;
+      }
+
       if (typeof window !== 'undefined' && !navigator.onLine) {
         state.setSyncStatus('offline');
         return;
