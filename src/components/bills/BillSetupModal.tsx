@@ -30,9 +30,11 @@ interface BillSetupModalProps {
   isOpen: boolean
   onClose: () => void
   editingBill?: Bill | null
+  onSelectPrepaidTopUp?: () => void
+  onSelectPostpaid?: () => void
 }
 
-export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalProps) {
+export function BillSetupModal({ isOpen, onClose, editingBill, onSelectPrepaidTopUp, onSelectPostpaid }: BillSetupModalProps) {
   const { language, addBill, updateBill } = useStore()
   const strings = t[language]
 
@@ -65,6 +67,14 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
   }, [editingBill, isOpen])
 
   const handleSelectTemplate = (template: BillTemplate) => {
+    if (template.category === 'prepaid_topup') {
+      if (onSelectPrepaidTopUp) onSelectPrepaidTopUp();
+      return;
+    }
+    if (template.category === 'phone') {
+      if (onSelectPostpaid) onSelectPostpaid();
+      return;
+    }
     setSelectedTemplate(template)
     setFormData(prev => ({
       ...prev,
@@ -346,46 +356,8 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
                           )}
                         </div>
                         <div className="grid grid-cols-1 gap-4 p-4 rounded-[2rem] bg-slate-50 border border-slate-200/60 shadow-inner">
-                          {selectedTemplate.category === 'phone' ? (
-                            <>
-                              <div className="space-y-1.5">
-                                <Label className="text-[10px] font-bold text-slate-500 ml-1">Mobile Number</Label>
-                                <Input 
-                                  value={formData.referenceNumber || ""}
-                                  onChange={e => setFormData(p => ({ ...p, referenceNumber: e.target.value }))}
-                                  placeholder="01x-xxx xxxx"
-                                  className="rounded-xl border-slate-200 bg-white text-slate-900 h-10 text-xs placeholder:text-slate-400 focus:border-emerald-500/50 focus:ring-emerald-500/30"
-                                  required={formData.autopayEnabled}
-                                />
-                              </div>
-                              {formData.productType === 'Postpaid' && (
-                                <>
-                                  <div className="space-y-1.5">
-                                    <Label className="text-[10px] font-bold text-slate-500 ml-1">JomPAY Biller Code</Label>
-                                    <Input 
-                                      value={formData.billerCode || ""}
-                                      onChange={e => setFormData(p => ({ ...p, billerCode: e.target.value }))}
-                                      placeholder="e.g. 1234"
-                                      className="rounded-xl border-slate-200 bg-white text-slate-900 h-10 text-xs placeholder:text-slate-400 focus:border-emerald-500/50 focus:ring-emerald-500/30"
-                                      required={formData.autopayEnabled}
-                                    />
-                                  </div>
-                                  <div className="space-y-1.5">
-                                    <Label className="text-[10px] font-bold text-slate-500 ml-1">Account Number</Label>
-                                    <Input 
-                                      value={formData.accountNumber || ""}
-                                      onChange={e => setFormData(p => ({ ...p, accountNumber: e.target.value }))}
-                                      placeholder="•••• ••••"
-                                      className="rounded-xl border-slate-200 bg-white text-slate-900 h-10 text-xs placeholder:text-slate-400 focus:border-emerald-500/50 focus:ring-emerald-500/30"
-                                      required={formData.autopayEnabled}
-                                    />
-                                  </div>
-                                </>
-                              )}
-                            </>
-                          ) : (
-                            selectedTemplate.paymentFields.map(field => (
-                              <div key={field.name} className="space-y-1.5">
+                          {selectedTemplate.paymentFields.map(field => (
+                            <div key={field.name} className="space-y-1.5">
                                 <Label className="text-[10px] font-bold text-slate-500 ml-1">{field.label}</Label>
                                 {field.type === 'select' ? (
                                   <Select 
@@ -413,7 +385,7 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
                                 )}
                               </div>
                             ))
-                          )}
+                          }
                         </div>
                       </div>
                     )}

@@ -63,18 +63,22 @@ export const BILL_TEMPLATES: BillTemplate[] = [
   },
   {
     category: "phone",
-    title: "Phone Bill",
-    description: "Postpaid/prepaid monthly commitment",
+    title: "Postpaid Bill",
+    description: "Postpaid monthly commitment",
     icon: "📱",
     defaultMode: "simulated_autopay",
     defaultRail: "jompay",
-    setupFields: [
-      { name: "name", label: "Bill Name", type: "text", placeholder: "e.g. Celcom Bill", required: true },
-      { name: "productType", label: "Plan Type", type: "select", options: ["Postpaid", "Prepaid"], required: true },
-      { name: "provider", label: "Provider", type: "select", options: ["CelcomDigi", "Maxis", "U Mobile", "Yes", "Hotlink", "Xpax", "RedONE", "Yoodo"], required: true },
-      { name: "amount", label: "Amount (RM)", type: "number", placeholder: "0.00", required: true },
-      { name: "dueDay", label: "Due Day of Month", type: "number", placeholder: "15", required: true },
-    ],
+    setupFields: [], // Handled by PostpaidSetupModal
+    paymentFields: []
+  },
+  {
+    category: "prepaid_topup",
+    title: "Prepaid Top Up",
+    description: "Instant mobile credit reload",
+    icon: "⚡",
+    defaultMode: "protected_only",
+    defaultRail: "none",
+    setupFields: [], // Will be handled by the specialized TelcoTopUpModal flow
     paymentFields: []
   },
   {

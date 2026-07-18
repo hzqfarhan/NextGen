@@ -62,6 +62,7 @@ export type BillMode =
 export type BillCategory =
   | "rent"
   | "phone"
+  | "prepaid_topup"
   | "ptptn"
   | "internet"
   | "streaming"

@@ -17,6 +17,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useState, useMemo } from "react"
 import { BillCard } from "./bills/BillCard"
 import { BillSetupModal } from "./bills/BillSetupModal"
+import { TelcoTopUpModal } from "./bills/topup/TelcoTopUpModal"
+import { PostpaidSetupModal } from "./bills/postpaid/PostpaidSetupModal"
 import Link from "next/link"
 import { Badge } from "./ui/badge"
 import { cn } from "@/lib/utils"
@@ -25,6 +27,8 @@ export function Bills() {
   const { bills, language, processAutoPay } = useStore()
   const strings = t[language]
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showTopUpModal, setShowTopUpModal] = useState(false)
+  const [showPostpaidModal, setShowPostpaidModal] = useState(false)
   const [editingBill, setEditingBill] = useState<Bill | null>(null)
   const [activeTab, setActiveTab] = useState<'upcoming' | 'paid'>('upcoming')
 
@@ -190,6 +194,22 @@ export function Bills() {
         isOpen={showAddModal} 
         onClose={handleCloseModal}
         editingBill={editingBill}
+        onSelectPrepaidTopUp={() => {
+          setShowAddModal(false);
+          setShowTopUpModal(true);
+        }}
+        onSelectPostpaid={() => {
+          setShowAddModal(false);
+          setShowPostpaidModal(true);
+        }}
+      />
+      <TelcoTopUpModal 
+        isOpen={showTopUpModal}
+        onClose={() => setShowTopUpModal(false)}
+      />
+      <PostpaidSetupModal 
+        isOpen={showPostpaidModal}
+        onClose={() => setShowPostpaidModal(false)}
       />
     </div>
   )
