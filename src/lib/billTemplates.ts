@@ -33,7 +33,6 @@ export const MALAYSIAN_BANKS = [
   "Bank Rakyat",
   "OCBC Bank Malaysia",
   "HSBC Bank Malaysia",
-  "Bank Islam Malaysia",
   "Affin Bank",
   "Alliance Bank Malaysia",
   "Standard Chartered Malaysia",

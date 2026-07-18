@@ -48,7 +48,7 @@ const COMPANION_EASTER_EGGS: Record<string, Array<{ text: string; animation: str
   ],
   oyen: [
     { text: "Oyen demands you keep that 30-day streak active. Or else... 🐾", animation: "angry" },
-    { text: "A 5.2% MaxCash rate? Now that's royalty. Oyen approves.", animation: "think" },
+    { text: "A 5.2% premium yield? Now that's royalty. Oyen approves.", animation: "think" },
     { text: "Keep saving! I need my premium kibble! 👑", animation: "excited" }
   ],
   yunn: [

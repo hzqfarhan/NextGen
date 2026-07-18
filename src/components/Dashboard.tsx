@@ -40,7 +40,6 @@ export function Dashboard() {
     highestStreak,
     membershipTier,
     streakShieldActive,
-    moveFundsToAwfarNest,
     simulateNextDay,
     simulateNextTier,
     selectedCompanion,
@@ -108,7 +107,7 @@ export function Dashboard() {
         ? selectedCompanion.charAt(0).toUpperCase() + selectedCompanion.slice(1)
         : 'Uteh';
 
-      const shareText = `I just hit a ${currentStreak}-day savings streak with ${companionName} on Be U: NextGen! 🐾🔥\n\nJoin Be U: NextGen today and unlock more interactive companions when you sign up and start your savings streak with your own AI digital companion.\n\n✅ Explore NextGen:\nhttps://nextgen.haziqfarhan.my\n\n✅ Use Code:\nTEAMITC\n\nStart your journey with Be U: NextGen and experience banking done right!\n\nT&Cs apply.`;
+      const shareText = `I just hit a ${currentStreak}-day savings streak with ${companionName} on NextGen! 🐾🔥\n\nJoin NextGen today and unlock more interactive companions when you sign up and start your savings streak with your own AI digital companion.\n\n✅ Explore NextGen:\nhttps://nextgen.haziqfarhan.my\n\nStart your journey with NextGen and build smarter money habits!`;
 
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
@@ -719,12 +718,12 @@ function PromoCarousel() {
   const slides = [
     {
       image: `${basePath}/assets/banner/banner1.png`,
-      link: "https://www.instagram.com/hackathonx2026?igsh=MThuaDExazdjazNmdQ%3D%3D",
+      link: "https://nextgen.haziqfarhan.my",
       accent: "bg-[#DF0059]"
     },
     {
       image: `${basePath}/assets/banner/banner2.png`,
-      link: "https://getbeu.com/product/nextchapter",
+      link: "https://nextgen.haziqfarhan.my",
       accent: "bg-[#CC0D5A]"
     },
     {
@@ -734,7 +733,7 @@ function PromoCarousel() {
     },
     {
       image: `${basePath}/assets/banner/banner4.png`,
-      link: "https://www.instagram.com/hackathonx2026?igsh=MThuaDExazdjazNmdQ%3D%3D",
+      link: "https://nextgen.haziqfarhan.my",
       accent: "bg-[#221F20]"
     }
   ]

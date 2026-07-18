@@ -19,20 +19,20 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
   const {
     currentStreak,
     membershipTier,
-    awfarDrawTickets,
-    isBimbMigrated,
+    rewardDrawTickets,
+    isPassportExported,
     streakShieldActive,
     user,
-    moveFundsToAwfarNest,
-    triggerBimbMigration,
+    moveFundsToRewardNest,
+    exportFinancialPassport,
     activateStreakShield,
     language,
     transactions
   } = useStore()
 
-  const [activeTab, setActiveTab] = useState<'tiers' | 'awfar' | 'maxcash' | 'migration'>('tiers')
-  const [awfarAmount, setAwfarAmount] = useState<number>(10)
-  const [maxCashAmount, setMaxCashAmount] = useState<number>(1000)
+  const [activeTab, setActiveTab] = useState<'tiers' | 'nest' | 'yield' | 'passport'>('tiers')
+  const [nestAmount, setNestAmount] = useState<number>(10)
+  const [yieldAmount, setYieldAmount] = useState<number>(1000)
   const [nestedMessage, setNestedMessage] = useState<string>("")
   const [nestedError, setNestedError] = useState<string>("")
 
@@ -44,16 +44,16 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
     .reduce((sum, t) => sum + t.amount, 0);
 
   // Handlers
-  const handleAwfarDeposit = () => {
+  const handleNestDeposit = () => {
     try {
       setNestedError("")
       setNestedMessage("")
-      if (awfarAmount <= 0) {
+      if (nestAmount <= 0) {
         setNestedError("Please enter a valid amount.");
         return;
       }
-      moveFundsToAwfarNest(awfarAmount)
-      setNestedMessage(`Successfully moved RM ${awfarAmount.toFixed(2)} to your Awfar Nest! Unlocked ${Math.floor(awfarAmount / 10)} tickets!`);
+      moveFundsToRewardNest(nestAmount)
+      setNestedMessage(`Successfully moved RM ${nestAmount.toFixed(2)} to your Reward Nest! Unlocked ${Math.floor(nestAmount / 10)} tickets!`);
     } catch (e: any) {
       setNestedError(e.message || "Failed to transfer funds.");
     }
@@ -79,10 +79,10 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
       name: 'Pro',
       milestone: 'Maintain 7-Day Streak',
       perks: [
-        'Unlocks Be U Awfar Nest integration prompts.',
-        'Simulate Bank Islam\'s RM15 Million Prize Draw entries (win a Porsche Taycan/BMW i4!).',
-        'Unlocks GrabFood RM5 OFF coupon code (BIMBYOUTH5).',
-        'Unlocks Koppiku 10% OFF beverage coupon code (KOPIBEU10).'
+        'Unlocks NextGen Reward Nest savings prompts.',
+        'Earn prize-draw tickets for monthly simulated raffles.',
+        'Unlocks GrabFood RM5 OFF coupon code (NEXTGEN5).',
+        'Unlocks Koppiku 10% OFF beverage coupon code (KOPINEXT10).'
       ],
       color: 'from-[#237AF9] to-[#1C62C7]',
       textColor: 'text-[#237AF9]',
@@ -94,8 +94,8 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
       name: 'Legend',
       milestone: 'Maintain 30-Day Streak',
       perks: [
-        'Unlocks premium BeU MaxCash Term Deposit-i Hybrid Simulator.',
-        'Boosts simulated Growth Starter pocket profit yield rate modifier by +0.5% p.a. (from 6.5% to 7.0% p.a.).',
+        'Unlocks Premium Yield deposit simulator.',
+        'Boosts simulated Growth pocket profit yield rate modifier by +0.5% p.a. (from 6.5% to 7.0% p.a.).',
         'Double entries multiplier into monthly simulated prize raffles.'
       ],
       color: 'from-[#FFC107] to-[#CBA024]',
@@ -158,7 +158,7 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                   </div>
                   <h2 className="text-xl font-black text-black">NextGen Rewards Hub</h2>
                   <p className="text-xs text-slate-500">
-                    Your savings streak defines your tier and unlocks institutional privileges.
+                    Your savings streak defines your tier and unlocks rewards.
                   </p>
                 </div>
 
@@ -220,9 +220,9 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                 <div className="flex bg-[#F8F8F8] border border-[#F1F1F1] p-1 rounded-xl gap-1">
                   {[
                     { id: 'tiers', label: 'Tiers' },
-                    { id: 'awfar', label: 'Awfar Nest' },
-                    { id: 'maxcash', label: 'MaxCash TD-i' },
-                    { id: 'migration', label: 'BIMB Mig' }
+                    { id: 'nest', label: 'Reward Nest' },
+                    { id: 'yield', label: 'Premium Yield' },
+                    { id: 'passport', label: 'Passport' }
                   ].map(tab => (
                     <button
                       key={tab.id}
@@ -294,7 +294,7 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                     </div>
                   )}
 
-                  {activeTab === 'awfar' && (
+                  {activeTab === 'nest' && (
                     <div className="space-y-4">
                       <div className="bg-gradient-to-br from-blue-500 to-[#237AF9] rounded-2xl p-4 text-white space-y-3 relative overflow-hidden shadow-lg shadow-blue-500/10">
                         <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-4 translate-y-4">
@@ -302,22 +302,22 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                         </div>
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className="text-[9px] font-black tracking-widest uppercase opacity-75">BIMB PROMOTION</span>
-                            <h4 className="text-base font-black">Awfar RM15 Million Draw</h4>
+                            <span className="text-[9px] font-black tracking-widest uppercase opacity-75">REWARDS</span>
+                            <h4 className="text-base font-black">NextGen Prize Draw</h4>
                           </div>
                           <Badge className="bg-white/20 text-white border-none font-bold text-[9px] px-2 py-0.5">
                             Active Campaign
                           </Badge>
                         </div>
                         <p className="text-[10px] text-white/90 leading-relaxed font-medium">
-                          Simulating the real-world prize draw where university savers stand a chance to win a Porsche Taycan, BMW i4, or cash bonuses. Every RM10 saved in your Be U Awfar Nest gains you 1 ticket.
+                          Lock funds into your Reward Nest to earn prize-draw tickets. Every RM10 saved gains you 1 ticket for the monthly simulated raffle.
                         </p>
                         <div className="flex items-center gap-4 pt-1.5">
                           <div className="bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-1.5">
                             <Ticket className="w-4 h-4 text-yellow-300" />
                             <div>
                               <p className="text-[8px] text-white/70 leading-none">Your Draw Tickets</p>
-                              <p className="text-sm font-black tabular-nums">{awfarDrawTickets} tickets</p>
+                              <p className="text-sm font-black tabular-nums">{rewardDrawTickets} tickets</p>
                             </div>
                           </div>
                         </div>
@@ -327,25 +327,25 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                       {currentStreak < 7 ? (
                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center space-y-2">
                           <Lock className="w-8 h-8 text-slate-400 mx-auto" />
-                          <h4 className="text-xs font-bold text-slate-800">Awfar Nest Locked</h4>
+                          <h4 className="text-xs font-bold text-slate-800">Reward Nest Locked</h4>
                           <p className="text-[10px] text-slate-500 max-w-xs mx-auto">
-                            Requires a **7-Day Saving Streak** (Pro Saver Tier) to unlock Awfar Nest saving triggers. Keep staying in the green!
+                            Requires a **7-Day Saving Streak** (Pro Saver Tier) to unlock Reward Nest saving triggers. Keep staying in the green!
                           </p>
                         </div>
                       ) : (
                         <div className="space-y-3">
                           <div className="space-y-1">
-                            <label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Simulate Awfar Lock (RM)</label>
+                            <label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Simulate Nest Lock (RM)</label>
                             <div className="flex gap-2">
                               <input
                                 type="number"
-                                value={awfarAmount}
-                                onChange={(e) => setAwfarAmount(Number(e.target.value))}
+                                value={nestAmount}
+                                onChange={(e) => setNestAmount(Number(e.target.value))}
                                 className="flex-1 px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-primary text-black font-semibold"
                                 placeholder="Amount to lock"
                               />
                               <button
-                                onClick={handleAwfarDeposit}
+                                onClick={handleNestDeposit}
                                 className="px-4 bg-primary text-white font-bold text-xs rounded-xl hover:opacity-95 transition-opacity"
                               >
                                 Lock to Nest
@@ -371,11 +371,11 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                             <div className="grid grid-cols-2 gap-2">
                               <div className="p-2 border border-slate-200 rounded-lg bg-white space-y-0.5">
                                 <p className="text-[8px] text-slate-400 font-bold uppercase">GrabFood RM5 OFF</p>
-                                <p className="text-xs font-black text-black">BIMBYOUTH5</p>
+                                <p className="text-xs font-black text-black">NEXTGEN5</p>
                               </div>
                               <div className="p-2 border border-slate-200 rounded-lg bg-white space-y-0.5">
                                 <p className="text-[8px] text-slate-400 font-bold uppercase">Koppiku 10% OFF</p>
-                                <p className="text-xs font-black text-black">KOPIBEU10</p>
+                                <p className="text-xs font-black text-black">KOPINEXT10</p>
                               </div>
                             </div>
                           </div>
@@ -384,7 +384,7 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                     </div>
                   )}
 
-                  {activeTab === 'maxcash' && (
+                  {activeTab === 'yield' && (
                     <div className="space-y-4">
                       <div className="bg-gradient-to-br from-amber-500 to-[#CBA024] rounded-2xl p-4 text-white space-y-3 relative overflow-hidden shadow-lg shadow-amber-500/10">
                         <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-4 translate-y-4">
@@ -393,14 +393,14 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                         <div className="flex justify-between items-start">
                           <div>
                             <span className="text-[9px] font-black tracking-widest uppercase opacity-75">PREMIUM PRODUCT</span>
-                            <h4 className="text-base font-black">TD-i MaxCash 2026</h4>
+                            <h4 className="text-base font-black">Premium Yield Simulator</h4>
                           </div>
                           <Badge className="bg-white/20 text-white border-none font-bold text-[9px] px-2 py-0.5">
                             5.20% p.a. Simulated
                           </Badge>
                         </div>
                         <p className="text-[10px] text-white/90 leading-relaxed font-medium">
-                          The simulated Be U Term Deposit-i (TD-i) MaxCash campaign allows you to place idle funds in 6-month deposits. Normal yield: 3.5%, MaxCash yield: 5.2% p.a.
+                          Place idle funds in a simulated 6-month fixed deposit. Standard yield: 3.5% p.a., Premium yield: 5.2% p.a.
                         </p>
                       </div>
 
@@ -408,22 +408,22 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                       {currentStreak < 30 ? (
                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center space-y-2">
                           <Lock className="w-8 h-8 text-slate-400 mx-auto" />
-                          <h4 className="text-xs font-bold text-slate-800">MaxCash TD-i Locked</h4>
+                          <h4 className="text-xs font-bold text-slate-800">Premium Yield Locked</h4>
                           <p className="text-[10px] text-slate-500 max-w-xs mx-auto">
-                            Requires a **30-Day Saving Streak** (Legend Guardian Tier) to unlock simulated access to fixed Term Deposit instruments. Keep going!
+                            Requires a **30-Day Saving Streak** (Legend Guardian Tier) to unlock simulated access to fixed deposit instruments. Keep going!
                           </p>
                         </div>
                       ) : (
                         <div className="space-y-3">
                           <div className="space-y-2">
-                            <label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">TD-i Interest Optimizer Simulator</label>
+                            <label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Interest Optimizer Simulator</label>
                             <div className="space-y-3 p-4 border border-slate-200 rounded-xl bg-slate-50">
                               <div className="flex justify-between items-center text-xs">
                                 <span className="text-slate-500 font-medium">Investment Amount:</span>
                                 <input
                                   type="number"
-                                  value={maxCashAmount}
-                                  onChange={(e) => setMaxCashAmount(Number(e.target.value))}
+                                  value={yieldAmount}
+                                  onChange={(e) => setYieldAmount(Number(e.target.value))}
                                   className="w-24 px-2 py-1 text-xs border border-slate-300 rounded-lg text-right font-bold text-black"
                                 />
                               </div>
@@ -431,20 +431,20 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                               <div className="border-t border-slate-200 my-2 pt-2 space-y-1.5 text-xs">
                                 <div className="flex justify-between">
                                   <span className="text-slate-500">Standard Yield (3.5% p.a.):</span>
-                                  <span className="font-semibold text-slate-700">RM {(maxCashAmount * 0.035 / 2).toFixed(2)} (6-mos)</span>
+                                  <span className="font-semibold text-slate-700">RM {(yieldAmount * 0.035 / 2).toFixed(2)} (6-mos)</span>
                                 </div>
                                 <div className="flex justify-between font-bold text-primary">
-                                  <span>MaxCash Hybrid Yield (5.2% p.a.):</span>
-                                  <span>RM {(maxCashAmount * 0.052 / 2).toFixed(2)} (6-mos)</span>
+                                  <span>Premium Yield (5.2% p.a.):</span>
+                                  <span>RM {(yieldAmount * 0.052 / 2).toFixed(2)} (6-mos)</span>
                                 </div>
                                 <div className="flex justify-between text-[10px] text-emerald-600 font-bold border-t border-dashed border-slate-200 pt-1.5">
-                                  <span>Your Gold Profit Increment:</span>
-                                  <span>+ RM {((maxCashAmount * 0.052 / 2) - (maxCashAmount * 0.035 / 2)).toFixed(2)} Extra!</span>
+                                  <span>Your Extra Profit:</span>
+                                  <span>+ RM {((yieldAmount * 0.052 / 2) - (yieldAmount * 0.035 / 2)).toFixed(2)} Extra!</span>
                                 </div>
                               </div>
                             </div>
                             <span className="text-[9px] text-slate-400 block leading-normal">
-                              * Note: Tying your savings to Legend Guardian tier also automatically boosts your standard savings pockets rate in the store from 6.5% to 7.0% p.a.
+                              * Note: Reaching Legend Guardian tier also automatically boosts your standard growth pockets rate from 6.5% to 7.0% p.a.
                             </span>
                           </div>
                         </div>
@@ -452,15 +452,15 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                     </div>
                   )}
 
-                  {activeTab === 'migration' && (
+                  {activeTab === 'passport' && (
                     <div className="space-y-4">
                       <div className="border border-amber-200 bg-amber-50 rounded-xl p-4 space-y-2.5">
                         <h4 className="text-xs font-bold text-amber-800 flex items-center gap-1.5">
                           <Calendar className="w-4 h-4 text-amber-600 shrink-0" />
-                          July 31, 2026 Migration Countdown
+                          Financial Passport Export
                         </h4>
                         <p className="text-[10px] text-amber-700 leading-relaxed font-medium">
-                          Bank Islam will officially transition Be U app accounts into the main BIMB Mobile app. Protect your data now! Export your simulated "Financial Passport" records to ensure seamless migration.
+                          Export your simulated Financial Passport to back up streaks, tier records, and savings progress. Keep a portable snapshot of your money habits.
                         </p>
                       </div>
 
@@ -470,25 +470,25 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                             <h4 className="font-bold text-slate-800">Financial Passport Data</h4>
                             <p className="text-[9px] text-slate-500">Includes Streaks, Tier Records & Savings Pockets</p>
                           </div>
-                          <Badge className={isBimbMigrated ? "bg-emerald-500 text-white font-bold" : "bg-slate-300 text-slate-700"}>
-                            {isBimbMigrated ? "Linked to BIMB" : "Not Linked"}
+                          <Badge className={isPassportExported ? "bg-emerald-500 text-white font-bold" : "bg-slate-300 text-slate-700"}>
+                            {isPassportExported ? "Exported" : "Not Exported"}
                           </Badge>
                         </div>
 
-                        {isBimbMigrated ? (
+                        {isPassportExported ? (
                           <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl text-center space-y-2">
                             <Check className="w-8 h-8 text-emerald-500 mx-auto" />
-                            <h5 className="text-xs font-bold text-emerald-800">Migration Confirmed!</h5>
+                            <h5 className="text-xs font-bold text-emerald-800">Export Confirmed!</h5>
                             <p className="text-[9px] text-emerald-600 leading-normal max-w-xs mx-auto">
-                              Your streak data, Awfar draw tickets, and active loyalty bonuses are secured for BIMB Mobile App integration.
+                              Your streak data, prize-draw tickets, and loyalty bonuses are secured in your Financial Passport.
                             </p>
                           </div>
                         ) : (
                           <button
-                            onClick={triggerBimbMigration}
+                            onClick={exportFinancialPassport}
                             className="w-full h-10 bg-primary text-white font-extrabold text-xs rounded-xl hover:opacity-95 transition-all shadow-md flex items-center justify-center gap-1.5"
                           >
-                            Migrate Data to BIMB Mobile
+                            Export Financial Passport
                           </button>
                         )}
                       </Card>
@@ -496,7 +496,7 @@ export function RewardsModal({ isOpen, onClose }: RewardsModalProps) {
                       <div className="p-3 bg-blue-50 border border-blue-100 text-[10px] text-blue-800 rounded-xl space-y-1">
                         <p className="font-extrabold flex items-center gap-1"><HelpCircle className="w-3.5 h-3.5" /> What is a Streak Shield?</p>
                         <p className="leading-relaxed">
-                          Sharing your custom de-influencing roast quote or passport milestones on TikTok or Instagram generates a "Streak Shield". You can activate it once a week to protect your savings streak for 24 hours if you overspend!
+                          Sharing your custom de-influencing roast quote or passport milestones on social media generates a "Streak Shield". You can activate it once a week to protect your savings streak for 24 hours if you overspend!
                         </p>
                         <div className="pt-1.5">
                           {streakShieldActive ? (

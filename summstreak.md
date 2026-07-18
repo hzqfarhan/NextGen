@@ -105,7 +105,7 @@ A dynamic streak tracker in `Dashboard.tsx` features a hot-spot streak animation
 
 Unlocked milestones provide tangible financial gains inside the app's banking ecosystem:
 1. **Silver Saver Perks**:
-   - Accesses high-yield mock investment channels like **Be U Awfar Nest**.
+   - Accesses high-yield mock investment channels like **NextGen Reward Nest**.
    - Merchant perk discounts.
 2. **Gold Guardian Perks**:
    - **Boosted Savings Returns**: Unlocks a **+0.5% interest yield boost** on growth pockets (`simulateGrowth()` automatically appends this return premium if `membershipTier === 'Gold'`).

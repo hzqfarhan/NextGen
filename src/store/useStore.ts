@@ -211,14 +211,14 @@ interface NextGenState {
   setSyncStatus: (status: 'synced' | 'syncing' | 'offline' | 'error' | 'disabled') => void;
   simulatedDayOffset?: number;
 
-  // Gamification & BIMB Transition State
+  // Gamification & rewards state
   currentStreak: number;
   highestStreak: number;
   lastCalculatedDate: string;
   membershipTier: 'Novice' | 'Pro' | 'Legend';
   streakShieldActive: boolean;
-  awfarDrawTickets: number;
-  isBimbMigrated: boolean;
+  rewardDrawTickets: number;
+  isPassportExported: boolean;
   selectedCompanion: string;
   // Proposal UI States
   affordItem: string;
@@ -257,8 +257,8 @@ interface NextGenState {
   incrementStreak: () => void;
   resetStreak: () => void;
   activateStreakShield: () => void;
-  triggerBimbMigration: () => void;
-  moveFundsToAwfarNest: (amount: number) => void;
+  exportFinancialPassport: () => void;
+  moveFundsToRewardNest: (amount: number) => void;
   simulateNextDay: () => void;
   simulateNextTier: () => void;
   // Bills Actions
@@ -422,8 +422,8 @@ export const initialStoreState = {
   lastCalculatedDate: '',
   membershipTier: 'Novice' as const,
   streakShieldActive: false,
-  awfarDrawTickets: 0,
-  isBimbMigrated: false,
+  rewardDrawTickets: 0,
+  isPassportExported: false,
   selectedCompanion: 'uteh',
   affordItem: "",
   affordPrice: "",
@@ -859,26 +859,26 @@ const useStoreBase = create<NextGenState>()(
           animation: "happy"
         }
       })),
-      triggerBimbMigration: () => set((state) => ({
-        isBimbMigrated: true,
+      exportFinancialPassport: () => set((state) => ({
+        isPassportExported: true,
         pet: {
-          message: "Financial Passport data successfully migrated to BIMB Mobile app! 🎓",
+          message: "Financial Passport exported successfully! Your streak and rewards data are secured. 🎓",
           animation: "excited"
         }
       })),
-      moveFundsToAwfarNest: (amount) => {
+      moveFundsToRewardNest: (amount) => {
         const state = get();
         if (state.user.currentBalance < amount) {
           throw new Error("Insufficient balance in your wallet.");
         }
 
-        let nest = state.savingsPockets.find(p => p.name === "Be U Awfar Nest");
+        let nest = state.savingsPockets.find(p => p.name === "NextGen Reward Nest");
         let nextPockets = [...state.savingsPockets];
 
         if (!nest) {
           nest = {
-            id: `awfar-${Date.now()}`,
-            name: "Be U Awfar Nest",
+            id: `nest-${Date.now()}`,
+            name: "NextGen Reward Nest",
             target: 1000,
             current: amount,
             icon: "Nest",
@@ -898,9 +898,9 @@ const useStoreBase = create<NextGenState>()(
         set((s) => ({
           user: { ...s.user, currentBalance: s.user.currentBalance - amount },
           savingsPockets: nextPockets,
-          awfarDrawTickets: s.awfarDrawTickets + ticketsEarned,
+          rewardDrawTickets: s.rewardDrawTickets + ticketsEarned,
           pet: {
-            message: `Locked RM ${amount.toFixed(2)} into Be U Awfar Nest! Unlocked ${ticketsEarned} tickets for the RM15 Million Draw! 🎟️`,
+            message: `Locked RM ${amount.toFixed(2)} into NextGen Reward Nest! Unlocked ${ticketsEarned} prize-draw tickets! 🎟️`,
             animation: "excited"
           }
         }));
@@ -946,10 +946,10 @@ const useStoreBase = create<NextGenState>()(
 
         if (tier !== state.membershipTier) {
           if (tier === 'Pro') {
-            petMessage += ` Graduation! You've unlocked Pro Saver Tier. Access Be U Awfar Nest and merchant perks! 🥈`;
+            petMessage += ` Graduation! You've unlocked Pro Saver Tier. Access Reward Nest and merchant perks! 🥈`;
             petAnimation = 'happy';
           } else if (tier === 'Legend') {
-            petMessage += ` Spectacular! You've reached Legend Guardian Tier. Boosted returns and MaxCash active! 🥇`;
+            petMessage += ` Spectacular! You've reached Legend Guardian Tier. Boosted returns and Premium Yield active! 🥇`;
             petAnimation = 'excited';
           } else if (tier === 'Novice') {
             petMessage += ` You are back to Novice Budgeter Tier. Keep saving to unlock rewards!`;
@@ -1432,8 +1432,8 @@ export const useStore = (() => {
       incrementStreak: storeState.incrementStreak,
       resetStreak: storeState.resetStreak,
       activateStreakShield: storeState.activateStreakShield,
-      triggerBimbMigration: storeState.triggerBimbMigration,
-      moveFundsToAwfarNest: storeState.moveFundsToAwfarNest,
+      exportFinancialPassport: storeState.exportFinancialPassport,
+      moveFundsToRewardNest: storeState.moveFundsToRewardNest,
       simulateNextDay: storeState.simulateNextDay,
       simulateNextTier: storeState.simulateNextTier,
       setSyncStatus: storeState.setSyncStatus,

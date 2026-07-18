@@ -3,7 +3,7 @@ import { getDbPool } from '@/lib/db';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sync API — Persists/Retrieves Zustand store state to/from PostgreSQL
-// Stored as a JSONB payload per user name (acting as unique key for hackathon)
+// Stored as a JSONB payload per user name (acting as unique key)
 //
 // CREATE TABLE IF NOT EXISTS user_sync (
 //     user_name VARCHAR(100) PRIMARY KEY,

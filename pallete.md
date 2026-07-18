@@ -1,6 +1,6 @@
 # BeU NextChapter Colour Palette
 
-Source: https://getbeu.com/product/nextchapter
+Source: NextGen design system
 
 Extracted from the page HTML and linked CSS bundle on 2026-05-23.
 

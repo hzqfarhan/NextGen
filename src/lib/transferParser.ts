@@ -9,7 +9,7 @@ const MOCK_CONTACTS = [
   { name: 'Sarah', bank: 'Maybank' },
   { name: 'Irfan', bank: 'CIMB' },
   { name: 'Farhan', bank: 'RHB' },
-  { name: 'Mama', bank: 'Bank Islam' }
+  { name: 'Mama', bank: 'Maybank' }
 ];
 
 export async function parseTransferIntent(message: string): Promise<TransferIntent> {

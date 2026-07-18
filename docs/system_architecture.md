@@ -1,6 +1,6 @@
 # BeU NextGen — System Architecture
 
-> **BeU by Bank Islam × UMPSA | Hackathon X Fintech Forward 2026**  
+> **BeU NextGen** — AI-powered financial companion for youth money habits  
 > Theme: *"Future of Money: Reimagine Finance with AI"*
 
 ---
@@ -159,7 +159,7 @@ Single Zustand store. Key state slices:
   currentStreak: number,
   membershipTier: 'Novice' | 'Pro' | 'Legend',
   streakShieldActive: boolean,
-  awfarDrawTickets: number,
+  rewardDrawTickets: number,
   
   // Settings
   language: 'en' | 'ms',
@@ -258,4 +258,4 @@ Companion animations: `idle`, `walk`, `happy`, `excited`, `think`, `blink`
 
 ---
 
-*Last updated: May 2026 | BeU NextGen × UMPSA Hackathon*
+*Last updated: May 2026 | BeU NextGen*

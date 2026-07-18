@@ -17,7 +17,7 @@ const CONTACTS = [
   { id: '2', name: 'Khairul', bank: 'CIMB', account: '7021 **** 4422', color: 'bg-red-500', initials: 'KH', avatar: '/assets/pfp/khairul.png' },
   { id: '3', name: 'Aizat', bank: 'Public Bank', account: '3188 **** 1100', color: 'bg-rose-500', initials: 'AZ', avatar: '/assets/pfp/aizat.png' },
   { id: '4', name: 'Farhan', bank: 'RHB', account: '2144 **** 9911', color: 'bg-blue-600', initials: 'FH', avatar: '/assets/pfp/farhan.png' },
-  { id: '5', name: 'Qaid', bank: 'Bank Islam', account: '1202 **** 5566', color: 'bg-emerald-600', initials: 'QA', avatar: '/assets/pfp/Qaid.png' },
+  { id: '5', name: 'Qaid', bank: 'Maybank', account: '1202 **** 5566', color: 'bg-emerald-600', initials: 'QA', avatar: '/assets/pfp/Qaid.png' },
   { id: '6', name: 'Danial', bank: 'Hong Leong', account: '0011 **** 7788', color: 'bg-sky-500', initials: 'DN', avatar: '/assets/pfp/Danial.png' },
 ]
 

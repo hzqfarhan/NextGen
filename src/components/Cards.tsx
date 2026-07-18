@@ -166,7 +166,7 @@ export function Cards() {
           <div className="relative h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <p className="text-[9px] opacity-80 uppercase tracking-widest font-black text-[#FFE9F2]">Bank Islam</p>
+                <p className="text-[9px] opacity-80 uppercase tracking-widest font-black text-[#FFE9F2]">NextGen</p>
                 <div className="flex items-center gap-2">
                   <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300 animate-pulse" />
                   <p className="text-base font-black">Virtual Card</p>
