@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getDbPool } from '@/lib/db';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sync API — Persists/Retrieves Zustand store state to/from PostgreSQL
@@ -27,33 +28,40 @@ export async function GET(req: NextRequest) {
             });
         }
 
-        let Client;
+        const pool = getDbPool();
+        const client = await pool.connect();
+
         try {
-            // @ts-ignore
-            const pg = await import('pg');
-            Client = pg.default?.Client || pg.Client;
-        } catch {
-            return NextResponse.json({ 
-                success: false, 
-                reason: 'pg module not installed. Run: npm install pg' 
-            });
+            const result = await client.query(
+                `SELECT state_data FROM user_sync WHERE user_name = $1`,
+                [userName]
+            );
+
+            if (result.rows.length === 0) {
+                client.release();
+                return NextResponse.json({ success: true, data: null });
+            }
+
+            const stateData = result.rows[0].state_data;
+            const storedPasscode = stateData?.user?.passcode;
+
+            // Enforce passcode check if one is saved
+            if (storedPasscode) {
+                const clientPasscode = searchParams.get('passcode') || '';
+                if (clientPasscode !== storedPasscode) {
+                    client.release();
+                    return NextResponse.json({ 
+                        success: false, 
+                        reason: 'unauthorized', 
+                        message: 'Access denied: Incorrect passcode.' 
+                    }, { status: 401 });
+                }
+            }
+
+            return NextResponse.json({ success: true, data: stateData });
+        } finally {
+            client.release();
         }
-
-        const client = new Client({ connectionString: dbUrl });
-        await client.connect();
-
-        const result = await client.query(
-            `SELECT state_data FROM user_sync WHERE user_name = $1`,
-            [userName]
-        );
-
-        await client.end();
-
-        if (result.rows.length === 0) {
-            return NextResponse.json({ success: true, data: null });
-        }
-
-        return NextResponse.json({ success: true, data: result.rows[0].state_data });
     } catch (err: any) {
         console.error('[Sync GET] Error:', err?.message || err);
         return NextResponse.json(
@@ -83,20 +91,8 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        let Client;
-        try {
-            // @ts-ignore
-            const pg = await import('pg');
-            Client = pg.default?.Client || pg.Client;
-        } catch {
-            return NextResponse.json({ 
-                success: false, 
-                reason: 'pg module not installed. Run: npm install pg' 
-            });
-        }
-
-        const client = new Client({ connectionString: dbUrl });
-        await client.connect();
+        const pool = getDbPool();
+        const client = await pool.connect();
 
         try {
             // Ensure the sync table exists
@@ -368,12 +364,12 @@ export async function POST(req: NextRequest) {
             }
 
             await client.query('COMMIT');
-            await client.end();
             return NextResponse.json({ success: true });
         } catch (txErr: any) {
             await client.query('ROLLBACK');
-            await client.end();
             throw txErr;
+        } finally {
+            client.release();
         }
     } catch (err: any) {
         console.error('[Sync POST] Error:', err?.message || err);

@@ -6,15 +6,44 @@ import { useStore } from '@/store/useStore';
 export function StoreSyncHandler() {
   useEffect(() => {
     const syncFromDB = async () => {
+      const state = useStore.getState();
+      if (typeof window !== 'undefined' && !navigator.onLine) {
+        state.setSyncStatus('offline');
+        return;
+      }
+
+      state.setSyncStatus('syncing');
+
       try {
-        const username = useStore.getState().user.name || 'Aiman';
+        const username = state.user.name || 'Aiman';
+        const passcode = state.user.passcode || '';
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-        const res = await fetch(`/api/sync?username=${username}`, {
+        const res = await fetch(`/api/sync?username=${username}&passcode=${passcode}`, {
           signal: controller.signal
         });
         clearTimeout(timeoutId);
+
+        if (res.status === 401) {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('beu-nextgen-store');
+            localStorage.removeItem('beu_nextgen_sync_pending');
+            localStorage.removeItem('coach_messages');
+            if ('indexedDB' in window) {
+              try {
+                indexedDB.deleteDatabase('beu-nextgen-db');
+              } catch {}
+            }
+            window.location.href = process.env.NEXT_PUBLIC_BASE_PATH || '/';
+          }
+          return;
+        }
+
+        if (res.status === 404) {
+          useStore.setState({ syncStatus: 'disabled' });
+          return;
+        }
 
         const data = await res.json();
         if (data.success && data.data) {
@@ -24,11 +53,9 @@ export function StoreSyncHandler() {
           // Helper to merge arrays by unique 'id'
           const mergeById = (localArr: any[] = [], dbArr: any[] = []) => {
             const map = new Map();
-            // Fill with database items first
             dbArr.forEach(item => {
               if (item && item.id) map.set(item.id, item);
             });
-            // Merge local items if they don't exist in DB
             localArr.forEach(item => {
               if (item && item.id) {
                 if (!map.has(item.id)) {
@@ -43,14 +70,13 @@ export function StoreSyncHandler() {
           const mergedTransactions = mergeById(localState.transactions, dbState.transactions);
           const mergedBills = mergeById(localState.bills, dbState.bills);
 
-          // Determine current balance, defaulting to localState if it's more active/different
           const currentBalance = localState.user?.currentBalance !== undefined
             ? localState.user.currentBalance
             : (dbState.user?.currentBalance || 420);
 
-          // Update Zustand store with merged state
           useStore.setState({
             ...dbState,
+            syncStatus: 'synced',
             savingsPockets: mergedPockets,
             transactions: mergedTransactions,
             bills: mergedBills,
@@ -59,9 +85,21 @@ export function StoreSyncHandler() {
               currentBalance
             }
           });
+        } else {
+          if (data.reason && data.reason.includes('No DATABASE_URL')) {
+            useStore.setState({ syncStatus: 'disabled' });
+          } else {
+            useStore.setState({ syncStatus: 'error' });
+          }
         }
       } catch (err) {
         console.error('[StoreSyncHandler] failed to sync state from database:', err);
+        const currentState = useStore.getState();
+        if (typeof window !== 'undefined' && !navigator.onLine) {
+          currentState.setSyncStatus('offline');
+        } else {
+          currentState.setSyncStatus('error');
+        }
       }
     };
     

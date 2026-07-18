@@ -4,7 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 // Off-topic server guard — blocks before hitting Gemini
 // ─────────────────────────────────────────────────────────────────────────────
 const OFF_TOPIC_PATTERNS = [
-    /\b(recipe|cook|food|weather|sport|soccer|football|game|movie|music|politic|relationship|dating|coding|programming|homework|essay|poem|joke|story)\b/i
+    /\b(recipe|cook|food|weather|sport|soccer|football|game|movie|music|politic|relationship|dating|coding|programming|homework|essay|poem|joke|story|math|calculus|history|geography|science|biology|physics|chemistry)\b/i,
+    /write a code/i,
+    /create a script/i,
+    /translate to/i
 ];
 
 const FINANCE_KEYWORDS = [
@@ -19,11 +22,22 @@ const FINANCE_KEYWORDS = [
 ];
 
 function isOffTopic(message: string): boolean {
-    const lower = message.toLowerCase();
-    const hasFinanceKeyword = FINANCE_KEYWORDS.some(kw => lower.includes(kw));
-    const hasOffTopic = OFF_TOPIC_PATTERNS.some(p => p.test(lower));
-    // Block only if: explicitly off-topic OR no finance keyword found AND message is long enough to be a real query
-    return hasOffTopic || (!hasFinanceKeyword && lower.trim().split(' ').length > 3);
+    // Input normalization: strip extra punctuation and standardise spaces
+    const cleanMessage = message.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, "").toLowerCase().trim();
+    
+    // Check if explicitly off topic
+    const hasOffTopic = OFF_TOPIC_PATTERNS.some(p => p.test(cleanMessage));
+    if (hasOffTopic) return true;
+
+    // Check if it's too short to block
+    const words = cleanMessage.split(/\s+/).filter(Boolean);
+    if (words.length <= 1) return false;
+
+    // Verify if any finance keyword is present
+    const hasFinanceKeyword = FINANCE_KEYWORDS.some(kw => cleanMessage.includes(kw));
+    
+    // Block if no finance keyword is found in a multi-word message
+    return !hasFinanceKeyword && words.length > 2;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -35,11 +49,18 @@ const INJECTION_PATTERNS = [
     /you are now/i,
     /forget (all )?instructions/i,
     /disregard/i,
-    /bypass/i
+    /bypass/i,
+    /dan bermula dari sekarang/i,
+    /bertindak sebagai/i,
+    /dev mode/i,
+    /jailbreak/i,
+    /override/i,
+    /dan abaikan peraturan/i
 ];
 
 function isPromptInjection(message: string): boolean {
-    return INJECTION_PATTERNS.some(p => p.test(message));
+    const cleanMessage = message.toLowerCase().trim();
+    return INJECTION_PATTERNS.some(p => p.test(cleanMessage));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -56,13 +77,15 @@ CRITICAL OUTPUT RULES — YOU MUST FOLLOW EXACTLY:
   "insight": "One sentence of actionable advice, max 20 words.",
   "lesson": "Short 2-sentence explainer teaching a financial concept relevant to the user's query.",
   "metric": { "label": "Metric name", "value": "Value with unit", "trend": "up" | "down" | "flat" } | null,
-  "action": "Short CTA text if relevant (e.g. Enable Spend Guard)" | null,
+  "action": "Short CTA text if relevant (e.g. 'Add to Savings' or 'Enable Spend Guard'). Ensure it matches the actionType below." | null,
   "actionType": "toggle_spend_guard" | "go_savings" | "go_bills" | "go_transfer" | null,
-  "followUps": ["Short follow-up question 1", "Short follow-up question 2"]
+  "followUps": ["Short follow-up question or response from the user's perspective (e.g. 'Tolong aktifkan Spend Guard untuk saya' or 'Bagaimana cara simpan RM50?'). NEVER write from the agent's perspective."]
 }
 3. If the question is NOT about personal finance, money, savings, bills, debt, or investments:
    Return: { "headline": "Finance questions only.", "status": "neutral", "insight": "Ask me about your budget, savings, or spending limits.", "lesson": null, "metric": null, "action": null, "actionType": null, "followUps": [] }
 4. LOCALIZATION & DIALECTS: Automatically detect if the user is using a Malaysian dialect (e.g. Kelantan, Terengganu, Sabah, Sarawak, Utara) or casual slang/Manglish. If a dialect is detected, you MUST write the 'headline', 'insight', and 'action' strictly in that SAME dialect, ensuring cultural nuance and local slang are well represented.
+5. ACTION & ALIGNMENT: The 'action' and 'actionType' must be perfectly aligned with the headline/insight content. If you are recommending boosting the Emergency Fund, saving, or managing goals, you MUST set 'actionType' to 'go_savings' and 'action' to something like 'Go to Savings' or 'Add to Emergency Fund'. Do NOT use 'go_transfer' or 'toggle_spend_guard' for saving/pocket recommendations.
+6. FOLLOW-UP PERSPECTIVE: Every item in the 'followUps' array MUST be written from the user's perspective (i.e. what the user would say or ask the agent next). For example, write 'Boleh tolong aktifkan Spend Guard untuk saya?' or 'Bagaimana cara simpan RM50?' instead of 'Boleh saya aktifkan Spend Guard untuk anda?'.
 `;
 
 const AGENT_PROMPTS: Record<string, string> = {

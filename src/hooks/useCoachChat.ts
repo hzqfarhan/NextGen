@@ -20,6 +20,10 @@ export function useCoachChat() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [undoToast, setUndoToast] = useState<{ message: string; onUndo: () => void } | null>(null);
 
+  // Multi-session chat states
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string>("default");
+
   // Speech Recognition states
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
@@ -27,30 +31,7 @@ export function useCoachChat() {
   const transcriptRef = useRef("");
   const hasGreetedRef = useRef(false);
 
-  // Load persisted chat and Handle Proactive Greetings
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('coach_messages');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setMessages(parsed);
-            setIsLoaded(true);
-            return;
-          }
-        } catch (e) {
-          console.error("Failed to parse saved messages", e);
-        }
-      }
-    }
-
-    if (hasGreetedRef.current || messages.length > 0) {
-      setIsLoaded(true);
-      return;
-    }
-    hasGreetedRef.current = true;
-
+  const triggerGreeting = () => {
     const store = useStore.getState();
     const urgentBills = analyzeBills(store.bills).filter(b => b.status === 'urgent').length;
     const isBroke = store.safeDailySpend < 5;
@@ -86,14 +67,98 @@ export function useCoachChat() {
       setMessages([greetingMessage]);
     }
     setIsLoaded(true);
+  };
+
+  // Load persisted sessions and active chat
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // 1. Initialize sessions list
+      const savedSessions = localStorage.getItem('coach_sessions');
+      let loadedSessions = [];
+      if (savedSessions) {
+        try {
+          loadedSessions = JSON.parse(savedSessions);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      if (!Array.isArray(loadedSessions) || loadedSessions.length === 0) {
+        loadedSessions = [{ id: 'default', title: 'Sembang Utama / Main Chat', createdAt: new Date().toISOString() }];
+        localStorage.setItem('coach_sessions', JSON.stringify(loadedSessions));
+      }
+
+      // 2. Initialize current session ID
+      const savedCurrentSessionId = localStorage.getItem('coach_current_session_id') || 'default';
+      setCurrentSessionId(savedCurrentSessionId);
+
+      // Clean loaded sessions list: keep the current active one, and any other session that has at least one user message
+      const cleanedSessions = loadedSessions.filter((s: any) => {
+        if (s.id === savedCurrentSessionId) return true;
+        const savedMessages = localStorage.getItem(`coach_messages_${s.id}`);
+        if (!savedMessages) return false;
+        try {
+          const parsed = JSON.parse(savedMessages);
+          return Array.isArray(parsed) && parsed.some((m: any) => m.role === 'user');
+        } catch (e) {
+          return false;
+        }
+      });
+
+      // Clear empty messages from localStorage for pruned sessions
+      loadedSessions.forEach((s: any) => {
+        const stillExists = cleanedSessions.some((cs: any) => cs.id === s.id);
+        if (!stillExists && s.id !== savedCurrentSessionId) {
+          localStorage.removeItem(`coach_messages_${s.id}`);
+        }
+      });
+
+      setSessions(cleanedSessions);
+      localStorage.setItem('coach_sessions', JSON.stringify(cleanedSessions));
+
+      // 3. Load messages for the current session
+      const savedMessages = localStorage.getItem(`coach_messages_${savedCurrentSessionId}`);
+      if (savedMessages) {
+        try {
+          const parsed = JSON.parse(savedMessages);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed);
+            setIsLoaded(true);
+            return;
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      } else if (savedCurrentSessionId === 'default') {
+        // Backward compatibility: import from old single-session cache
+        const oldSaved = localStorage.getItem('coach_messages');
+        if (oldSaved) {
+          try {
+            const parsed = JSON.parse(oldSaved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setMessages(parsed);
+              localStorage.setItem('coach_messages_default', oldSaved);
+              setIsLoaded(true);
+              return;
+            }
+          } catch (e) {}
+        }
+      }
+    }
+
+    // Trigger greeting if no messages loaded
+    triggerGreeting();
   }, []);
 
-  // Persist messages
+  // Persist messages for the active session
   useEffect(() => {
-    if (isLoaded && typeof window !== 'undefined') {
-      localStorage.setItem('coach_messages', JSON.stringify(messages));
+    if (isLoaded && typeof window !== 'undefined' && currentSessionId) {
+      localStorage.setItem(`coach_messages_${currentSessionId}`, JSON.stringify(messages));
+      // Keep single 'coach_messages' updated for backward compatibility / fallback
+      if (currentSessionId === 'default') {
+        localStorage.setItem('coach_messages', JSON.stringify(messages));
+      }
     }
-  }, [messages, isLoaded]);
+  }, [messages, isLoaded, currentSessionId]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -158,8 +223,80 @@ export function useCoachChat() {
     else recognitionRef.current.start();
   };
 
+  const validateToolCall = (name: string, args: any): { valid: boolean; error?: string } => {
+    const store = useStore.getState();
+    const balance = store.user.currentBalance;
+
+    switch (name) {
+      case 'createSavingsPocket': {
+        const deposit = Number(args.deposit) || 0;
+        const target = Number(args.target) || 0;
+        const pocketName = args.name?.trim();
+
+        if (!pocketName) {
+          return { valid: false, error: "Nama pocket tidak boleh kosong. / Pocket name cannot be empty." };
+        }
+        if (target <= 0) {
+          return { valid: false, error: "Jumlah sasaran mesti melebihi RM 0. / Target amount must be greater than RM 0." };
+        }
+        if (deposit < 0) {
+          return { valid: false, error: "Jumlah deposit tidak boleh negatif. / Deposit amount cannot be negative." };
+        }
+        if (deposit > balance) {
+          return { valid: false, error: `Baki tidak mencukupi untuk mendepositkan RM ${deposit.toFixed(2)} (Baki semasa: RM ${balance.toFixed(2)}).` };
+        }
+        break;
+      }
+      case 'addFundsToPocket': {
+        const amount = Number(args.amount) || 0;
+        const pocketName = args.pocketName?.trim();
+
+        if (!pocketName) {
+          return { valid: false, error: "Nama pocket tidak boleh kosong. / Pocket name cannot be empty." };
+        }
+        if (amount <= 0) {
+          return { valid: false, error: "Jumlah pindahan mesti melebihi RM 0. / Transfer amount must be greater than RM 0." };
+        }
+        if (amount > balance) {
+          return { valid: false, error: `Baki tidak mencukupi untuk memindahkan RM ${amount.toFixed(2)} (Baki semasa: RM ${balance.toFixed(2)}).` };
+        }
+        break;
+      }
+      case 'addTransaction': {
+        const amount = Number(args.amount) || 0;
+        const title = args.title?.trim();
+
+        if (!title) {
+          return { valid: false, error: "Tajuk transaksi tidak boleh kosong. / Transaction title cannot be empty." };
+        }
+        if (amount <= 0) {
+          return { valid: false, error: "Jumlah transaksi mesti melebihi RM 0. / Transaction amount must be greater than RM 0." };
+        }
+        break;
+      }
+      case 'toggleSpendGuard': {
+        if (args.enable === undefined) {
+          return { valid: false, error: "Parameter 'enable' tidak sah. / Invalid 'enable' parameter." };
+        }
+        break;
+      }
+    }
+    return { valid: true };
+  };
+
   const executeGeminiFunctionCall = (fnCall: { name: string; args: any }): { success: boolean; message: string; redirect?: { label: string; href: string }; proposal?: any } => {
     const store = useStore.getState();
+
+    // Run Guardrail Verification
+    const validation = validateToolCall(fnCall.name, fnCall.args);
+    if (!validation.valid) {
+      useStore.setState({ pet: { ...useStore.getState().pet, animation: "angry" } });
+      return {
+        success: false,
+        message: `🛡️ [Guardrail Alert] ${validation.error}`,
+      };
+    }
+
     try {
       switch (fnCall.name) {
         case 'createSavingsPocket': {
@@ -350,7 +487,8 @@ export function useCoachChat() {
           const oldQuota = oldState.initialSafeDaily - todayExpenses;
           const oldSafeDaily = oldState.safeDailySpend;
 
-          useStore.getState().addFundsToPocket(action.payload.pocketId, action.payload.amount);
+          const amt = action.payload.amount;
+          useStore.getState().addFundsToPocket(action.payload.pocketId, amt);
           const newState = useStore.getState();
           const newSafeDaily = newState.calculateDailyLimitForBalance(newState.user.currentBalance);
           const newQuota = newState.initialSafeDaily - todayExpenses;
@@ -407,6 +545,7 @@ export function useCoachChat() {
             const monthly = daily * 30;
             
             setMessages(prev => [...prev, {
+              timestamp: new Date().toISOString(),
               role: 'assistant',
               agent: 'Finance Strategist',
               content: projection.avgDailySavings > 0 ? `Based on your recent savings pace, here is your projection.` : `Great job! I've calculated a structured plan.`,
@@ -544,6 +683,7 @@ export function useCoachChat() {
       if (!overrideText) setInput("");
       setTimeout(() => {
         setMessages(prev => [...prev, {
+          timestamp: new Date().toISOString(),
           role: 'assistant', agent: 'Finance Strategist',
           content: `Your current balance is RM ${user.currentBalance.toFixed(2)}.`,
           structured: { headline: "Balance Update", status: "good", insight: "You are on track.", metric: { label: "Balance", value: `RM ${user.currentBalance.toFixed(2)}`, trend: "flat" } }
@@ -629,6 +769,7 @@ export function useCoachChat() {
         if (transferDetails.recipient && transferDetails.amount) {
           const isUnknownBank = transferDetails.bank === 'Unknown Bank';
           responses.push({
+            timestamp: new Date().toISOString(),
             role: 'assistant', agent: 'Finance Strategist', 
             content: isUnknownBank ? "I couldn't find this recipient in your contacts. Please verify before sending:" : "I've prepared a transfer proposal:",
             proposal: { 
@@ -646,6 +787,7 @@ export function useCoachChat() {
           });
         } else {
            responses.push({
+            timestamp: new Date().toISOString(),
             role: 'assistant', agent: 'Finance Strategist', 
             content: "Who would you like to transfer to, and how much?",
           });
@@ -727,11 +869,166 @@ export function useCoachChat() {
     }
   };
 
+  const createSession = () => {
+    if (typeof window === 'undefined') return;
+
+    // Save current session first
+    localStorage.setItem(`coach_messages_${currentSessionId}`, JSON.stringify(messages));
+
+    const newId = Math.random().toString(36).substring(7);
+    const newSession = {
+      id: newId,
+      title: `Sembang Baru / New Chat #${sessions.length + 1}`,
+      createdAt: new Date().toISOString()
+    };
+
+    // Prune any other empty sessions (except the new session we're creating)
+    const currentSessionsList = JSON.parse(localStorage.getItem('coach_sessions') || '[]');
+    const cleanedSessions = currentSessionsList.filter((s: any) => {
+      if (s.id === currentSessionId) {
+        // Keep current session only if there is a user message
+        return messages.some(m => m.role === 'user');
+      }
+      const savedMessages = localStorage.getItem(`coach_messages_${s.id}`);
+      if (!savedMessages) return false;
+      try {
+        const parsed = JSON.parse(savedMessages);
+        return Array.isArray(parsed) && parsed.some((m: any) => m.role === 'user');
+      } catch (e) {
+        return false;
+      }
+    });
+
+    // Remove local storage for pruned sessions
+    currentSessionsList.forEach((s: any) => {
+      const stillExists = cleanedSessions.some((cs: any) => cs.id === s.id);
+      if (!stillExists && s.id !== currentSessionId) {
+        localStorage.removeItem(`coach_messages_${s.id}`);
+      }
+    });
+
+    // If current session was pruned, wipe it
+    const currentHasUserMsg = messages.some(m => m.role === 'user');
+    if (!currentHasUserMsg && currentSessionId !== 'default') {
+      localStorage.removeItem(`coach_messages_${currentSessionId}`);
+    }
+
+    const updatedSessions = [...cleanedSessions, newSession];
+    setSessions(updatedSessions);
+    localStorage.setItem('coach_sessions', JSON.stringify(updatedSessions));
+
+    setCurrentSessionId(newId);
+    localStorage.setItem('coach_current_session_id', newId);
+
+    // Reset messages and trigger greeting
+    setMessages([]);
+    setIsLoaded(false);
+    setTimeout(() => {
+      triggerGreeting();
+    }, 50);
+  };
+
+  const switchSession = (id: string) => {
+    if (typeof window === 'undefined') return;
+
+    // Save current session first
+    localStorage.setItem(`coach_messages_${currentSessionId}`, JSON.stringify(messages));
+
+    // Prune other empty sessions
+    const currentSessionsList = JSON.parse(localStorage.getItem('coach_sessions') || '[]');
+    const cleanedSessions = currentSessionsList.filter((s: any) => {
+      if (s.id === id) return true; // Always keep target
+      if (s.id === currentSessionId) {
+        // Keep current session only if there is a user message
+        return messages.some(m => m.role === 'user');
+      }
+      const savedMessages = localStorage.getItem(`coach_messages_${s.id}`);
+      if (!savedMessages) return false;
+      try {
+        const parsed = JSON.parse(savedMessages);
+        return Array.isArray(parsed) && parsed.some((m: any) => m.role === 'user');
+      } catch (e) {
+        return false;
+      }
+    });
+
+    // Clean up empty messages from localStorage
+    currentSessionsList.forEach((s: any) => {
+      const stillExists = cleanedSessions.some((cs: any) => cs.id === s.id);
+      if (!stillExists && s.id !== id) {
+        localStorage.removeItem(`coach_messages_${s.id}`);
+      }
+    });
+
+    // If current session was pruned, wipe it
+    const currentHasUserMsg = messages.some(m => m.role === 'user');
+    if (!currentHasUserMsg && currentSessionId !== 'default') {
+      localStorage.removeItem(`coach_messages_${currentSessionId}`);
+    }
+
+    // Ensure at least one session remains
+    if (cleanedSessions.length === 0) {
+      cleanedSessions.push({ id: 'default', title: 'Sembang Utama / Main Chat', createdAt: new Date().toISOString() });
+    }
+
+    setSessions(cleanedSessions);
+    localStorage.setItem('coach_sessions', JSON.stringify(cleanedSessions));
+
+    setCurrentSessionId(id);
+    localStorage.setItem('coach_current_session_id', id);
+
+    const savedMessages = localStorage.getItem(`coach_messages_${id}`);
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages));
+      } catch (e) {
+        console.error(e);
+        setMessages([]);
+      }
+    } else {
+      setMessages([]);
+      setIsLoaded(false);
+      setTimeout(() => {
+        triggerGreeting();
+      }, 50);
+    }
+  };
+
+  const deleteSession = (id: string) => {
+    if (typeof window === 'undefined') return;
+
+    const updatedSessions = sessions.filter(s => s.id !== id);
+    localStorage.setItem('coach_sessions', JSON.stringify(updatedSessions));
+    setSessions(updatedSessions);
+    localStorage.removeItem(`coach_messages_${id}`);
+
+    // If we deleted the current active session, switch to another
+    if (currentSessionId === id) {
+      const fallbackId = updatedSessions[0]?.id || 'default';
+      if (updatedSessions.length === 0) {
+        const defaultSession = { id: 'default', title: 'Sembang Utama / Main Chat', createdAt: new Date().toISOString() };
+        setSessions([defaultSession]);
+        localStorage.setItem('coach_sessions', JSON.stringify([defaultSession]));
+      }
+      switchSession(fallbackId);
+    }
+  };
+
+  const renameSession = (id: string, newTitle: string) => {
+    if (typeof window === 'undefined') return;
+
+    const updatedSessions = sessions.map(s => s.id === id ? { ...s, title: newTitle } : s);
+    setSessions(updatedSessions);
+    localStorage.setItem('coach_sessions', JSON.stringify(updatedSessions));
+  };
+
   const clearChat = () => {
     setMessages([]);
-    localStorage.removeItem('coach_messages');
-    hasGreetedRef.current = false;
-    window.location.reload(); // Quick reset to trigger greeting again
+    localStorage.removeItem(`coach_messages_${currentSessionId}`);
+    if (currentSessionId === 'default') {
+      localStorage.removeItem('coach_messages');
+    }
+    triggerGreeting();
   };
 
   return {
@@ -749,6 +1046,12 @@ export function useCoachChat() {
     toggleListening,
     handleAction,
     sendMessage,
-    clearChat
+    clearChat,
+    sessions,
+    currentSessionId,
+    createSession,
+    switchSession,
+    deleteSession,
+    renameSession
   };
 }

@@ -2,7 +2,7 @@
 
 import { Bill, useStore } from "@/store/useStore"
 import { t } from "@/lib/translations"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { BILL_TEMPLATES } from "@/lib/billTemplates"
 import { 
   Lock, 
@@ -43,10 +43,19 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
   const strings = t[language]
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showPayModal, setShowPayModal] = useState(false)
+  const [showSetupPrompt, setShowSetupPrompt] = useState(false)
 
   const isPaid = bill.status === 'paid'
   const needsSetup = bill.status === 'needs_setup'
   
+  const handleToggleAutopay = () => {
+    if (needsSetup) {
+      setShowSetupPrompt(true);
+    } else {
+      toggleBillAutopay(bill.id);
+    }
+  };
+
   const getStatusConfig = () => {
     switch (bill.status) {
       case 'paid':
@@ -161,7 +170,7 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
 
               <div className="flex flex-col items-center gap-1.5">
                 <button 
-                  onClick={() => toggleBillAutopay(bill.id)}
+                  onClick={handleToggleAutopay}
                   disabled={isPaid}
                   className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
                     bill.autopayEnabled 
@@ -219,6 +228,51 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
         billName={bill.name}
         amount={bill.amount}
       />
+
+      {/* Premium Onboarding / Setup Prompt Modal */}
+      <AnimatePresence>
+        {showSetupPrompt && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white border border-pink-100 shadow-2xl rounded-[2.5rem] p-6 text-center space-y-6 w-full max-w-sm overflow-hidden"
+            >
+              <div className="w-14 h-14 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto text-xl">
+                ⚠️
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-extrabold text-slate-950 text-base">Setup Required</h3>
+                <p className="text-xs text-slate-600 leading-relaxed px-2 font-medium">
+                  Sila lengkapkan maklumat pembayaran terlebih dahulu untuk mengaktifkan AutoPay.
+                </p>
+                <p className="text-[10px] text-slate-400 font-bold italic leading-relaxed">
+                  Please complete the payment setup first to enable AutoPay.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowSetupPrompt(false)}
+                  className="h-12 rounded-2xl text-xs font-bold border-slate-200 text-slate-900 hover:bg-slate-50"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowSetupPrompt(false);
+                    onEdit(bill);
+                  }}
+                  className="h-12 rounded-2xl bg-primary hover:bg-primary/95 text-white font-black text-xs shadow-lg shadow-primary/20"
+                >
+                  Setup Now
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }

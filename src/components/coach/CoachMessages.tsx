@@ -72,7 +72,7 @@ export function CoachMessages(props: CoachMessagesProps) {
               </div>
               <div className={cn("flex flex-col gap-3 max-w-[90%]", m.role === 'user' ? "items-end" : "items-start")}>
                 {m.structured ? (
-                  <StructuredCard message={m} />
+                  <StructuredCard message={m} isLastMessage={i === messages.length - 1} />
                 ) : (
                   <div className={cn(
                     "p-3 rounded-2xl text-[11px] leading-relaxed shadow-sm w-fit",
@@ -141,7 +141,7 @@ export function CoachMessages(props: CoachMessagesProps) {
                   </motion.div>
                 )}
 
-                {m.actions && m.actions.length > 0 && (
+                {m.actions && m.actions.length > 0 && i === messages.length - 1 && (
                   <div className="flex gap-2 mt-1 w-full max-w-[280px]">
                     {m.actions.map((action: ChatAction) => (
                       <button

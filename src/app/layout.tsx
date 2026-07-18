@@ -6,6 +6,7 @@ import { CoachFAB } from "@/components/layout/CoachFAB";
 import { SplashScreen } from "@/components/layout/SplashScreen";
 import { GlobalBackground } from "@/components/layout/GlobalBackground";
 import { StoreSyncHandler } from "@/components/layout/StoreSyncHandler";
+import { ServiceWorkerRegister } from "@/components/layout/ServiceWorkerRegister";
 
 const inter = { className: "font-sans" };
 
@@ -73,6 +74,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-background text-foreground min-h-screen selection:bg-primary/30`}>
+        <ServiceWorkerRegister />
         <StoreSyncHandler />
         <GlobalBackground />
         <main className="min-h-screen">

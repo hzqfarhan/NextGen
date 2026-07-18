@@ -227,7 +227,7 @@ export function ProposalCard({
               const colors = colorMap[alt.color] || colorMap.orange;
               const isSelected = selectedPlatform === idx;
 
-              const originalPrice = allMessages.find(msg => msg.proposal?.type === 'affordability_result')?.proposal?.price || 1;
+              const originalPrice = parseFloat(affordPrice) || 1;
               const savePercent = Math.round((originalPrice - alt.price) / originalPrice * 100);
 
               const PlatformIcon = alt.platform.toLowerCase().includes('shopee') ? ShoppingBag :
@@ -296,7 +296,7 @@ export function ProposalCard({
                                 const originalPrice = parseFloat(affordPrice) || 1;
                                 const limit = parseFloat(m.proposal.budgetLimit);
                                 const maxSpend = Math.min(originalPrice, limit);
-                                handleAction({ id: 'alt_buy', label: `Found alternative for RM ${alt.price}`, type: 'create_pocket', payload: { name: alt.title, target: alt.price, mode: 'savings', riskLevel: 'low' } })
+                                actionHandler({ id: 'alt_buy', label: `Found alternative for RM ${alt.price}`, type: 'create_pocket', payload: { name: alt.title, target: alt.price, mode: 'savings', riskLevel: 'low' } })
                               }}
                               className={cn("h-8 px-4 flex-1 bg-gradient-to-r text-white text-[10px] font-black gap-2 rounded-full shadow-lg shrink-0", colors.btnFrom, colors.btnTo, colors.shadow)}
                             >

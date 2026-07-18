@@ -39,8 +39,14 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
   const [selectedTemplate, setSelectedTemplate] = useState<BillTemplate | null>(null)
   const [formData, setFormData] = useState<Partial<Bill>>({})
 
+  // Confirmation dialog states
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
+
   // Initialize form
   useEffect(() => {
+    setShowCancelConfirm(false)
+    setShowSubmitConfirm(false)
     if (editingBill) {
       setFormData(editingBill)
       const template = BILL_TEMPLATES.find(t => t.category === editingBill.category)
@@ -71,10 +77,31 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
     }))
   }
 
+  const handleAttemptCloseAction = () => {
+    // If the user has made edits or selected a template, show confirmation
+    const isModified = selectedTemplate || editingBill;
+    if (isModified) {
+      setShowCancelConfirm(true);
+    } else {
+      onClose();
+    }
+  };
+
+  const handleAttemptClose = (open: boolean) => {
+    if (!open) {
+      handleAttemptCloseAction();
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.name || !formData.amount) return
+    setShowSubmitConfirm(true)
+  }
 
+  const executeSubmit = () => {
+    setShowSubmitConfirm(false)
+    
     // Calculate due dates based on dueDay
     const dueDayNum = Number(formData.dueDay) || 1
     const now = new Date()
@@ -113,8 +140,101 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
   const isBudgetLock = formData.mode === 'budget_lock'
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[450px] rounded-[2rem] p-0 overflow-hidden border border-slate-200/60 glass-card shadow-2xl text-slate-900">
+    <Dialog open={isOpen} onOpenChange={handleAttemptClose}>
+      <DialogContent className="sm:max-w-[450px] rounded-[2rem] p-0 overflow-hidden border border-slate-200/60 glass-card shadow-2xl text-slate-900 relative">
+        
+        {/* Cancel Confirmation Popup */}
+        <AnimatePresence>
+          {showCancelConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-6"
+            >
+              <motion.div
+                initial={{ scale: 0.95, y: 10 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.95, y: 10 }}
+                className="bg-white border border-slate-100 shadow-2xl rounded-3xl p-6 text-center space-y-4 w-full max-w-xs"
+              >
+                <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto text-xl">
+                  ⚠️
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-sm text-slate-900">Discard Changes?</h4>
+                  <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                    Adakah anda pasti mahu batal? Semua perubahan yang belum disimpan akan hilang.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCancelConfirm(false)}
+                    className="h-10 rounded-xl text-xs font-bold border-slate-200 text-slate-900 hover:bg-slate-50"
+                  >
+                    No, keep
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setShowCancelConfirm(false);
+                      onClose();
+                    }}
+                    className="h-10 rounded-xl text-xs font-bold bg-rose-500 hover:bg-rose-600 text-white shadow-sm"
+                  >
+                    Yes, discard
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {showSubmitConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-6"
+            >
+              <motion.div
+                initial={{ scale: 0.95, y: 10 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.95, y: 10 }}
+                className="bg-white border border-slate-100 shadow-2xl rounded-3xl p-6 text-center space-y-4 w-full max-w-xs"
+              >
+                <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto text-xl">
+                  ✅
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-sm text-slate-900">Confirm and Save?</h4>
+                  <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                    Adakah anda pasti untuk simpan bil ini? / Are you sure you want to save this bill?
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowSubmitConfirm(false)}
+                    className="h-10 rounded-xl text-xs font-bold border-slate-200 text-slate-900 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={executeSubmit}
+                    className="h-10 rounded-xl text-xs font-bold bg-primary hover:bg-primary/95 text-white shadow-sm"
+                  >
+                    Confirm
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <AnimatePresence mode="wait">
           {!selectedTemplate && !editingBill ? (
             <motion.div
@@ -176,7 +296,7 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
                   </DialogHeader>
 
                   <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                     {/* Setup Fields */}
+                    {/* Setup Fields */}
                     <div className="space-y-4">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-primary/70">Bill Setup</Label>
                       <div className="grid grid-cols-1 gap-4">
@@ -344,7 +464,7 @@ export function BillSetupModal({ isOpen, onClose, editingBill }: BillSetupModalP
                 </div>
 
                 <DialogFooter className="p-6 bg-slate-50 border-t border-slate-200/60">
-                  <Button type="button" variant="ghost" onClick={onClose} className="rounded-2xl font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100">
+                  <Button type="button" variant="ghost" onClick={handleAttemptCloseAction} className="rounded-2xl font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100">
                     {strings.billsCancel}
                   </Button>
                   <Button type="submit" className="rounded-2xl bg-primary hover:bg-primary/95 text-white font-black px-10 shadow-lg shadow-primary/20">

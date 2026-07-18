@@ -5,9 +5,10 @@ import { Message } from "./types"
 
 interface StructuredCardProps {
   message: Message;
+  isLastMessage?: boolean;
 }
 
-export function StructuredCard({ message: m }: StructuredCardProps) {
+export function StructuredCard({ message: m, isLastMessage = true }: StructuredCardProps) {
   const router = useRouter();
   const { isSpendGuardActive, toggleSpendGuard, activateStreakShield, user } = useStore();
 
@@ -62,11 +63,19 @@ export function StructuredCard({ message: m }: StructuredCardProps) {
 
         {/* CTA action button */}
         {m.structured.action && (() => {
+          const isToggleSpendGuard = m.structured?.actionType === 'toggle_spend_guard' || 
+            (m.structured?.action && m.structured.action.toLowerCase().includes('spend guard'));
+
+          const label = isToggleSpendGuard
+            ? (isSpendGuardActive ? 'Disable Spend Guard' : 'Enable Spend Guard')
+            : m.structured.action;
+
           const handleAction = () => {
+            if (isToggleSpendGuard) {
+              toggleSpendGuard();
+              return;
+            }
             switch (m.structured?.actionType) {
-              case 'toggle_spend_guard':
-                toggleSpendGuard();
-                break;
               case 'go_savings':
                 router.push('/savings');
                 break;
@@ -74,22 +83,45 @@ export function StructuredCard({ message: m }: StructuredCardProps) {
                 router.push('/bills');
                 break;
               case 'go_transfer':
-                router.push('/transfer');
+                // Smart fallback: if action text mentions Emergency Fund, Savings, or Pockets, route to /savings!
+                const actionLower = label.toLowerCase();
+                if (
+                  actionLower.includes('emergency') || 
+                  actionLower.includes('saving') || 
+                  actionLower.includes('pocket') || 
+                  actionLower.includes('simpan')
+                ) {
+                  router.push('/savings');
+                } else {
+                  router.push('/transfer');
+                }
                 break;
+              default:
+                if (
+                  label.toLowerCase().includes('saving') || 
+                  label.toLowerCase().includes('pocket') || 
+                  label.toLowerCase().includes('emergency')
+                ) {
+                  router.push('/savings');
+                } else {
+                  router.push('/dashboard');
+                }
             }
           };
-
-          const label = m.structured?.actionType === 'toggle_spend_guard'
-            ? (isSpendGuardActive ? 'Disable Spend Guard' : 'Enable Spend Guard')
-            : m.structured.action;
 
           return (
             <button
               onClick={handleAction}
-              className="w-full mt-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#DF0059] to-[#CC0D5A] text-white text-[10px] font-black hover:opacity-90 active:scale-95 transition-all shadow-sm shadow-[#DF0059]/20 text-left flex items-center justify-between gap-1"
+              disabled={!isLastMessage}
+              className={cn(
+                "w-full mt-1 px-3 py-1.5 rounded-xl text-[10px] font-black text-left flex items-center justify-between gap-1 transition-all shadow-sm",
+                isLastMessage 
+                  ? "bg-gradient-to-r from-[#DF0059] to-[#CC0D5A] text-white hover:opacity-90 active:scale-95 shadow-[#DF0059]/20" 
+                  : "bg-slate-100 text-slate-400 border border-slate-200/50 cursor-not-allowed opacity-60"
+              )}
             >
               <span>{label}</span>
-              <span>→</span>
+              {isLastMessage && <span>→</span>}
             </button>
           );
         })()}

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { useState, useEffect } from 'react';
+import { indexedDbStorage } from '@/lib/indexedDbStorage';
 import { Language } from '@/lib/translations';
 import { calculateNextDueDate, isBillDue, isAutoPaySafe } from '@/lib/billEngine';
 
@@ -174,6 +175,7 @@ interface NextGenState {
     totalCommitments?: number;
     cardLastFour?: string;
     avatar?: string;
+    passcode?: string;
   };
   transactions: Transaction[];
   savingsPockets: SavingsPocket[];
@@ -205,6 +207,9 @@ interface NextGenState {
   pendingMainGoal: string | null;
   hasNotificationSave: boolean;
   lastQuotaUpdateDate: string | null;
+  syncStatus: 'synced' | 'syncing' | 'offline' | 'error' | 'disabled';
+  setSyncStatus: (status: 'synced' | 'syncing' | 'offline' | 'error' | 'disabled') => void;
+  simulatedDayOffset?: number;
 
   // Gamification & BIMB Transition State
   currentStreak: number;
@@ -373,6 +378,7 @@ export const initialStoreState = {
     spendingPersonality: 'Food Overspender + Impulse Buyer',
     cardLastFour: '4292',
     avatar: "/assets/pfp/user.png",
+    setupDate: "2026-05-23T05:00:00.000Z",
   },
   transactions: [],
   savingsPockets: [],
@@ -409,6 +415,8 @@ export const initialStoreState = {
   pendingMainGoal: null,
   hasNotificationSave: false,
   lastQuotaUpdateDate: null,
+  syncStatus: 'synced' as const,
+  simulatedDayOffset: 0,
   currentStreak: 0,
   highestStreak: 0,
   lastCalculatedDate: '',
@@ -441,6 +449,7 @@ const useStoreBase = create<NextGenState>()(
   persist(
     (set, get) => ({
       ...initialStoreState,
+      setSyncStatus: (status) => set({ syncStatus: status }),
       setMonthlyIncome: (amount) => set((state) => ({ user: { ...state.user, monthlyIncome: amount } })),
       setSelectedCompanion: (c) => set({ selectedCompanion: c }),
       setAffordItem: (val) => set({ affordItem: val }),
@@ -1235,6 +1244,12 @@ const useStoreBase = create<NextGenState>()(
     }),
     {
       name: 'beu-nextgen-store',
+      storage: createJSONStorage(() => indexedDbStorage),
+      partialize: (state) => {
+        // Exclude syncStatus from being saved to IndexedDB so it starts fresh
+        const { syncStatus, ...rest } = state;
+        return rest;
+      }
     }
   )
 );
@@ -1242,9 +1257,80 @@ const useStoreBase = create<NextGenState>()(
 // Client-side subscriber to sync state with PostgreSQL database
 if (typeof window !== 'undefined') {
   let lastSyncStr = '';
+
+  const syncStateWithDB = async (currentSyncObj: any) => {
+    const state = useStoreBase.getState();
+    if (!navigator.onLine) {
+      state.setSyncStatus('offline');
+      localStorage.setItem('beu_nextgen_sync_pending', JSON.stringify(currentSyncObj));
+      return;
+    }
+
+    state.setSyncStatus('syncing');
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    try {
+      const res = await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(currentSyncObj),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (res.status === 404) {
+        state.setSyncStatus('disabled');
+        localStorage.removeItem('beu_nextgen_sync_pending');
+        return;
+      }
+
+      const data = await res.json();
+      if (data.success) {
+        state.setSyncStatus('synced');
+        localStorage.removeItem('beu_nextgen_sync_pending');
+      } else {
+        if (data.reason && data.reason.includes('No DATABASE_URL')) {
+          state.setSyncStatus('disabled');
+        } else {
+          state.setSyncStatus('error');
+        }
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.error('[Zustand DB Sync] error:', err);
+      state.setSyncStatus('error');
+      // Save to offline queue
+      localStorage.setItem('beu_nextgen_sync_pending', JSON.stringify(currentSyncObj));
+    }
+  };
+
+  const handleOnline = () => {
+    const state = useStoreBase.getState();
+    if (state.syncStatus === 'offline' || state.syncStatus === 'error') {
+      state.setSyncStatus('syncing');
+    }
+    lastSyncStr = '';
+    const pending = localStorage.getItem('beu_nextgen_sync_pending');
+    if (pending) {
+      try {
+        const parsed = JSON.parse(pending);
+        syncStateWithDB(parsed);
+      } catch {}
+    }
+  };
+
+  window.addEventListener('online', handleOnline);
+  window.addEventListener('offline', () => {
+    useStoreBase.getState().setSyncStatus('offline');
+  });
+
+  let syncDebounceTimeout: any = null;
+
   useStoreBase.subscribe((state) => {
     const { user, nextGenScore, currentStreak, transactions, savingsPockets, bills } = state;
-    if (!user || !user.name) return;
+    if (!user || !user.name || !user.setupDate) return;
 
     const currentSyncObj = {
       userName: user.name,
@@ -1282,16 +1368,20 @@ if (typeof window !== 'undefined') {
 
     if (currentSyncStr !== lastSyncStr) {
       lastSyncStr = currentSyncStr;
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-      fetch('/api/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(currentSyncObj),
-        signal: controller.signal
-      }).then(() => clearTimeout(timeoutId)).catch((err) => console.error('[Zustand DB Sync] error:', err));
+      // Optimistically show syncing spinner in UI during the debounce period
+      const currentState = useStoreBase.getState();
+      if (currentState.syncStatus === 'synced') {
+        currentState.setSyncStatus('syncing');
+      }
+
+      if (syncDebounceTimeout) {
+        clearTimeout(syncDebounceTimeout);
+      }
+
+      syncDebounceTimeout = setTimeout(() => {
+        syncStateWithDB(currentSyncObj);
+      }, 3000);
     }
   });
 }
@@ -1346,6 +1436,7 @@ export const useStore = (() => {
       moveFundsToAwfarNest: storeState.moveFundsToAwfarNest,
       simulateNextDay: storeState.simulateNextDay,
       simulateNextTier: storeState.simulateNextTier,
+      setSyncStatus: storeState.setSyncStatus,
     };
 
     const stateToUse = hydrated

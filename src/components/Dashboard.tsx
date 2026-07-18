@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { motion, AnimatePresence } from "framer-motion"
-import { TrendingUp, AlertTriangle, ShieldCheck, Wallet, Settings as SettingsIcon, Send, History, CalendarClock, RefreshCw, Eye, EyeOff, Sparkles, Flame, X, Download, Share2 } from "lucide-react"
+import { TrendingUp, AlertTriangle, ShieldCheck, Wallet, Settings as SettingsIcon, Send, History, CalendarClock, RefreshCw, Eye, EyeOff, Sparkles, Flame, X, Download, Share2, Cloud, CloudOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
 import { SpendGuardModal } from "./BudgetGuardModal"
@@ -43,7 +43,8 @@ export function Dashboard() {
     moveFundsToAwfarNest,
     simulateNextDay,
     simulateNextTier,
-    selectedCompanion
+    selectedCompanion,
+    syncStatus
   } = useStore()
   const bills = useStore(state => state.bills)
 
@@ -288,6 +289,26 @@ export function Dashboard() {
           <p className="text-sm font-medium text-black">{strings.dashGreeting}, {user.name} · {getPlanName()}</p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Sync Status Caching Pill */}
+          {syncStatus !== 'disabled' && (
+            <div className={cn(
+              "flex items-center justify-center p-2 rounded-xl border transition-all duration-300",
+              syncStatus === 'synced' && "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/20 dark:border-emerald-900/30 dark:text-emerald-400",
+              syncStatus === 'syncing' && "bg-blue-50 border-blue-200 text-blue-500 dark:bg-blue-950/20 dark:border-blue-900/30 dark:text-blue-400",
+              syncStatus === 'offline' && "bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-950/20 dark:border-amber-900/30 dark:text-amber-400",
+              syncStatus === 'error' && "bg-rose-50 border-rose-200 text-rose-500 dark:bg-rose-950/20 dark:border-rose-900/30 dark:text-rose-400"
+            )} title={
+              syncStatus === 'synced' ? 'Synced with Cloud' :
+              syncStatus === 'syncing' ? 'Syncing with Cloud...' :
+              syncStatus === 'offline' ? 'Offline mode - changes saved locally' :
+              'Sync Error - retrying later'
+            }>
+              {syncStatus === 'synced' && <Cloud className="w-5 h-5" />}
+              {syncStatus === 'syncing' && <RefreshCw className="w-5 h-5 animate-spin" />}
+              {syncStatus === 'offline' && <CloudOff className="w-5 h-5" />}
+              {syncStatus === 'error' && <AlertTriangle className="w-5 h-5" />}
+            </div>
+          )}
 
           <Link href="/settings" className="p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 hover:text-primary transition-colors">
             <SettingsIcon className="w-5 h-5" />

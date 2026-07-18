@@ -7,7 +7,7 @@ import { t } from "@/lib/translations"
 import { Pet } from "@/components/ui/Pet"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, Sparkles, X, Download, Trash2 } from "lucide-react"
+import { ChevronLeft, Sparkles, X, Download, Trash2, MessageSquare, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 import { useStore } from "@/store/useStore"
@@ -35,6 +35,10 @@ export function Coach() {
   const [isAtBottom, setIsAtBottom] = useState(true)
   const [showRewardsModal, setShowRewardsModal] = useState(false)
   const [showCompanionModal, setShowCompanionModal] = useState(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [showSessionsDrawer, setShowSessionsDrawer] = useState(false)
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState("")
 
   const {
     messages,
@@ -51,6 +55,12 @@ export function Coach() {
     handleAction,
     sendMessage,
     clearChat,
+    sessions,
+    currentSessionId,
+    createSession,
+    switchSession,
+    deleteSession,
+    renameSession
   } = useCoachChat();
 
   useEffect(() => {
@@ -97,20 +107,17 @@ export function Coach() {
             >
               <ChevronLeft className="w-5 h-5 text-[#727272]" />
             </Link>
-            <div className="w-10 h-10 flex items-center justify-center">
-              <Pet animation={(pet.animation as any) || (isThinking ? "think" : "idle")} size={40} />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold leading-tight text-[#221F20]">{strings.coachHeader}</h1>
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <p className="text-[10px] text-[#727272] uppercase tracking-widest font-bold">
-                  {COMPANIONS.find(c => c.id === selectedCompanion)?.name || "Uteh"}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-2 items-center">
+
+            {/* Chat Sessions Drawer Toggle */}
+            <button 
+              onClick={() => setShowSessionsDrawer(true)}
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F8F8F8] hover:bg-[#FFE9F2] border border-pink-100 transition-colors"
+              title="Perbualan Lain / Chat Sessions"
+            >
+              <MessageSquare className="w-4 h-4 text-[#727272]" />
+            </button>
+
+            {/* Export Chat Button */}
             <button
               onClick={() => {
                 const text = messages.map(m => {
@@ -128,13 +135,28 @@ export function Coach() {
                 a.click();
                 setTimeout(() => URL.revokeObjectURL(url), 100);
               }}
-              className="w-8 h-8 rounded-full bg-[#F8F8F8] flex items-center justify-center border border-pink-100 hover:bg-[#FFE9F2] transition-colors"
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F8F8F8] hover:bg-[#FFE9F2] border border-pink-100 transition-colors"
               title="Export Chat"
             >
               <Download className="w-4 h-4 text-[#727272]" />
             </button>
+
+            <div className="w-10 h-10 flex items-center justify-center">
+              <Pet animation={(pet.animation as any) || (isThinking ? "think" : "idle")} size={40} />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold leading-tight text-[#221F20]">{strings.coachHeader}</h1>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-[10px] text-[#727272] uppercase tracking-widest font-bold">
+                  {COMPANIONS.find(c => c.id === selectedCompanion)?.name || "Uteh"}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2 items-center">
             <button
-              onClick={clearChat}
+              onClick={() => setShowClearConfirm(true)}
               className="w-8 h-8 rounded-full bg-[#F8F8F8] flex items-center justify-center border border-pink-100 hover:bg-rose-50 transition-colors"
               title="Clear Chat"
             >
@@ -397,6 +419,201 @@ export function Coach() {
         isOpen={showRewardsModal}
         onClose={() => setShowRewardsModal(false)}
       />
+
+      {/* Clear Chat Confirmation Modal */}
+      <AnimatePresence>
+        {showClearConfirm && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white border border-rose-100 shadow-2xl rounded-[2.5rem] p-6 text-center space-y-6 w-full max-w-sm overflow-hidden text-slate-900"
+            >
+              <div className="w-14 h-14 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto text-xl">
+                🗑️
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-extrabold text-slate-950 text-base">Padam Sejarah Sembang?</h3>
+                <p className="text-xs text-slate-500 leading-relaxed px-2 font-medium">
+                  Adakah anda pasti mahu padam semua sembang dengan Coach? Tindakan ini tidak boleh diundurkan.
+                </p>
+                <p className="text-[10px] text-slate-400 font-bold italic leading-relaxed">
+                  Are you sure you want to clear your chat history? This action cannot be undone.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowClearConfirm(false)}
+                  className="h-12 rounded-2xl text-xs font-bold border-slate-200 text-slate-900 hover:bg-slate-50"
+                >
+                  Batal / Cancel
+                </Button>
+                <Button 
+                  onClick={() => {
+                    clearChat();
+                    setShowClearConfirm(false);
+                  }}
+                  className="h-12 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs shadow-lg shadow-rose-500/20"
+                >
+                  Padam / Clear
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Chat Sessions Drawer Sidebar */}
+      <AnimatePresence>
+        {showSessionsDrawer && (
+          <div className="fixed inset-0 z-50 flex text-slate-900">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSessionsDrawer(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            {/* Drawer Content */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative w-80 max-w-[85vw] h-full bg-white shadow-2xl border-r border-slate-200 flex flex-col p-6 z-10"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-primary animate-pulse" />
+                  <h3 className="font-extrabold text-base text-slate-950">Sembang Coach / Chats</h3>
+                </div>
+                <button
+                  onClick={() => setShowSessionsDrawer(false)}
+                  className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Create New Session Button */}
+              <Button
+                onClick={() => {
+                  createSession();
+                  setShowSessionsDrawer(false);
+                }}
+                className="w-full h-11 rounded-2xl bg-gradient-to-r from-primary to-rose-500 hover:opacity-95 text-white font-black text-xs gap-2 shadow-lg shadow-primary/20 mb-4"
+              >
+                <Plus className="w-4 h-4" /> Sembang Baru / New Chat
+              </Button>
+
+              {/* Sessions List */}
+              <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                {sessions.map((s) => {
+                  const isActive = s.id === currentSessionId;
+                  const isEditing = editingSessionId === s.id;
+
+                  return (
+                    <div
+                      key={s.id}
+                      className={cn(
+                        "group relative flex items-center justify-between p-3 rounded-2xl border transition-all duration-200",
+                        isActive 
+                          ? "border-primary bg-pink-500/5 text-primary shadow-sm" 
+                          : "border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-700"
+                      )}
+                    >
+                      {isEditing ? (
+                        <div className="flex items-center gap-1.5 w-full pr-10">
+                          <input
+                            type="text"
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                renameSession(s.id, editTitle);
+                                setEditingSessionId(null);
+                              }
+                            }}
+                            className="flex-1 text-xs font-bold px-2 py-1 border border-slate-300 rounded-lg bg-white outline-none focus:border-primary"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => {
+                              renameSession(s.id, editTitle);
+                              setEditingSessionId(null);
+                            }}
+                            className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            switchSession(s.id);
+                            setShowSessionsDrawer(false);
+                          }}
+                          onDoubleClick={() => {
+                            setEditingSessionId(s.id);
+                            setEditTitle(s.title);
+                          }}
+                          className="flex-1 text-left min-w-0 pr-10"
+                        >
+                          <p className="text-xs font-bold truncate pr-1">
+                            {s.title}
+                          </p>
+                          <span className="text-[9px] text-slate-400 font-bold mt-0.5 block">
+                            {new Date(s.createdAt).toLocaleDateString()}
+                          </span>
+                        </button>
+                      )}
+                      
+                      <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center gap-0.5 absolute right-2">
+                        {!isEditing && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingSessionId(s.id);
+                              setEditTitle(s.title);
+                            }}
+                            className="p-1 rounded-lg text-slate-400 hover:text-primary hover:bg-slate-100"
+                            title="Rename Chat"
+                          >
+                            ✎
+                          </button>
+                        )}
+                        {sessions.length > 1 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm("Adakah anda pasti mahu memadam perbualan ini? / Delete this chat?")) {
+                                deleteSession(s.id);
+                              }
+                            }}
+                            className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50"
+                            title="Delete Chat"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Footer info */}
+              <div className="pt-4 border-t border-slate-100 text-[10px] text-slate-400 text-center font-bold">
+                NextGen AI Coach • Multi-Session
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <VoiceOverlay isListening={isListening} interimTranscript={interimTranscript} />
     </div>

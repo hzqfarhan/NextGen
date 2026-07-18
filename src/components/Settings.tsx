@@ -35,8 +35,26 @@ export function Settings() {
   const handleLogout = () => {
     setIsLoggingOut(true)
     setTimeout(() => {
-      // Simulation of secure logout clearing state
-      router.push("/")
+      // Clear localStorage cache and pending sync records
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('beu-nextgen-store');
+        localStorage.removeItem('coach_messages');
+        localStorage.removeItem('beu_nextgen_sync_pending');
+        
+        // Delete IndexedDB store
+        if ('indexedDB' in window) {
+          try {
+            indexedDB.deleteDatabase('beu-nextgen-db');
+          } catch (e) {
+            console.error('Failed to delete IndexedDB:', e);
+          }
+        }
+        
+        // Redirect and reload page to completely wipe in-memory Zustand store
+        window.location.href = process.env.NEXT_PUBLIC_BASE_PATH || '/';
+      } else {
+        router.push("/");
+      }
     }, 1500)
   }
 

@@ -22,7 +22,9 @@ import {
   Briefcase,
   Wallet,
   Info,
-  Sparkles
+  Sparkles,
+  Eye,
+  EyeOff
 } from "lucide-react"
 import { Pet } from "@/components/ui/Pet"
 import { Button } from "@/components/ui/button"
@@ -51,7 +53,16 @@ export default function SetupPage() {
 
   // Form State
   const [name, setName] = useState("") // Empty by default
+  const [passcode, setPasscode] = useState("") // Empty by default
+  const [showPasscodePreview, setShowPasscodePreview] = useState(false)
   const [employmentStatus, setEmploymentStatus] = useState<"Student" | "Employed" | "Unemployed">("Student")
+
+  useEffect(() => {
+    const actualName = useStore.getState().user?.name;
+    if (actualName) {
+      setName(actualName);
+    }
+  }, [])
 
   // Step 2: Income Source selection ("fixed" | "lump-sum" | "irregular" | "none")
   const [incomeSource, setIncomeSource] = useState<"fixed" | "lump-sum" | "irregular" | "none">("fixed")
@@ -103,10 +114,16 @@ export default function SetupPage() {
   }
 
   const handleNext = () => {
-    // Validation on step 1: Name must be entered
-    if (step === 1 && !name.trim()) {
-      alert("Please enter your name to proceed.")
-      return
+    // Validation on step 1: Name and Passcode must be entered
+    if (step === 1) {
+      if (!name.trim()) {
+        alert("Please enter your name to proceed.")
+        return
+      }
+      if (passcode.length !== 4) {
+        alert("Please enter a 4-digit passcode to secure your account.")
+        return
+      }
     }
 
     if (step < 5) {
@@ -297,6 +314,7 @@ export default function SetupPage() {
           runwayDurationUnit: runwayDurationUnit,
           totalCommitments: totalCommitments,
           cardLastFour: randomLastFour,
+          passcode: passcode,
         },
         bills: initialBills as any[],
         transactions: [initialTx],
@@ -400,6 +418,36 @@ export default function SetupPage() {
                       placeholder="Enter your name"
                       required
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">4-Digit Passcode</label>
+                    <p className="text-[10px] text-slate-400 font-bold leading-normal">
+                      Sila masukkan 4 digit nombor sahaja (contoh: 1234) sebagai PIN keselamatan anda. / Enter 4-digit numeric PIN to secure your account.
+                    </p>
+                    <div className="relative">
+                      <input
+                        type={showPasscodePreview ? "text" : "password"}
+                        maxLength={4}
+                        pattern="\d{4}"
+                        value={passcode}
+                        onChange={(e) => setPasscode(e.target.value.replace(/\D/g, ''))}
+                        className="w-full h-12 pl-4 pr-12 rounded-2xl bg-white border border-slate-300 focus:border-[#DF0059] focus:ring-2 focus:ring-[#DF0059]/20 outline-none font-bold text-slate-900 placeholder:text-slate-400 transition-all text-sm shadow-sm text-center tracking-widest text-lg"
+                        placeholder="••••"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasscodePreview(!showPasscodePreview)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 outline-none transition-colors"
+                      >
+                        {showPasscodePreview ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-2">

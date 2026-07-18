@@ -2,27 +2,36 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { ArrowUpRight, ShieldCheck, Loader2 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useStore } from "@/store/useStore"
+import { cn } from "@/lib/utils"
 
 export default function Landing() {
   const router = useRouter();
   const [nameInput, setNameInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Passcode verification states
+  const [showPasscodeModal, setShowPasscodeModal] = useState(false);
+  const [passcodeInput, setPasscodeInput] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
   const handleStart = async () => {
-    const finalName = nameInput.trim() || "Aiman";
+    const finalName = nameInput.trim();
+    if (!finalName) return;
+
     setIsLoading(true);
+    setErrorMsg("");
     
     try {
-      useStore.setState((state) => ({ user: { ...state.user, name: finalName } }));
-      
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 seconds timeout
+      const timeoutId = setTimeout(() => controller.abort(), 3500); // 3.5 seconds timeout
 
+      // Fetch profile from database (checking if user exists)
       const res = await fetch(`/api/sync?username=${encodeURIComponent(finalName)}`, {
         signal: controller.signal
       });
@@ -31,26 +40,107 @@ export default function Landing() {
       const data = await res.json();
       
       if (data.success && data.data) {
-        useStore.setState(data.data);
-        router.push('/dashboard');
+        // User exists! Show passcode modal for authorization
+        setIsLoading(false);
+        setShowPasscodeModal(true);
       } else {
+        // User does not exist! Route them to onboarding and delete setupDate to prevent early sync
+        useStore.setState((state) => ({ 
+          user: { 
+            ...state.user, 
+            name: finalName, 
+            setupDate: undefined 
+          } 
+        }));
         router.push('/setup');
       }
     } catch (e) {
       console.error(e);
+      // Fallback to onboarding if connection times out/fails
+      useStore.setState((state) => ({ 
+        user: { 
+          ...state.user, 
+          name: finalName, 
+          setupDate: undefined 
+        } 
+      }));
       router.push('/setup');
     }
-    
-    // We intentionally don't set isLoading(false) if we are routing away, 
-    // to prevent the button from flickering back to normal before the page unloads.
-    // However, if we want to reset it on error so they can try again:
-    // setIsLoading(false);
   };
+
+  const handleVerifyPasscode = async () => {
+    if (passcodeInput.length !== 4) return;
+    setIsVerifying(true);
+    setErrorMsg("");
+
+    try {
+      const res = await fetch(`/api/sync?username=${encodeURIComponent(nameInput.trim())}&passcode=${passcodeInput}`);
+      const data = await res.json();
+
+      if (res.status === 200 && data.success && data.data) {
+        // Passcode correct! Sync state and route to dashboard
+        useStore.setState(data.data);
+        router.push('/dashboard');
+      } else {
+        setErrorMsg("Incorrect passcode. Please try again.");
+        setPasscodeInput("");
+        setIsVerifying(false);
+      }
+    } catch (e) {
+      setErrorMsg("Verification failed. Please check connection.");
+      setIsVerifying(false);
+    }
+  };
+
+  // Auto-verify when passcode length reaches 4
+  useEffect(() => {
+    if (passcodeInput.length === 4 && showPasscodeModal) {
+      handleVerifyPasscode();
+    }
+  }, [passcodeInput]);
+
+  // Keypad presses
+  const handleKeypadPress = (val: string) => {
+    if (passcodeInput.length >= 4) return;
+    setPasscodeInput(prev => prev + val);
+    setErrorMsg("");
+  };
+
+  const handleKeypadBackspace = () => {
+    setPasscodeInput(prev => prev.slice(0, -1));
+    setErrorMsg("");
+  };
+
+  const handleKeypadClear = () => {
+    setPasscodeInput("");
+    setErrorMsg("");
+  };
+
+  // Keyboard binding for keypad
+  useEffect(() => {
+    if (!showPasscodeModal) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isVerifying) return;
+      if (e.key >= '0' && e.key <= '9') {
+        handleKeypadPress(e.key);
+      } else if (e.key === 'Backspace') {
+        handleKeypadBackspace();
+      } else if (e.key === 'Escape') {
+        setShowPasscodeModal(false);
+        setPasscodeInput("");
+        setErrorMsg("");
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showPasscodeModal, passcodeInput, isVerifying]);
 
   return (
     <div className="min-h-screen bg-transparent text-foreground flex flex-col items-center justify-between p-8 overflow-hidden relative font-sans">
       
-      {/* Background Liquid blobs - Subtle overlays */}
+      {/* Background Liquid blobs */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-30">
         <motion.div 
           animate={{ 
@@ -73,7 +163,6 @@ export default function Landing() {
           className="absolute bottom-[-10%] right-[10%] w-[400px] h-[400px] bg-secondary/20 blur-[100px] rounded-full"
         />
         
-        {/* The "Ribbon" - Using SVGs and filters to create a liquid look */}
         <div className="absolute inset-0 flex items-center justify-center opacity-70 scale-110">
           <svg viewBox="0 0 200 200" className="w-full h-full max-w-2xl filter blur-sm">
             <defs>
@@ -94,6 +183,7 @@ export default function Landing() {
               transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
               transform="translate(100 100)" 
               fill="url(#liquidGrad)" 
+              className="opacity-75"
             />
           </svg>
         </div>
@@ -122,7 +212,6 @@ export default function Landing() {
           <div className="w-1.5 h-1.5 bg-secondary rounded-full mt-2" />
         </motion.div>
         
-        {/* iPhone Style Top Indicators Mockup (Time, Signal, Wifi, Battery) */}
         <div className="hidden sm:flex items-center gap-4 text-[11px] font-bold opacity-60">
           <span>9:41</span>
           <div className="flex gap-0.5">
@@ -164,15 +253,15 @@ export default function Landing() {
               placeholder="Enter your name (e.g. Aiman)" 
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
-              className="h-14 rounded-2xl bg-white/50 backdrop-blur-sm border-foreground/10 text-lg px-6"
+              className="h-14 rounded-2xl bg-white/50 backdrop-blur-sm border-foreground/10 text-lg px-6 text-black"
             />
             <Button 
               onClick={handleStart}
-              disabled={isLoading}
-              className="w-full h-16 bg-foreground text-background hover:bg-foreground/90 rounded-[2rem] text-lg font-bold flex items-center justify-between px-8 group"
+              disabled={isLoading || !nameInput.trim()}
+              className="w-full h-16 bg-foreground text-background hover:bg-foreground/90 rounded-[2rem] text-lg font-bold flex items-center justify-between px-8 group disabled:opacity-50"
             >
               {isLoading ? (
-                <>Loading Profile... <Loader2 className="w-6 h-6 animate-spin" /></>
+                <>Verifying Profile... <Loader2 className="w-6 h-6 animate-spin" /></>
               ) : (
                 <>Start NextGen <ArrowUpRight className="w-6 h-6 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" /></>
               )}
@@ -186,12 +275,121 @@ export default function Landing() {
           </div>
         </motion.div>
         
-        {/* Swipe indicator mockup */}
         <div className="w-32 h-1 bg-foreground/10 rounded-full mt-4" />
       </footer>
       
-      {/* Decorative Blur for Notch/Island feel */}
+      {/* Decorative Blur for Notch */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-8 bg-slate-900 rounded-b-3xl z-20 hidden sm:block" />
+
+      {/* Passcode Keypad Modal Overlay */}
+      <AnimatePresence>
+        {showPasscodeModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => {
+                if (!isVerifying) {
+                  setShowPasscodeModal(false);
+                  setPasscodeInput("");
+                  setErrorMsg("");
+                }
+              }}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-2xl z-50 flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white border border-pink-100 shadow-2xl rounded-[2.5rem] p-8 w-full max-w-sm flex flex-col items-center gap-6"
+              >
+                <div className="text-center space-y-2">
+                  <h3 className="text-xl font-black text-slate-900">Enter Passcode</h3>
+                  <p className="text-xs text-slate-500">
+                    Enter the 4-digit passcode for <strong>{nameInput}</strong> to access dashboard.
+                  </p>
+                </div>
+
+                {/* Passcode Dots */}
+                <div className="flex justify-center gap-4 py-2">
+                  {[0, 1, 2, 3].map((idx) => {
+                    const filled = passcodeInput.length > idx;
+                    return (
+                      <div
+                        key={idx}
+                        className={cn(
+                          "w-4 h-4 rounded-full border-2 transition-all duration-150",
+                          filled
+                            ? "bg-primary border-primary scale-110 shadow-sm shadow-primary/30"
+                            : "border-slate-300"
+                        )}
+                      />
+                    );
+                  })}
+                </div>
+
+                {errorMsg && (
+                  <p className="text-rose-500 text-xs font-bold text-center">
+                    {errorMsg}
+                  </p>
+                )}
+
+                {/* Keypad Grid */}
+                <div className="grid grid-cols-3 gap-3 w-full max-w-[240px] mx-auto pt-2">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                    <button
+                      key={num}
+                      disabled={isVerifying}
+                      onClick={() => handleKeypadPress(num.toString())}
+                      className="w-14 h-14 rounded-full bg-slate-50 active:bg-slate-100 disabled:opacity-50 text-slate-950 font-bold text-lg flex items-center justify-center transition-colors outline-none border border-slate-100 shadow-sm"
+                    >
+                      {num}
+                    </button>
+                  ))}
+                  <button
+                    disabled={isVerifying}
+                    onClick={handleKeypadClear}
+                    className="w-14 h-14 rounded-full text-slate-400 font-bold text-xs flex items-center justify-center outline-none"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    disabled={isVerifying}
+                    onClick={() => handleKeypadPress('0')}
+                    className="w-14 h-14 rounded-full bg-slate-50 active:bg-slate-100 disabled:opacity-50 text-slate-950 font-bold text-lg flex items-center justify-center transition-colors outline-none border border-slate-100 shadow-sm"
+                  >
+                    0
+                  </button>
+                  <button
+                    disabled={isVerifying}
+                    onClick={handleKeypadBackspace}
+                    className="w-14 h-14 rounded-full text-slate-400 font-bold text-xs flex items-center justify-center outline-none"
+                  >
+                    ⌫
+                  </button>
+                </div>
+
+                <div className="w-full flex gap-3 mt-2">
+                  <Button
+                    variant="outline"
+                    disabled={isVerifying}
+                    onClick={() => {
+                      setShowPasscodeModal(false);
+                      setPasscodeInput("");
+                      setErrorMsg("");
+                    }}
+                    className="flex-1 h-12 rounded-2xl text-xs font-bold border-slate-200 text-black hover:bg-slate-50"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
     </div>
   )
