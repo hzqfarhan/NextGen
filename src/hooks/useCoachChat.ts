@@ -89,11 +89,36 @@ export function useCoachChat() {
 
       // 2. Initialize current session ID
       const savedCurrentSessionId = localStorage.getItem('coach_current_session_id') || 'default';
-      setCurrentSessionId(savedCurrentSessionId);
+
+      // 2b. If the current session already has user messages, start a fresh session for this new visit!
+      const currentMessagesSaved = localStorage.getItem(`coach_messages_${savedCurrentSessionId}`);
+      let hasUserMessages = false;
+      if (currentMessagesSaved) {
+        try {
+          const parsed = JSON.parse(currentMessagesSaved);
+          hasUserMessages = Array.isArray(parsed) && parsed.some((m: any) => m.role === 'user');
+        } catch (e) {}
+      }
+
+      let activeId = savedCurrentSessionId;
+
+      if (hasUserMessages) {
+        activeId = Math.random().toString(36).substring(7);
+        const newSession = {
+          id: activeId,
+          title: `Sembang Baru / New Chat #${loadedSessions.length + 1}`,
+          createdAt: new Date().toISOString(),
+          isUncommitted: true
+        };
+        loadedSessions.push(newSession);
+        localStorage.setItem('coach_current_session_id', activeId);
+      }
+
+      setCurrentSessionId(activeId);
 
       // Clean loaded sessions list: keep the current active one, and any other session that has at least one user message
       const cleanedSessions = loadedSessions.filter((s: any) => {
-        if (s.id === savedCurrentSessionId) return true;
+        if (s.id === activeId) return true;
         const savedMessages = localStorage.getItem(`coach_messages_${s.id}`);
         if (!savedMessages) return false;
         try {
@@ -107,16 +132,19 @@ export function useCoachChat() {
       // Clear empty messages from localStorage for pruned sessions
       loadedSessions.forEach((s: any) => {
         const stillExists = cleanedSessions.some((cs: any) => cs.id === s.id);
-        if (!stillExists && s.id !== savedCurrentSessionId) {
+        if (!stillExists && s.id !== activeId) {
           localStorage.removeItem(`coach_messages_${s.id}`);
         }
       });
 
+      // Persist only committed sessions to localStorage
+      const committed = cleanedSessions.filter((s: any) => !s.isUncommitted);
+      localStorage.setItem('coach_sessions', JSON.stringify(committed));
+
       setSessions(cleanedSessions);
-      localStorage.setItem('coach_sessions', JSON.stringify(cleanedSessions));
 
       // 3. Load messages for the current session
-      const savedMessages = localStorage.getItem(`coach_messages_${savedCurrentSessionId}`);
+      const savedMessages = localStorage.getItem(`coach_messages_${activeId}`);
       if (savedMessages) {
         try {
           const parsed = JSON.parse(savedMessages);
@@ -128,7 +156,7 @@ export function useCoachChat() {
         } catch (e) {
           console.error(e);
         }
-      } else if (savedCurrentSessionId === 'default') {
+      } else if (activeId === 'default') {
         // Backward compatibility: import from old single-session cache
         const oldSaved = localStorage.getItem('coach_messages');
         if (oldSaved) {
@@ -149,7 +177,7 @@ export function useCoachChat() {
     triggerGreeting();
   }, []);
 
-  // Persist messages for the active session
+  // Persist messages for the active session and commit session if user interacted
   useEffect(() => {
     if (isLoaded && typeof window !== 'undefined' && currentSessionId) {
       localStorage.setItem(`coach_messages_${currentSessionId}`, JSON.stringify(messages));
@@ -157,8 +185,26 @@ export function useCoachChat() {
       if (currentSessionId === 'default') {
         localStorage.setItem('coach_messages', JSON.stringify(messages));
       }
+
+      // Check if this active session has user messages
+      const hasUserMsg = messages.some(m => m.role === 'user');
+      if (hasUserMsg) {
+        // Check if this session is currently marked as uncommitted in the state list
+        const sessionIndex = sessions.findIndex(s => s.id === currentSessionId);
+        if (sessionIndex !== -1 && sessions[sessionIndex].isUncommitted) {
+          // Commit it!
+           const updatedSessions = sessions.map((s: any) => 
+            s.id === currentSessionId ? { ...s, isUncommitted: false } : s
+          );
+          setSessions(updatedSessions);
+          
+          // Persist all committed sessions
+          const committed = updatedSessions.filter((s: any) => !s.isUncommitted);
+          localStorage.setItem('coach_sessions', JSON.stringify(committed));
+        }
+      }
     }
-  }, [messages, isLoaded, currentSessionId]);
+  }, [messages, isLoaded, currentSessionId, sessions]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -879,14 +925,14 @@ export function useCoachChat() {
     const newSession = {
       id: newId,
       title: `Sembang Baru / New Chat #${sessions.length + 1}`,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      isUncommitted: true
     };
 
-    // Prune any other empty sessions (except the new session we're creating)
+    // Clean current sessions list (remove uncommitted ones that don't have user messages)
     const currentSessionsList = JSON.parse(localStorage.getItem('coach_sessions') || '[]');
     const cleanedSessions = currentSessionsList.filter((s: any) => {
       if (s.id === currentSessionId) {
-        // Keep current session only if there is a user message
         return messages.some(m => m.role === 'user');
       }
       const savedMessages = localStorage.getItem(`coach_messages_${s.id}`);
@@ -915,7 +961,10 @@ export function useCoachChat() {
 
     const updatedSessions = [...cleanedSessions, newSession];
     setSessions(updatedSessions);
-    localStorage.setItem('coach_sessions', JSON.stringify(updatedSessions));
+
+    // Save committed sessions list to localStorage (exclude the new uncommitted one)
+    const committed = updatedSessions.filter((s: any) => !s.isUncommitted);
+    localStorage.setItem('coach_sessions', JSON.stringify(committed));
 
     setCurrentSessionId(newId);
     localStorage.setItem('coach_current_session_id', newId);
@@ -972,7 +1021,10 @@ export function useCoachChat() {
     }
 
     setSessions(cleanedSessions);
-    localStorage.setItem('coach_sessions', JSON.stringify(cleanedSessions));
+    
+    // Save committed sessions list to localStorage (exclude the target session if it is uncommitted)
+    const committed = cleanedSessions.filter((s: any) => !s.isUncommitted);
+    localStorage.setItem('coach_sessions', JSON.stringify(committed));
 
     setCurrentSessionId(id);
     localStorage.setItem('coach_current_session_id', id);

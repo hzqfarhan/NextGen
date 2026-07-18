@@ -63,6 +63,12 @@ export function Coach() {
     renameSession
   } = useCoachChat();
 
+  const closeDrawer = () => {
+    setShowSessionsDrawer(false);
+    setEditingSessionId(null);
+    setEditTitle("");
+  };
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isThinking])
@@ -108,39 +114,6 @@ export function Coach() {
               <ChevronLeft className="w-5 h-5 text-[#727272]" />
             </Link>
 
-            {/* Chat Sessions Drawer Toggle */}
-            <button 
-              onClick={() => setShowSessionsDrawer(true)}
-              className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F8F8F8] hover:bg-[#FFE9F2] border border-pink-100 transition-colors"
-              title="Perbualan Lain / Chat Sessions"
-            >
-              <MessageSquare className="w-4 h-4 text-[#727272]" />
-            </button>
-
-            {/* Export Chat Button */}
-            <button
-              onClick={() => {
-                const text = messages.map(m => {
-                  let content = m.content;
-                  if (m.structured) {
-                    content = `[${m.structured.headline}] ${m.structured.insight}\n${m.structured.lesson ? `Lesson: ${m.structured.lesson}` : ''}`;
-                  }
-                  return `[${m.role.toUpperCase()}] ${m.agent ? m.agent + ': ' : ''}${content}`;
-                }).join('\n\n');
-                const blob = new Blob([text], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'financial-coach-history.txt';
-                a.click();
-                setTimeout(() => URL.revokeObjectURL(url), 100);
-              }}
-              className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F8F8F8] hover:bg-[#FFE9F2] border border-pink-100 transition-colors"
-              title="Export Chat"
-            >
-              <Download className="w-4 h-4 text-[#727272]" />
-            </button>
-
             <div className="w-10 h-10 flex items-center justify-center">
               <Pet animation={(pet.animation as any) || (isThinking ? "think" : "idle")} size={40} />
             </div>
@@ -155,13 +128,15 @@ export function Coach() {
             </div>
           </div>
           <div className="flex gap-2 items-center">
-            <button
-              onClick={() => setShowClearConfirm(true)}
-              className="w-8 h-8 rounded-full bg-[#F8F8F8] flex items-center justify-center border border-pink-100 hover:bg-rose-50 transition-colors"
-              title="Clear Chat"
+            {/* Chat Sessions Drawer Toggle */}
+            <button 
+              onClick={() => setShowSessionsDrawer(true)}
+              className="w-8 h-8 rounded-full flex items-center justify-center bg-[#F8F8F8] hover:bg-[#FFE9F2] border border-pink-100 transition-colors"
+              title="Perbualan Lain / Chat Sessions"
             >
-              <Trash2 className="w-4 h-4 text-rose-500" />
+              <MessageSquare className="w-4 h-4 text-[#727272]" />
             </button>
+
             <Badge 
               variant="outline" 
               className="text-[9px] font-black text-white tracking-widest px-2.5 py-1 rounded-full cursor-pointer transition-all duration-300 border-none bg-gradient-to-r from-[#DF0059] via-[#CC0D5A] to-[#FF6B6B] shadow-md shadow-[#DF0059]/40 hover:shadow-lg hover:shadow-[#DF0059]/60 hover:scale-110 active:scale-95 flex items-center gap-1 animate-pulse"
@@ -474,7 +449,7 @@ export function Coach() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowSessionsDrawer(false)}
+              onClick={closeDrawer}
               className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
             {/* Drawer Content */}
@@ -492,7 +467,7 @@ export function Coach() {
                   <h3 className="font-extrabold text-base text-slate-950">Sembang Coach / Chats</h3>
                 </div>
                 <button
-                  onClick={() => setShowSessionsDrawer(false)}
+                  onClick={closeDrawer}
                   className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500"
                 >
                   <X className="w-4 h-4" />
@@ -503,7 +478,7 @@ export function Coach() {
               <Button
                 onClick={() => {
                   createSession();
-                  setShowSessionsDrawer(false);
+                  closeDrawer();
                 }}
                 className="w-full h-11 rounded-2xl bg-gradient-to-r from-primary to-rose-500 hover:opacity-95 text-white font-black text-xs gap-2 shadow-lg shadow-primary/20 mb-4"
               >
@@ -555,7 +530,7 @@ export function Coach() {
                         <button
                           onClick={() => {
                             switchSession(s.id);
-                            setShowSessionsDrawer(false);
+                            closeDrawer();
                           }}
                           onDoubleClick={() => {
                             setEditingSessionId(s.id);
@@ -572,7 +547,7 @@ export function Coach() {
                         </button>
                       )}
                       
-                      <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center gap-0.5 absolute right-2">
+                      <div className="flex items-center gap-0.5 absolute right-2">
                         {!isEditing && (
                           <button
                             onClick={(e) => {
@@ -586,20 +561,18 @@ export function Coach() {
                             ✎
                           </button>
                         )}
-                        {sessions.length > 1 && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm("Adakah anda pasti mahu memadam perbualan ini? / Delete this chat?")) {
-                                deleteSession(s.id);
-                              }
-                            }}
-                            className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50"
-                            title="Delete Chat"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm("Adakah anda pasti mahu memadam perbualan ini? / Delete this chat?")) {
+                              deleteSession(s.id);
+                            }
+                          }}
+                          className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50"
+                          title="Delete Chat"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
                   );
