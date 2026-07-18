@@ -30,7 +30,7 @@ export function StoreSyncHandler() {
         const username = (state.user.name || 'Aiman').trim().toLowerCase();
         const passcode = state.user.passcode || '';
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         const res = await fetch(`/api/sync?username=${username}&passcode=${passcode}`, {
           signal: controller.signal

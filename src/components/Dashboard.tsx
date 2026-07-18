@@ -69,7 +69,7 @@ export function Dashboard() {
     try {
       setIsGenerating(true);
       const { toPng } = await import('html-to-image');
-      
+
       // WebKit/Safari rendering cache workaround: Trigger a pre-render to force browser caching of inlined base64 SVG resources
       await toPng(shareCardRef.current, {
         pixelRatio: 2,
@@ -133,7 +133,7 @@ export function Dashboard() {
     try {
       setIsGenerating(true);
       const { toPng } = await import('html-to-image');
-      
+
       // WebKit/Safari rendering cache workaround: Trigger a pre-render to force browser caching of inlined base64 SVG resources
       await toPng(shareCardRef.current, {
         pixelRatio: 2,
@@ -215,23 +215,23 @@ export function Dashboard() {
     if (user.incomeSource === "irregular" || user.incomeSource === "lump-sum") {
       const startStr = user.lumpStartDate || user.setupDate;
       if (!startStr) return user.durationDays || 30;
-      
+
       let start = new Date(startStr);
       const duration = user.durationDays || 30;
       let end = new Date(start.getTime() + duration * 24 * 60 * 60 * 1000);
-      
+
       while (end.getTime() <= today.getTime()) {
         start = new Date(end);
         end = new Date(start.getTime() + duration * 24 * 60 * 60 * 1000);
       }
-      
+
       const diffTime = end.getTime() - today.getTime();
       return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
 
     if (!user.nextAllowanceDate) return 14;
     let nextDate = new Date(user.nextAllowanceDate);
-    
+
     while (nextDate.getTime() <= today.getTime()) {
       nextDate.setMonth(nextDate.getMonth() + 1);
     }
@@ -298,9 +298,9 @@ export function Dashboard() {
               syncStatus === 'error' && "bg-rose-50 border-rose-200 text-rose-500 dark:bg-rose-950/20 dark:border-rose-900/30 dark:text-rose-400"
             )} title={
               syncStatus === 'synced' ? 'Synced with Cloud' :
-              syncStatus === 'syncing' ? 'Syncing with Cloud...' :
-              syncStatus === 'offline' ? 'Offline mode - changes saved locally' :
-              'Sync Error - retrying later'
+                syncStatus === 'syncing' ? 'Syncing with Cloud...' :
+                  syncStatus === 'offline' ? 'Offline mode - changes saved locally' :
+                    'Sync Error - retrying later'
             }>
               {syncStatus === 'synced' && <Cloud className="w-5 h-5" />}
               {syncStatus === 'syncing' && <RefreshCw className="w-5 h-5 animate-spin" />}
@@ -717,24 +717,28 @@ function PromoCarousel() {
 
   const slides = [
     {
-      image: `${basePath}/assets/banner/banner1.png`,
-      link: "https://nextgen.haziqfarhan.my",
-      accent: "bg-[#DF0059]"
+      image: `${basePath}/assets/logos/1 on white background 1.png`,
+      link: "https://www.mlrg.net/aiotie-2026",
+      accent: "bg-[#DF0059]",
+      bgClass: "bg-white object-contain p-8"
     },
     {
-      image: `${basePath}/assets/banner/banner2.png`,
-      link: "https://nextgen.haziqfarhan.my",
-      accent: "bg-[#CC0D5A]"
+      image: `${basePath}/assets/logos/MLRG-PANEL.png`,
+      link: "https://www.mlrg.net/",
+      accent: "bg-[#CC0D5A]",
+      bgClass: "bg-white object-contain p-0 scale-140"
     },
     {
-      image: `${basePath}/assets/banner/banner3.png`,
-      link: "https://www.ipserverone.com/",
-      accent: "bg-[#E06E9C]"
+      image: `${basePath}/assets/logos/IMG_8512.PNG`,
+      link: "https://itcfsktm.uthm.edu.my/",
+      accent: "bg-[#E06E9C]",
+      bgClass: "bg-white object-contain p-0 scale-250 transform -translate-y-4"
     },
     {
-      image: `${basePath}/assets/banner/banner4.png`,
-      link: "https://nextgen.haziqfarhan.my",
-      accent: "bg-[#221F20]"
+      image: `${basePath}/assets/logos/uthm.png`,
+      link: "https://www.uthm.edu.my/",
+      accent: "bg-[#221F20]",
+      bgClass: "bg-white object-contain p-8"
     }
   ]
 
@@ -774,7 +778,7 @@ function PromoCarousel() {
             <img
               src={current.image}
               alt={`Banner ${index + 1}`}
-              className="w-full h-full object-cover"
+              className={cn("w-full h-full", current.bgClass || "object-cover")}
             />
           </motion.div>
         </AnimatePresence>
