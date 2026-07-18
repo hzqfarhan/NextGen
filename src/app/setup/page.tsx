@@ -292,6 +292,39 @@ export default function SetupPage() {
         confidence: 1.0
       };
 
+      // Calculate dynamic spending personality based on onboarding numbers
+      let calculatedPersonality = "Balanced Spender";
+      const totalIncome = incomeSource === "fixed" ? fixedAmount : (incomeSource === "lump-sum" ? lumpAmount : savingsAmount);
+      const commitmentRatio = totalIncome > 0 ? (totalCommitments / totalIncome) : 0;
+
+      if (employmentStatus === "Student") {
+        if (commitmentRatio > 0.4) {
+          calculatedPersonality = "Struggling Student • High Commitments";
+        } else if (startBalance < 300) {
+          calculatedPersonality = "Frugal Student • Tight Budget";
+        } else if (subscriptions > 30) {
+          calculatedPersonality = "Lifestyle Student • Subscription Lover";
+        } else {
+          calculatedPersonality = "Student Spender • Learning Budgeter";
+        }
+      } else if (employmentStatus === "Employed") {
+        if (commitmentRatio > 0.6) {
+          calculatedPersonality = "Debt Conscious • Heavy Commitments";
+        } else if (startBalance > 3000) {
+          calculatedPersonality = "Wealth Builder • Active Saver";
+        } else if (rent > totalIncome * 0.35) {
+          calculatedPersonality = "Rent Burdened • City Spender";
+        } else {
+          calculatedPersonality = "Balanced Spender • Career Professional";
+        }
+      } else { // Unemployed
+        if (startBalance > 1000) {
+          calculatedPersonality = "Buffer Builder • Savings Focus";
+        } else {
+          calculatedPersonality = "Thrifty Spender • Zero Income Alert";
+        }
+      }
+
       // Update Zustand store fields cleanly
       useStore.setState((state) => ({
         ...initialStoreState,
@@ -304,6 +337,7 @@ export default function SetupPage() {
           nextAllowanceDate: new Date(finalResetDate).toISOString(),
           incomeSource: incomeSource,
           fixedFrequency: fixedFrequency,
+          spendingPersonality: calculatedPersonality,
           setupDate: new Date().toISOString(),
           durationDays: durationDays,
           lumpStartDate: lumpStartDate,
