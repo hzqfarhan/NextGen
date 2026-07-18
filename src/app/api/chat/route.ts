@@ -83,7 +83,15 @@ CRITICAL OUTPUT RULES — YOU MUST FOLLOW EXACTLY:
 }
 3. If the question is NOT about personal finance, money, savings, bills, debt, or investments:
    Return: { "headline": "Finance questions only.", "status": "neutral", "insight": "Ask me about your budget, savings, or spending limits.", "lesson": null, "metric": null, "action": null, "actionType": null, "followUps": [] }
-4. LOCALIZATION & DIALECTS: Automatically detect if the user is using a Malaysian dialect (e.g. Kelantan, Terengganu, Sabah, Sarawak, Utara) or casual slang/Manglish. If a dialect is detected, you MUST write the 'headline', 'insight', and 'action' strictly in that SAME dialect, ensuring cultural nuance and local slang are well represented.
+4. LOCALIZATION & DIALECTS: BeU NextGen users speak in various Malaysian dialects. Automatically detect their dialect/slang and respond strictly in that SAME dialect/slang for the 'headline', 'insight', 'action', and 'followUps' arrays.
+   Follow these dialect tuning guidelines:
+   - KELANTAN (Baso Kelate): Use 'demo' (you), 'ambo/kito' (me), 'gapo' (what), 'guano' (how), 'make' (makan), 'simpe' (simpan), 'baya' (bayar), 'pitih' (money), 'soh' (don't), 'jah' (only). E.g. "Simpe pitih dlu demo, soh perabih."
+   - TERENGGANU: Use 'mu' (you), 'guane' (how), 'mende' (what), 'makang' (makan), 'simpang' (simpan), 'duik' (money), 'sokmo' (always). E.g. "Simpang duik sokmo mu, guane nok labur?"
+   - UTARA (Kedah/Penang): Use 'hang' (you), 'depa' (them), 'lagu mana' (how), 'awat' (why), 'habaq' (tell), 'la' (now), 'sempoi' (cool). E.g. "Awat hang tak simpan la? Lagu mana nak sempoi."
+   - SABAH: Use 'bah' particle, 'sia' (me), 'ko' (you), 'ndak' (no/not), 'kamurang' (you all). E.g. "Simpan sikit-sikit bah, ndak rugi ko nanti."
+   - SARAWAK: Use 'kamek' (me), 'kitak' (you), 'sik' (no/not), 'gine' (how), 'tok' (this), 'iboh' (don't). E.g. "Iboh bazir duit kitak, nang bagus simpan tok."
+   - MANGLISH: Use particles like 'lah', 'leh', 'meh', 'already'. E.g. "Wallet bleeding already, must save now lah."
+   Ensure the response sounds natural, highly authentic, and culturally relatable. Do not mix formal standard Malay in a robotic way.
 5. ACTION & ALIGNMENT: The 'action' and 'actionType' must be perfectly aligned with the headline/insight content. If you are recommending boosting the Emergency Fund, saving, or managing goals, you MUST set 'actionType' to 'go_savings' and 'action' to something like 'Go to Savings' or 'Add to Emergency Fund'. Do NOT use 'go_transfer' or 'toggle_spend_guard' for saving/pocket recommendations.
 6. FOLLOW-UP PERSPECTIVE: Every item in the 'followUps' array MUST be written from the user's perspective (i.e. what the user would say or ask the agent next). For example, write 'Boleh tolong aktifkan Spend Guard untuk saya?' or 'Bagaimana cara simpan RM50?' instead of 'Boleh saya aktifkan Spend Guard untuk anda?'.
 `;
@@ -312,40 +320,73 @@ export async function POST(req: NextRequest) {
             requestBody.tools = [{ functionDeclarations: TOOL_DECLARATIONS }];
         }
 
-        const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-        let response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody),
-            }
-        );
-
-        let isFallbackModel = false;
+        const primaryModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
         
-        // 3.2a Model Cascading on Rate Limit
-        if (!response.ok && response.status === 429) {
-            console.warn(`[AI Chat] Rate limit hit on ${modelName}, cascading to gemini-2.0-flash-lite`);
-            const fallbackModelName = 'gemini-2.0-flash-lite';
-            response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModelName}:generateContent?key=${apiKey}`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody),
+        // Define the fallback chain of models to try in sequence
+        const fallbackChain = [
+            'gemini-2.5-flash',
+            'gemini-2.0-flash',
+            'gemini-2.0-flash-lite',
+            'gemini-1.5-flash'
+        ];
+
+        // Create the full order of models to try, ensuring primary is first and no duplicates
+        const modelsToTry = [
+            primaryModel,
+            ...fallbackChain.filter(m => m !== primaryModel)
+        ];
+
+        let response: any = null;
+        let activeModel = primaryModel;
+        let isFallbackModel = false;
+
+        for (let i = 0; i < modelsToTry.length; i++) {
+            activeModel = modelsToTry[i];
+            console.log(`[AI Chat] Attempting request using model: ${activeModel}`);
+            
+            try {
+                response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${apiKey}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody),
+                    }
+                );
+
+                if (response.ok) {
+                    if (activeModel !== primaryModel) {
+                        isFallbackModel = true;
+                        console.warn(`[AI Chat] Primary model ${primaryModel} failed. Successfully fell back to ${activeModel}.`);
+                    }
+                    break;
                 }
-            );
-            isFallbackModel = true;
+
+                // Log error response and check if we can cascade to the next model
+                const errBody = await response.text();
+                console.warn(`[AI Chat] Model ${activeModel} failed with status ${response.status}: ${errBody}`);
+                
+                if (i === modelsToTry.length - 1) {
+                    break;
+                }
+            } catch (err: any) {
+                console.error(`[AI Chat] Fetch failed for model ${activeModel}:`, err?.message || err);
+                if (i === modelsToTry.length - 1) {
+                    return NextResponse.json({ 
+                        reply: null, 
+                        fallback: true,
+                        error: `Gemini API fetch failed: ${err?.message || 'Unknown error'}` 
+                    });
+                }
+            }
         }
 
-        if (!response.ok) {
-            const errBody = await response.text();
-            console.error('[AI Chat] Gemini API error:', response.status, errBody);
+        if (!response || !response.ok) {
+            const status = response ? response.status : 500;
             return NextResponse.json({ 
                 reply: null, 
                 fallback: true,
-                error: `Gemini API returned ${response.status}` 
+                error: `Gemini API returned final status ${status} after trying all cascade models.` 
             });
         }
 
