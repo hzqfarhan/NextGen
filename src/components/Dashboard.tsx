@@ -795,7 +795,7 @@ function PromoCarousel() {
                 if (diff > 40) goNext();
                 if (diff < -40) goPrev();
               } else if (duration < 250) {
-                window.open(current.link, '_blank', 'noopener,noreferrer');
+                window.location.href = current.link;
               }
               window.removeEventListener('mouseup', onMouseUp);
             };
@@ -811,7 +811,7 @@ function PromoCarousel() {
                 if (diff > 40) goNext();
                 if (diff < -40) goPrev();
               } else if (duration < 250) {
-                window.open(current.link, '_blank', 'noopener,noreferrer');
+                window.location.href = current.link;
               }
               window.removeEventListener('touchend', onTouchEnd);
             };

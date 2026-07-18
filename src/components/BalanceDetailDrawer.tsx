@@ -3,6 +3,7 @@
 import { useStore } from "@/store/useStore"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Switch } from "@/components/ui/switch"
 import {
   Wallet,
@@ -24,6 +25,7 @@ interface BalanceDetailDrawerProps {
 }
 
 export function BalanceDetailDrawer({ open, onClose }: BalanceDetailDrawerProps) {
+  const router = useRouter()
   const { user, savingsPockets, language, showSpendOnly, setShowSpendOnly, hideBalance, setHideBalance } = useStore()
   const bills = useStore(state => state.bills)
   const strings = t[language]
@@ -145,17 +147,32 @@ export function BalanceDetailDrawer({ open, onClose }: BalanceDetailDrawerProps)
                 
                 {/* Spend Section */}
                 <div className="py-3">
-                  <div className="flex items-center justify-between mb-3">
+                  <div 
+                    onClick={() => {
+                      onClose();
+                      router.push('/transactions');
+                    }}
+                    className="flex items-center justify-between mb-3 cursor-pointer hover:opacity-80 transition-opacity"
+                  >
                     <div className="flex items-center gap-2">
                       <Wallet className="w-4 h-4 text-foreground" />
                       <span className="text-sm font-bold">Spend</span>
                     </div>
-                    <span className="text-sm font-bold">{formatRM(user.currentBalance)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold">{formatRM(user.currentBalance)}</span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+                    </div>
                   </div>
 
                   <div className="ml-6 space-y-2">
                     {/* eWallet row */}
-                    <div className="flex items-center justify-between group cursor-pointer">
+                    <div 
+                      onClick={() => {
+                        onClose();
+                        router.push('/transactions');
+                      }}
+                      className="flex items-center justify-between group cursor-pointer hover:opacity-80 transition-opacity"
+                    >
                       <div>
                         <p className="text-xs font-medium text-muted-foreground">eWallet</p>
                         <p className="text-xs font-bold">{formatRM(spendableBalance)}</p>
@@ -185,18 +202,34 @@ export function BalanceDetailDrawer({ open, onClose }: BalanceDetailDrawerProps)
 
                 {/* Save Section */}
                 <div className="py-3">
-                  <div className="flex items-center justify-between mb-3">
+                  <div 
+                    onClick={() => {
+                      onClose();
+                      router.push('/savings');
+                    }}
+                    className="flex items-center justify-between mb-3 cursor-pointer hover:opacity-80 transition-opacity"
+                  >
                     <div className="flex items-center gap-2">
                       <PiggyBank className="w-4 h-4 text-emerald-500" />
                       <span className="text-sm font-bold">Save</span>
                     </div>
-                    <span className="text-sm font-bold">{formatRM(savingsPocketsTotal)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold">{formatRM(savingsPocketsTotal)}</span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+                    </div>
                   </div>
 
                   {savingsPocketsList.length > 0 ? (
                     <div className="ml-6 space-y-2">
                       {savingsPocketsList.map(pocket => (
-                        <div key={pocket.id} className="flex items-center justify-between group cursor-pointer">
+                        <div 
+                          key={pocket.id} 
+                          onClick={() => {
+                            onClose();
+                            router.push('/savings');
+                          }}
+                          className="flex items-center justify-between group cursor-pointer hover:opacity-80 transition-opacity"
+                        >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">{pocket.icon}</span>
                             <div>
@@ -206,9 +239,9 @@ export function BalanceDetailDrawer({ open, onClose }: BalanceDetailDrawerProps)
                               </p>
                             </div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-right flex items-center gap-1">
                             <p className="text-xs font-bold">{formatRM(pocket.current)}</p>
-                            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 ml-auto" />
+                            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40" />
                           </div>
                         </div>
                       ))}
@@ -231,7 +264,13 @@ export function BalanceDetailDrawer({ open, onClose }: BalanceDetailDrawerProps)
 
                 {/* Invest Section */}
                 <div className="py-3">
-                  <div className="flex items-center justify-between mb-3">
+                  <div 
+                    onClick={() => {
+                      onClose();
+                      router.push('/savings');
+                    }}
+                    className="flex items-center justify-between mb-3 cursor-pointer hover:opacity-80 transition-opacity"
+                  >
                     <div className="flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-primary" />
                       <span className="text-sm font-bold">Invest</span>
@@ -245,7 +284,14 @@ export function BalanceDetailDrawer({ open, onClose }: BalanceDetailDrawerProps)
                   {growthPockets.length > 0 ? (
                     <div className="ml-6 space-y-2">
                       {growthPockets.map(pocket => (
-                        <div key={pocket.id} className="flex items-center justify-between group cursor-pointer">
+                        <div 
+                          key={pocket.id} 
+                          onClick={() => {
+                            onClose();
+                            router.push('/savings');
+                          }}
+                          className="flex items-center justify-between group cursor-pointer hover:opacity-80 transition-opacity"
+                        >
                           <div className="flex items-center gap-2">
                             <span className="text-sm">{pocket.icon}</span>
                             <div>
@@ -255,7 +301,10 @@ export function BalanceDetailDrawer({ open, onClose }: BalanceDetailDrawerProps)
                               </p>
                             </div>
                           </div>
-                          <p className="text-xs font-bold">{formatRM(pocket.current)}</p>
+                          <div className="text-right flex items-center gap-1">
+                            <p className="text-xs font-bold">{formatRM(pocket.current)}</p>
+                            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40" />
+                          </div>
                         </div>
                       ))}
                     </div>
