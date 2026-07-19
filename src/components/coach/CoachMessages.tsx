@@ -79,6 +79,11 @@ export function CoachMessages(props: CoachMessagesProps) {
                     m.role === 'assistant' ? "bg-white/95 border border-pink-100 text-[#221F20]" : "bg-primary text-white font-medium"
                   )}>
                     {m.content}
+                    {m.deduction !== undefined && (
+                      <p className="text-[7px] text-muted-foreground italic mt-1">
+                        Deducted from your RM {m.deduction.toFixed(2)} balance
+                      </p>
+                    )}
                     {m.isFallbackModel && (
                       <div className="mt-2 text-[8px] text-amber-500 font-bold flex items-center gap-1">
                         ⚠️ High traffic. Using fallback model.
@@ -135,6 +140,8 @@ export function CoachMessages(props: CoachMessagesProps) {
                   >
                     <ProposalCard 
                       message={m} 
+                      index={i}
+                      totalMessages={messages.length}
                       onAction={handleAction} 
                       isExecuting={isExecuting}
                     />

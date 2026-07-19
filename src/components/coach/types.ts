@@ -18,7 +18,7 @@ export interface Agent {
 export interface ChatAction {
   id: string;
   label: string;
-  type: 'create_pocket' | 'postpone' | 'prioritize_emergency' | 'transfer' | 'simulate_affordability' | 'add_funds' | 'follow_up';
+  type: 'create_pocket' | 'postpone' | 'prioritize_emergency' | 'transfer' | 'simulate_affordability' | 'add_funds' | 'follow_up' | 'check_bills' | 'pay_bill' | 'setup_bill_prompt' | 'save_setup_and_pay';
   payload?: any;
 }
 
@@ -121,6 +121,17 @@ export interface ListPocketsProposal {
   type: 'list_pockets';
 }
 
+export interface CheckBillsListProposal {
+  type: 'check_bills_list';
+  bills: any[];
+  totalAmount: number;
+}
+
+export interface SetupBillFormProposal {
+  type: 'setup_bill_form';
+  bill: any;
+}
+
 export type ProposalType = 
   | CreatePocketProposal 
   | AddFundsProposal 
@@ -133,7 +144,9 @@ export type ProposalType =
   | SpendingBreakdownProposal 
   | BillTimelineProposal 
   | OtpVerificationProposal 
-  | ListPocketsProposal;
+  | ListPocketsProposal
+  | CheckBillsListProposal
+  | SetupBillFormProposal;
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -145,4 +158,5 @@ export interface Message {
   redirect?: { label: string; href: string };
   isFallbackModel?: boolean;
   timestamp: string;
+  deduction?: number;
 }

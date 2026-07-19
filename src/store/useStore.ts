@@ -1138,7 +1138,7 @@ const useStoreBase = create<NextGenState>()(
       payBillNow: (id) => {
         const state = get();
         const bill = state.bills.find(b => b.id === id);
-        if (!bill) return;
+        if (!bill || bill.status === 'needs_setup') return;
 
         const transactionId = Math.random().toString(36).substring(7);
         const paymentRecord: BillPaymentRecord = {

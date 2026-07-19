@@ -104,29 +104,31 @@ export function BillCard({ bill, onEdit }: BillCardProps) {
               </div>
             </div>
             
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors">
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
-                }
-              />
-              <DropdownMenuContent className="rounded-xl border-slate-200 bg-white/95 backdrop-blur-xl shadow-lg">
-                <DropdownMenuItem 
-                  className="text-xs font-bold gap-2 text-slate-700 hover:text-slate-900 focus:bg-slate-50 cursor-pointer"
-                  onClick={() => onEdit(bill)}
-                >
-                  <Pencil className="w-3.5 h-3.5" /> {strings.billsEdit}
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="text-xs font-bold gap-2 text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer"
-                  onClick={() => setShowDeleteModal(true)}
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> {strings.billsDelete}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {!isPaid && (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent className="rounded-xl border-slate-200 bg-white/95 backdrop-blur-xl shadow-lg">
+                  <DropdownMenuItem 
+                    className="text-xs font-bold gap-2 text-slate-700 hover:text-slate-900 focus:bg-slate-50 cursor-pointer"
+                    onClick={() => onEdit(bill)}
+                  >
+                    <Pencil className="w-3.5 h-3.5" /> {strings.billsEdit}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="text-xs font-bold gap-2 text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer"
+                    onClick={() => setShowDeleteModal(true)}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> {strings.billsDelete}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           {/* Middle Row: Amount and Status */}

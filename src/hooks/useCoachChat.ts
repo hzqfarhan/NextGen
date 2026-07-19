@@ -68,7 +68,7 @@ export function useCoachChat() {
         role: 'assistant',
         agent: 'Commitment Shield',
         content: `Hey! You have ${urgentBills} urgent bill(s) due soon. Want me to check if you have enough balance to cover them?`,
-        actions: [{ id: 'check_bills', label: 'Check Bills', type: 'postpone' }]
+        actions: [{ id: 'check_bills', label: 'Check Bills', type: 'check_bills' }]
       };
     } else if (isBroke) {
       greetingMessage = {
@@ -390,20 +390,12 @@ export function useCoachChat() {
           const deposit = fnCall.args.deposit || 0;
           const mode = fnCall.args.mode || 'savings';
           const riskLevel = mode === 'growth' ? 'medium' : 'low';
-          addSavingsPocket({
-            id: Math.random().toString(36).substring(2, 11),
-            name: fnCall.args.name,
-            target: fnCall.args.target,
-            current: deposit,
-            icon: '💰',
-            mode: mode as 'savings' | 'growth',
-            riskLevel: riskLevel as 'low' | 'medium',
-          });
+          store.setSaveTarget(fnCall.args.target.toString());
+          store.setSaveDeposit(deposit.toString());
           useStore.setState({ pet: { ...useStore.getState().pet, animation: "happy" } });
           return {
             success: true,
-            message: `Done! I've created your "${fnCall.args.name}" pocket with a target of RM ${fnCall.args.target}${deposit > 0 ? ` and an initial deposit of RM ${deposit}` : ''}. Track it in the Savings tab!`,
-            redirect: { label: 'Go to Savings', href: '/savings' },
+            message: `I can help you set up the "${fnCall.args.name}" pocket with a target of RM ${fnCall.args.target}. Would you like to confirm this${deposit > 0 ? ` and make an initial deposit of RM ${deposit}` : ' with an initial deposit'}?`,
             proposal: { type: 'create_pocket', name: fnCall.args.name, target: fnCall.args.target, current: deposit, icon: '💰', mode, riskLevel }
           };
         }
@@ -520,12 +512,14 @@ export function useCoachChat() {
     let responseText = "";
     let redirect: { href: string; label: string } | undefined;
     let proposal: any = undefined;
+    let deduction: number | undefined = undefined;
 
     switch (action.type) {
       case 'create_pocket':
         try {
           const store = useStore.getState();
           const depositVal = parseFloat(store.saveDeposit) || 0;
+          const oldBalance = store.user.currentBalance;
           addSavingsPocket({
             id: Math.random().toString(36).substring(2, 11),
             name: action.payload.name,
@@ -548,7 +542,10 @@ export function useCoachChat() {
             if (lastIdx > -1) next.splice(lastIdx, 1);
             return next;
           });
-          responseText = `Awesome! I've created the ${action.payload.name} pocket for you.`;
+          responseText = `Done! I've created your "${action.payload.name}" pocket with a target of RM ${action.payload.target}. Track it in the Savings tab!`;
+          if (depositVal > 0) {
+            deduction = oldBalance;
+          }
           setUndoToast({
             message: "Pocket created",
             onUndo: () => {
@@ -646,6 +643,211 @@ export function useCoachChat() {
           useStore.setState({ pet: { ...useStore.getState().pet, animation: "angry" } });
         }
         break;
+      case 'check_bills': {
+        const storeState = useStore.getState();
+        const urgentBillsList = storeState.bills.filter(b => b.status !== 'paid');
+
+        const totalAmount = urgentBillsList.reduce((sum, b) => sum + b.amount, 0);
+
+        responseText = `Here are your upcoming bills. The total amount is RM ${totalAmount.toFixed(2)}. Would you like to make a payment now?`;
+        
+        setMessages(prev => [
+          ...prev,
+          {
+            timestamp: new Date().toISOString(),
+            role: 'assistant',
+            agent: 'Commitment Shield',
+            content: responseText,
+            proposal: {
+              type: 'check_bills_list',
+              bills: urgentBillsList,
+              totalAmount
+            }
+          }
+        ]);
+        haptic.success();
+        setIsExecuting(false);
+        return;
+      }
+      case 'pay_bill': {
+        try {
+          const storeState = useStore.getState();
+          const billId = action.payload.billId;
+          const bill = storeState.bills.find(b => b.id === billId);
+          if (!bill) {
+            throw new Error("Bill not found.");
+          }
+          if (bill.status === 'needs_setup') {
+            throw new Error(`The bill "${bill.name}" requires setup (account/reference number) before you can pay it.`);
+          }
+
+          if (storeState.user.currentBalance < bill.amount) {
+            throw new Error(`Insufficient balance to pay this bill (Need RM ${bill.amount.toFixed(2)}, Balance is RM ${storeState.user.currentBalance.toFixed(2)}).`);
+          }
+
+          storeState.payBillNow(billId);
+
+          responseText = `Done! I've paid RM ${bill.amount.toFixed(2)} for your ${bill.name} bill. Your new balance is RM ${useStore.getState().user.currentBalance.toFixed(2)}.`;
+          
+          setMessages(prev => [
+            ...prev,
+            {
+              timestamp: new Date().toISOString(),
+              role: 'assistant',
+              agent: 'Commitment Shield',
+              content: responseText
+            }
+          ]);
+          haptic.success();
+          setIsExecuting(false);
+          return;
+        } catch (error: any) {
+          responseText = `Warning: ${error.message}`;
+          useStore.setState({ pet: { ...useStore.getState().pet, animation: "angry" } });
+          setMessages(prev => [
+            ...prev,
+            {
+              timestamp: new Date().toISOString(),
+              role: 'assistant',
+              agent: 'Commitment Shield',
+              content: responseText
+            }
+          ]);
+          setIsExecuting(false);
+          return;
+        }
+      }
+      case 'setup_bill_prompt': {
+        const storeState = useStore.getState();
+        const billId = action.payload.billId;
+        const bill = storeState.bills.find(b => b.id === billId);
+        if (!bill) {
+          responseText = "Warning: Bill not found.";
+          setIsExecuting(false);
+          return;
+        }
+
+        responseText = `Let's complete the setup for **${bill.name}** first so you can enable AutoPay and safely pay it. Please enter the Account / Reference Number:`;
+        setMessages(prev => [
+          ...prev,
+          {
+            timestamp: new Date().toISOString(),
+            role: 'assistant',
+            agent: 'Commitment Shield',
+            content: responseText,
+            proposal: {
+              type: 'setup_bill_form',
+              bill
+            }
+          }
+        ]);
+        haptic.success();
+        setIsExecuting(false);
+        return;
+      }
+      case 'save_setup_and_pay': {
+        try {
+          const storeState = useStore.getState();
+          const billId = action.payload.billId;
+          const setupData = action.payload.setupData || {};
+          const bill = storeState.bills.find(b => b.id === billId);
+          if (!bill) {
+            throw new Error("Bill not found.");
+          }
+
+          // Check if any fields in setupData are empty
+          const missingFields: string[] = [];
+          Object.entries(setupData).forEach(([key, val]) => {
+            if (typeof val === 'string' && val.trim() === '') {
+              missingFields.push(key);
+            }
+          });
+
+          if (missingFields.length > 0) {
+            throw new Error("All setup fields are required. Please fill in all fields.");
+          }
+
+          // Determine name and amount updates
+          let updatedName = bill.name;
+          let updatedAmount = bill.amount;
+          
+          if (setupData.provider) {
+            const isPrepaid = (bill.category === 'prepaid_topup' || bill.name.toLowerCase().includes('prepaid'));
+            updatedName = `${setupData.provider} ${isPrepaid ? 'Prepaid' : 'Postpaid'}`;
+          }
+          if (setupData.amount) {
+            updatedAmount = parseFloat(setupData.amount) || bill.amount;
+          }
+
+          // Update the bill in Zustand store
+          useStore.setState(state => ({
+            bills: state.bills.map(b => b.id === billId ? {
+              ...b,
+              name: updatedName,
+              amount: updatedAmount,
+              accountNumber: setupData.accountNumber || b.accountNumber || setupData.referenceNumber,
+              referenceNumber: setupData.referenceNumber || b.referenceNumber,
+              billerCode: setupData.billerCode || b.billerCode,
+              bankName: setupData.bankName || b.bankName,
+              recipientName: setupData.recipientName || b.recipientName,
+              provider: setupData.provider || b.provider,
+              productType: setupData.productType || b.productType,
+              passType: setupData.passType || b.passType,
+              vehicleLabel: setupData.vehicleLabel || b.vehicleLabel,
+              serviceName: setupData.serviceName || b.serviceName,
+              planName: setupData.planName || b.planName,
+              accountEmail: setupData.accountEmail || b.accountEmail,
+              paymentSourceLabel: setupData.paymentSourceLabel || b.paymentSourceLabel,
+              tngCardNickname: setupData.tngCardNickname || b.tngCardNickname,
+              tngCardLast4: setupData.tngCardLast4 || b.tngCardLast4,
+              ref1: setupData.ref1 || b.ref1,
+              ref2: setupData.ref2 || b.ref2,
+              status: 'upcoming',
+              isLocked: true,
+              autopayEnabled: true
+            } : b)
+          }));
+
+          // Trigger payBillNow
+          const updatedBill = useStore.getState().bills.find(b => b.id === billId);
+          if (!updatedBill) throw new Error("Failed to retrieve updated bill.");
+
+          if (storeState.user.currentBalance < updatedBill.amount) {
+            throw new Error(`Insufficient balance to pay this bill (Need RM ${updatedBill.amount.toFixed(2)}, Balance is RM ${storeState.user.currentBalance.toFixed(2)}).`);
+          }
+
+          storeState.payBillNow(billId);
+
+          responseText = `Setup completed! Account information updated for **${updatedBill.name}** and AutoPay has been enabled. I've successfully locked your bill and paid RM ${updatedBill.amount.toFixed(2)} for ${updatedBill.name}.`;
+          
+          setMessages(prev => [
+            ...prev,
+            {
+              timestamp: new Date().toISOString(),
+              role: 'assistant',
+              agent: 'Commitment Shield',
+              content: responseText
+            }
+          ]);
+          haptic.success();
+          setIsExecuting(false);
+          return;
+        } catch (error: any) {
+          responseText = `Warning: ${error.message}`;
+          useStore.setState({ pet: { ...useStore.getState().pet, animation: "angry" } });
+          setMessages(prev => [
+            ...prev,
+            {
+              timestamp: new Date().toISOString(),
+              role: 'assistant',
+              agent: 'Commitment Shield',
+              content: responseText
+            }
+          ]);
+          setIsExecuting(false);
+          return;
+        }
+      }
       case 'postpone':
         responseText = "Understood. I've moved this suggestion to the backlog.";
         break;
@@ -751,7 +953,7 @@ export function useCoachChat() {
         store.setAffordItem(""); store.setAffordPrice(""); setIsExecuting(false);
         return;
     }
-    setMessages(prev => [...prev, { timestamp: new Date().toISOString(), role: 'assistant', agent: action.type === 'transfer' ? 'Finance Strategist' : 'Savings Sentinel', content: responseText, redirect, proposal }]);
+    setMessages(prev => [...prev, { timestamp: new Date().toISOString(), role: 'assistant', agent: action.type === 'transfer' ? 'Finance Strategist' : 'Savings Sentinel', content: responseText, redirect, proposal, deduction }]);
     haptic.success();
     setIsExecuting(false);
   };

@@ -9,6 +9,116 @@ import { cn } from "@/lib/utils"
 import { Message, ChatAction } from "./types"
 import { useStore } from "@/store/useStore"
 
+function getFieldsForBill(bill: any) {
+  const nameLower = (bill.name || "").toLowerCase();
+  const catLower = (bill.category || "").toLowerCase();
+  
+  if (catLower === 'rent' || catLower === 'housing') {
+    return {
+      type: 'rent',
+      title: 'Rent / Hostel Setup',
+      fields: [
+        { name: 'bankName', label: 'Bank Name', type: 'select', options: ['Maybank', 'CIMB Bank', 'Public Bank', 'RHB Bank', 'Hong Leong Bank', 'AmBank', 'UOB Malaysia', 'Bank Rakyat'] },
+        { name: 'accountNumber', label: 'Bank Account Number', type: 'text', placeholder: 'e.g. 1234567890' },
+        { name: 'recipientName', label: 'Recipient Name', type: 'text', placeholder: 'e.g. Encik Ali' },
+        { name: 'referenceNumber', label: 'Recipient Reference', type: 'text', placeholder: 'e.g. Rent Payment' }
+      ]
+    };
+  }
+  
+  if (nameLower.includes('prepaid') || nameLower.includes('top up') || nameLower.includes('topup') || catLower === 'prepaid_topup') {
+    return {
+      type: 'prepaid',
+      title: 'Prepaid Top Up Setup',
+      fields: [
+        { name: 'provider', label: 'Telco Provider', type: 'select', options: ['Hotlink', 'Celcom', 'Digi', 'U Mobile', 'Tune Talk', 'XOX'] },
+        { name: 'referenceNumber', label: 'Mobile Number', type: 'text', placeholder: 'e.g. 0123456789' },
+        { name: 'amount', label: 'Top Up Amount (RM)', type: 'select', options: ['5', '10', '20', '30', '50', '100'] }
+      ]
+    };
+  }
+
+  if (catLower === 'phone' || catLower === 'telecommunication' || nameLower.includes('postpaid') || nameLower.includes('phone')) {
+    return {
+      type: 'postpaid',
+      title: 'Postpaid Bill Setup',
+      fields: [
+        { name: 'provider', label: 'Telco Provider', type: 'select', options: ['Celcom Postpaid', 'Maxis Postpaid', 'Digi Postpaid', 'U Mobile Postpaid'] },
+        { name: 'referenceNumber', label: 'Mobile Number', type: 'text', placeholder: 'e.g. 0123456789' },
+        { name: 'billerCode', label: 'JomPAY Biller Code', type: 'text', placeholder: 'e.g. 1234' },
+        { name: 'accountNumber', label: 'Account Number', type: 'text', placeholder: 'e.g. 1002348576' }
+      ]
+    };
+  }
+
+  if (catLower === 'ptptn' || catLower === 'education' || nameLower.includes('loan') || nameLower.includes('ptptn')) {
+    return {
+      type: 'ptptn',
+      title: 'PTPTN Loan Setup',
+      fields: [
+        { name: 'productType', label: 'PTPTN Product Type', type: 'select', options: ['Ujrah (1%)', 'Conventional', 'SSPN-i', 'SSPN-i Plus'] },
+        { name: 'billerCode', label: 'JomPAY Biller Code', type: 'text', placeholder: 'e.g. 4848' },
+        { name: 'ref1', label: 'Ref-1 (IC Number)', type: 'text', placeholder: 'e.g. 010203-14-5566' },
+        { name: 'ref2', label: 'Ref-2 (Phone Number)', type: 'text', placeholder: 'e.g. 0123456789' }
+      ]
+    };
+  }
+
+  if (catLower === 'internet' || nameLower.includes('wifi') || nameLower.includes('internet') || nameLower.includes('fibre')) {
+    return {
+      type: 'internet',
+      title: 'Internet Bill Setup',
+      fields: [
+        { name: 'provider', label: 'Provider', type: 'select', options: ['Unifi', 'TIME', 'Maxis Fibre', 'Astro Fibre', 'Allo'] },
+        { name: 'accountNumber', label: 'Account Number', type: 'text', placeholder: 'e.g. 100293847' }
+      ]
+    };
+  }
+
+  if (catLower === 'streaming' || catLower === 'entertainment' || nameLower.includes('subscription') || nameLower.includes('netflix') || nameLower.includes('spotify')) {
+    return {
+      type: 'streaming',
+      title: 'Subscription Setup',
+      fields: [
+        { name: 'serviceName', label: 'Service Name', type: 'select', options: ['Netflix', 'Spotify', 'YouTube Premium', 'iCloud', 'Disney+ Hotstar', 'Amazon Prime', 'HBO Go'] },
+        { name: 'accountEmail', label: 'Account Email', type: 'text', placeholder: 'your@email.com' },
+        { name: 'paymentSourceLabel', label: 'Payment Source', type: 'select', options: ['NextGen Card •••• 4292', 'Main Account', 'Other Bank Card'] }
+      ]
+    };
+  }
+
+  if (catLower === 'transport' || nameLower.includes('tng') || nameLower.includes('rapid') || nameLower.includes('pass') || catLower === 'transport') {
+    return {
+      type: 'transport',
+      title: 'Transport Pass Setup',
+      fields: [
+        { name: 'passType', label: 'Pass Type', type: 'select', options: ['My50 (Monthly)', 'MyCity Pass (1-Day)', 'MyCity Pass (3-Day)', 'KTM Komuter Link', 'TNG Reload Tracking'] },
+        { name: 'tngCardNickname', label: 'TNG Card Nickname', type: 'text', placeholder: 'e.g. My Pink TNG' },
+        { name: 'tngCardLast4', label: 'Last 4 Digits of TNG Card', type: 'text', placeholder: 'e.g. 4321' }
+      ]
+    };
+  }
+
+  if (catLower === 'petrol' || nameLower.includes('petrol') || nameLower.includes('fuel')) {
+    return {
+      type: 'petrol',
+      title: 'Petrol Budget Setup',
+      fields: [
+        { name: 'vehicleLabel', label: 'Vehicle Label / Plate No', type: 'text', placeholder: 'e.g. Myvi (VAA 1234)' }
+      ]
+    };
+  }
+
+  return {
+    type: 'custom',
+    title: 'Custom Bill Setup',
+    fields: [
+      { name: 'bankName', label: 'Bank Name / Provider', type: 'text', placeholder: 'e.g. Maybank' },
+      { name: 'accountNumber', label: 'Account / Reference Number', type: 'text', placeholder: 'e.g. 1029384756' }
+    ]
+  };
+}
+
 interface ProposalCardProps {
   message: Message;
   index?: number;
@@ -617,7 +727,6 @@ export function ProposalCard({
               />
             </div>
           </div>
-          <p className="text-[7px] text-muted-foreground italic">Deducted from your RM {userBalance.toFixed(2)} balance</p>
 
           {isRestricted && (
             <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[10px] text-rose-400 font-bold leading-tight space-y-1">
@@ -700,6 +809,171 @@ export function ProposalCard({
             />
             {isExecuting && (
               <p className="text-[8px] text-center text-amber-500 font-bold animate-pulse mt-2">Verifying...</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (m.proposal.type === 'check_bills_list') {
+    const billsList = m.proposal.bills || [];
+    return (
+      <Card className="glass-card bg-white/95 border-rose-500/20 overflow-hidden">
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center">
+              <Shield className="w-4 h-4 text-rose-500" />
+            </div>
+            <p className="text-[10px] font-black text-[#221F20] uppercase tracking-widest">Upcoming Bills</p>
+          </div>
+
+          <div className="space-y-3">
+            {billsList.map((bill: any) => {
+              // Get live status from the store
+              const liveBill = store.bills.find((b: any) => b.id === bill.id);
+              const isPaid = liveBill ? liveBill.status === 'paid' : bill.status === 'paid';
+              const needsSetup = liveBill ? liveBill.status === 'needs_setup' : bill.status === 'needs_setup';
+              
+              // Emoji indicator based on category
+              let emoji = "🧾";
+              if (bill.category === 'utilities') emoji = "💡";
+              else if (bill.category === 'telecommunication') emoji = "📱";
+              else if (bill.category === 'subscription') emoji = "🎬";
+
+              return (
+                <div key={bill.id} className="bg-[#F8F8F8] border border-pink-50 p-3 rounded-xl shadow-sm flex flex-col gap-2">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-pink-100 flex items-center justify-center text-sm shrink-0">
+                        {emoji}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold text-[#221F20] truncate">{bill.name}</p>
+                        <p className="text-[8px] text-[#727272] uppercase font-bold">{bill.category}</p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[11px] font-black text-rose-600">RM {bill.amount.toFixed(2)}</p>
+                      <p className="text-[8px] text-muted-foreground">
+                        {bill.nextDueDate ? new Date(bill.nextDueDate).toLocaleDateString('en-MY', { day: '2-digit', month: 'short' }) : 'Due soon'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <Button
+                    onClick={() => actionHandler({
+                      id: needsSetup ? `setup_bill_${bill.id}` : `pay_bill_${bill.id}`,
+                      label: needsSetup ? `Pay ${bill.name}` : `Pay ${bill.name}`,
+                      type: needsSetup ? 'setup_bill_prompt' : 'pay_bill',
+                      payload: { billId: bill.id }
+                    })}
+                    disabled={isExecuting || isPaid}
+                    className={cn(
+                      "w-full h-7 text-[9px] font-bold rounded-lg transition-all",
+                      isPaid 
+                        ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 cursor-not-allowed"
+                        : needsSetup
+                          ? "bg-amber-500 text-white hover:bg-amber-600 shadow-amber-500/20"
+                          : "bg-rose-500 text-white hover:bg-rose-600"
+                    )}
+                  >
+                    {isPaid 
+                      ? "✓ Paid Successfully" 
+                      : needsSetup 
+                        ? `Setup & Pay RM ${bill.amount.toFixed(2)}` 
+                        : `Pay RM ${bill.amount.toFixed(2)}`}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="pt-2 border-t border-pink-100 flex justify-between items-center text-[10px] font-bold">
+            <span className="text-muted-foreground">Total Urgent Amount</span>
+            <span className="text-rose-600">RM {m.proposal.totalAmount.toFixed(2)}</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (m.proposal.type === 'setup_bill_form') {
+    const bill = m.proposal.bill;
+    const config = getFieldsForBill(bill);
+    return (
+      <Card className="glass-card bg-white/95 border-amber-500/20 overflow-hidden">
+        <CardContent className="p-4 space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Shield className="w-4 h-4 text-amber-500" />
+            <p className="text-xs font-bold text-[#221F20] uppercase tracking-wider">{config.title}</p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="bg-[#F8F8F8] border border-pink-50 p-2.5 rounded-xl flex justify-between items-center text-[10px]">
+              <div>
+                <p className="font-bold text-[#221F20]">{bill.name}</p>
+                <p className="text-[8px] text-[#727272] uppercase font-bold">{bill.category}</p>
+              </div>
+              <p className="font-black text-rose-600">RM {bill.amount.toFixed(2)}</p>
+            </div>
+
+            {config.fields.map((field: any) => {
+              const inputId = `setup_${field.name}_${bill.id}`;
+              
+              if (field.type === 'select') {
+                return (
+                  <div key={field.name} className="space-y-1">
+                    <label className="text-[8px] uppercase font-bold text-muted-foreground">{field.label}</label>
+                    <select
+                      id={inputId}
+                      className="w-full h-10 rounded-lg border px-2.5 py-1 text-sm bg-white border-pink-100 text-[#221F20] placeholder:text-[#727272] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:!opacity-70"
+                      disabled={isExecuting || !isLast}
+                    >
+                      {field.options?.map((opt: string) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              }
+
+              return (
+                <div key={field.name} className="space-y-1">
+                  <label className="text-[8px] uppercase font-bold text-muted-foreground">{field.label}</label>
+                  <Input
+                    placeholder={field.placeholder}
+                    id={inputId}
+                    className="h-10 text-sm bg-white border-pink-100 text-[#221F20] placeholder:text-[#727272]"
+                    disabled={isExecuting || !isLast}
+                  />
+                </div>
+              );
+            })}
+
+            {isLast && (
+              <Button
+                className="w-full h-8 text-[10px] bg-amber-500 hover:bg-amber-600 text-white font-bold"
+                onClick={() => {
+                  const setupData: Record<string, string> = {};
+                  config.fields.forEach((field: any) => {
+                    const inputEl = document.getElementById(`setup_${field.name}_${bill.id}`) as HTMLInputElement | HTMLSelectElement;
+                    if (inputEl) {
+                      setupData[field.name] = inputEl.value;
+                    }
+                  });
+                  
+                  actionHandler({
+                    id: `save_setup_${bill.id}`,
+                    label: `Pay ${bill.name}`,
+                    type: 'save_setup_and_pay',
+                    payload: { billId: bill.id, setupData }
+                  });
+                }}
+                disabled={isExecuting}
+              >
+                {isExecuting ? "Processing..." : "Save Setup & Pay"}
+              </Button>
             )}
           </div>
         </CardContent>
