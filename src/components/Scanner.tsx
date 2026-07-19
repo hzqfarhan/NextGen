@@ -3,7 +3,7 @@
 import { useStore } from "@/store/useStore"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { QrCode, ScanLine, X, AlertTriangle, ArrowRight, Zap, AlertCircle, ChevronDown, Coffee, ShoppingBag, Gamepad2 } from "lucide-react"
+import { QrCode, ScanLine, X, AlertTriangle, ArrowRight, Zap, AlertCircle, ChevronDown, Coffee, ShoppingBag, Gamepad2, SwitchCamera, ImageIcon } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -16,10 +16,11 @@ const QrScanner = dynamic(
 )
 import { TopUpModal } from "./TopUpModal"
 import { cn } from "@/lib/utils"
+import { Pet } from "@/components/ui/Pet"
 
 export function Scanner() {
   const router = useRouter()
-  const { user, addTransaction, safeDailySpend, initialSafeDaily, transactions } = useStore()
+  const { user, addTransaction, safeDailySpend, initialSafeDaily, transactions, selectedCompanion } = useStore()
   
   const [scannedItem, setScannedItem] = useState<{ merchant: string, amount: number, category: string } | null>(null)
   const [isIntercepted, setIsIntercepted] = useState(false)
@@ -27,6 +28,57 @@ export function Scanner() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [isFailed, setIsFailed] = useState(false)
   const [showTopUpModal, setShowTopUpModal] = useState(false)
+  const [facingMode, setFacingMode] = useState<"environment" | "user">("environment")
+  const [afterMessage, setAfterMessage] = useState<{ type: 'success' | 'warning', text: string } | null>(null)
+
+  const handleCancelIntercept = () => {
+    setIsIntercepted(false)
+    setAfterMessage({ 
+      type: 'success', 
+      text: 'Good job! PTPTN selamat. Future you is smiling and proud of you.' 
+    })
+    setTimeout(() => {
+      setAfterMessage(prev => {
+        if (prev?.type === 'success') {
+          setScannedItem(null)
+          return null
+        }
+        return prev
+      })
+    }, 2500)
+  }
+
+  const handleProceedIntercept = () => {
+    setIsIntercepted(false)
+    setAfterMessage({ 
+      type: 'warning', 
+      text: 'Sigh... don\'t say NextGen didn\'t warn you! Tengok wallet tu menangis.' 
+    })
+    setTimeout(() => {
+      setAfterMessage(prev => {
+        if (prev?.type === 'warning') {
+          setIsWarning(true)
+          return null
+        }
+        return prev
+      })
+    }, 2500)
+  }
+
+  const handleSwapCamera = () => {
+    setFacingMode(prev => prev === "environment" ? "user" : "environment")
+  }
+
+  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setScannedItem({
+        merchant: "Starbucks Coffee",
+        amount: 18.50,
+        category: "Food"
+      })
+      setIsIntercepted(true)
+    }
+  }
 
   // Calculate remaining daily spending quota
   const todayStr = new Date().toDateString()
@@ -128,6 +180,7 @@ export function Scanner() {
           }}
           onError={(error) => console.log(error?.message)}
           formats={['qr_code']}
+          constraints={{ facingMode }}
           components={{ finder: false }}
         />
         
@@ -155,11 +208,22 @@ export function Scanner() {
       {/* Header */}
       <header className="z-10 p-4 flex justify-between items-center bg-gradient-to-b from-white/90 to-transparent pb-8">
         <h1 className="text-slate-900 font-bold">Scan DuitNow QR</h1>
-        <Link href="/dashboard">
-          <Button variant="ghost" size="icon" className="text-slate-900 hover:bg-slate-200/50 rounded-full">
-            <X className="w-6 h-6" />
+        <div className="flex gap-2">
+          <Button variant="ghost" size="icon" onClick={() => document.getElementById('gallery-upload')?.click()} className="text-slate-900 hover:bg-slate-200/50 rounded-full">
+            <ImageIcon className="w-5 h-5" />
           </Button>
-        </Link>
+          <input id="gallery-upload" type="file" accept="image/*" className="hidden" onChange={handleGalleryUpload} />
+          
+          <Button variant="ghost" size="icon" onClick={handleSwapCamera} className="text-slate-900 hover:bg-slate-200/50 rounded-full">
+            <SwitchCamera className="w-5 h-5" />
+          </Button>
+
+          <Link href="/dashboard">
+            <Button variant="ghost" size="icon" className="text-slate-900 hover:bg-slate-200/50 rounded-full">
+              <X className="w-6 h-6" />
+            </Button>
+          </Link>
+        </div>
       </header>
 
       {/* Main Content */}
@@ -199,20 +263,14 @@ export function Scanner() {
                 <div className="space-y-3 z-10 relative pt-4">
                   <Button 
                     className="w-full h-14 bg-white text-rose-600 hover:bg-rose-50 font-black rounded-xl text-base shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
-                    onClick={() => {
-                      setIsIntercepted(false)
-                      setScannedItem(null)
-                    }}
+                    onClick={handleCancelIntercept}
                   >
                     Cancel
                   </Button>
                   <Button 
                     variant="ghost"
                     className="w-full h-12 text-rose-100 hover:bg-rose-700/50 hover:text-white font-bold rounded-xl text-sm"
-                    onClick={() => {
-                      setIsIntercepted(false)
-                      setIsWarning(true)
-                    }}
+                    onClick={handleProceedIntercept}
                   >
                     Proceed
                   </Button>
@@ -221,7 +279,43 @@ export function Scanner() {
             </motion.div>
           )}
 
-          {scannedItem && isWarning && !isProcessing && (
+          {afterMessage && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="absolute inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+              onClick={() => {
+                if (afterMessage.type === 'success') {
+                  setAfterMessage(null);
+                  setScannedItem(null);
+                } else {
+                  setAfterMessage(null);
+                  setIsWarning(true);
+                }
+              }}
+            >
+              <div className="bg-white rounded-3xl p-6 shadow-2xl text-center max-w-sm w-full space-y-4 border border-slate-100 relative overflow-hidden">
+                
+                {/* Companion avatar */}
+                <div className="mx-auto w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center border-4 border-white shadow-md relative z-10">
+                  <Pet animation={afterMessage.type === 'success' ? 'idle' : 'walk'} size={64} companionId={selectedCompanion} />
+                </div>
+                
+                <h3 className={cn("text-2xl font-black relative z-10", afterMessage.type === 'success' ? "text-emerald-600" : "text-rose-600")}>
+                  {afterMessage.type === 'success' ? 'Fuh, Selamat!' : 'Aduhai... Degilnya!'}
+                </h3>
+                <p className="text-slate-600 font-medium relative z-10">
+                  {afterMessage.text}
+                </p>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest relative z-10 mt-2">
+                  Tap anywhere to continue
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+          {scannedItem && isWarning && !isProcessing && !afterMessage && (
             <motion.div 
               initial={{ opacity: 0, y: 50, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
