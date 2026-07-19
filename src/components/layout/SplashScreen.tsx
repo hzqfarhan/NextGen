@@ -271,7 +271,7 @@ export function SplashScreen() {
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                   className="relative z-10 w-full h-full flex items-center justify-center p-3"
                 >
-                  <img src="/assets/NEXTGEN.png" alt="NextGen Logo" className="w-full h-full object-contain" />
+                  <img src="/assets/logos/nextxgen.png" alt="NextGen Logo" className="w-full h-full object-contain" />
                 </motion.div>
 
                 {/* Glass reflection */}

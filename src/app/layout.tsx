@@ -22,9 +22,9 @@ export const metadata: Metadata = {
   title: "BeU NextGen",
   description: "AI-powered financial companion for youth money habits.",
   icons: {
-    icon: "/assets/NEXTGEN.png",
-    shortcut: "/assets/NEXTGEN.png",
-    apple: "/assets/NEXTGEN.png",
+    icon: "/assets/logos/nextxgen.png",
+    shortcut: "/assets/logos/nextxgen.png",
+    apple: "/assets/logos/nextxgen.png",
   },
   openGraph: {
     title: "BeU NextGen",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     siteName: "BeU NextGen",
     images: [
       {
-        url: "/assets/NEXTGEN-og.jpg",
+        url: "/assets/logos/nextxgen.png",
         width: 1200,
         height: 1200,
         alt: "BeU NextGen Logo",
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "BeU NextGen",
     description: "Spend smarter, save better, and understand money before it becomes a problem.",
-    images: ["/assets/NEXTGEN-og.jpg"],
+    images: ["/assets/logos/nextxgen.png"],
   },
   appleWebApp: {
     title: "BeU NextGen",
