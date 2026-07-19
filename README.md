@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/assets/NEXTGEN.png" alt="BeU NextGen Logo" width="220" style="border-radius: 1.5rem; margin-bottom: 1rem; box-shadow: 0 10px 30px rgba(223,0,89,0.15);" />
+  <img src="public/assets/logos/nextxgen.png" alt="BeU NextGen Logo" width="220" style="margin-bottom: 1rem;" />
   
   # BeU NextGen
   
@@ -28,14 +28,14 @@ BeU NextGen separates money into **what the user has**, **what must be protected
 | **Safe Daily Spend** | Computed safe budget per day based on balance, bills, and days remaining |
 | **Smart Bill Lock** | Auto-protects recurring commitments — rent, phone, PTPTN, subscriptions |
 | **NextGen Score** | 0–100 financial health score updated in real-time |
-| **NextGen AI Council** | 4 Gemini-powered AI agents — Finance Strategist, Savings Sentinel, Commitment Shield, Growth Guru |
-| **Structured AI Responses** | AI returns a JSON card (headline, status, insight, metric, CTA) instead of long paragraphs |
+| **NextGen AI Council** | 4 Gemini-powered AI agents acting as interactive native app widgets, not just boring text bots |
+| **Structured AI Responses** | AI returns actionable UI cards (headline, status, insight, metric, CTA) instead of long paragraphs |
 | **AI Topic Guard** | Off-topic messages are rejected instantly without calling the AI model |
 | **Savings Hub** | Goal-based savings pockets with progress tracking and AI coaching |
 | **Transfer with AI Match** | AI-suggested transfers with 95%+ confidence matching from transaction history |
 | **Pay Scanner** | QR-style spend risk evaluator with Impulse Negotiator |
 | **Roast & Toast Engine** | Malay dialect AI feedback on spending habits |
-| **NextGen Companion** | 6 unlockable animated companions (Uteh, Zuko, Oreo, Oyen, Yunn, Lico) |
+| **NextGen Companion** | 6 unlockable customizable companions (Uteh, Zuko, Oreo, Oyen, Yunn, Lico) |
 | **Membership Tiers** | Novice → Pro → Legend with unlockable features and companions |
 | **Streak & Rewards** | Daily streak tracking, Streak Shield, prize-draw tickets |
 | **Diagnostics Panel** | Real-time system health — DB latency, Gemini API status, ERD schema map |
@@ -52,7 +52,7 @@ These additional high-fidelity features were successfully implemented in the fun
 | :---: | --- |
 | <img src="public/assets/git-img/main dashboard.PNG" width="360" alt="Main Dashboard" /> | **1. Core Financial Command Center (Main Dashboard)**<br><br>• **Safe Daily Spend Calculation:** Instantly calculates exactly what is safe to spend per day, protecting future bill locks and savings pockets.<br>• **Unified Visual Indicators:** Tracks streaks, membership progress, and real-time financial health without the user having to guess.<br>• **Quick Action Center:** Integrates QR scanner, rapid transfers, and smart bill management in one screen.<br><br>👉 **🌟 Key User Benefit:** **Eliminates the "Mental Math" Trap!** Never guess if you can afford lunch; your exact spendable balance is visible instantly, saving you from end-of-month panic! |
 | <img src="public/assets/git-img/smartbill.jpg" width="360" alt="Smart Bill Lock" /> | **2. Smart Bill Lock (Commitment Shield)**<br><br>• **Auto-Shield Subscriptions:** Dynamically locks funds for recurring utility bills, student loans (PTPTN), or standard subscriptions.<br>• **Protected Wallet Slices:** Locked funds are subtracted from the spendable balance and visually isolated in a beautiful vault card interface.<br>• **Visual Progression Trackers:** Shows due dates, lock status, and historical lock completion records.<br><br>👉 **🛡️ Key User Benefit:** **Zero-Effort Commitment Protection!** Automatically guarantees you never accidentally spend your rent or phone bill money. |
-| <img src="public/assets/git-img/companion.jpg" width="360" alt="Companion System" /> | **3. Gamified NextGen Companion System**<br><br>• **Interactive Avatars:** 6 animated virtual companions (including Oyen, Zuko, Oreo, Yunn) matching the user's financial habits.<br>• **Tier-Gated Unlocks:** Encourages sound savings disciplines by unlocking higher-status companions at Pro and Legend tiers.<br>• **Micro-Roasts & Prompts:** The companion serves as the reactive visual frontend of the multi-agent AI Council, cheering or roasting user decisions.<br><br>👉 **🤝 Key User Benefit:** **Finance Made Addictive!** Turns money management into a cute game—encouraging healthy savings habits through customizable companions that roast your bad spends and celebrate your savings! |
+| <img src="public/assets/git-img/companion.jpg" width="360" alt="Companion System" /> | **3. Gamified NextGen Companion System**<br><br>• **Interactive Customization:** Unlock and customize your own virtual companion (like Oyen, Zuko, or Yunn) as you build your daily streak.<br>• **Tier-Gated Unlocks:** Encourages sound savings disciplines by unlocking higher-status companions and features at Pro and Legend tiers.<br>• **Micro-Roasts & Prompts:** The companion serves as the reactive visual frontend of the multi-agent AI Council, cheering or roasting user decisions in localized dialects (e.g., Loghat Kelantan).<br><br>👉 **🤝 Key User Benefit:** **Finance Made Addictive!** Turns money management into a fun, personal game—encouraging healthy savings habits through customizable companions that keep you accountable! |
 | <img src="public/assets/git-img/insights.jpg" width="360" alt="Dynamic Insights" /> | **4. Recharts Advanced Spending Insights**<br><br>• **High-Contrast Data Visuals:** Modern custom light-mode analytics showing spending trends and weekly fluctuations.<br>• **Categorized Spend Breakdown:** Color-coded categorical Recharts grids highlighting dynamic budget deviations and savings allocations.<br>• **Streak Metrics:** Visualized progression of habit streak consistency and gamified scores.<br><br>👉 **📊 Key User Benefit:** **Spot Hidden Money Leaks Instantly!** Beautiful high-contrast visual charts pinpoint exactly where your funds are slipping away, so you can optimize budgets with absolute clarity. |
 | <img src="public/assets/git-img/voicemode.jpg" width="360" alt="Voice Assistant UI" /> | **5. Smart Voice Assistant Mode**<br><br>• **Speech-to-Text Processing:** Low-latency localized voice input matching the Malaysian accent and financial context.<br>• **Interactive Visual Aura:** Floating glowing gradient orb animations syncing real-time voice capture states.<br>• **Hands-Free AI Council Queries:** Quick vocal prompts like *"Can I afford bubble tea today?"* instantly yield structured JSON feedback.<br><br>👉 **🎙️ Key User Benefit:** **Vocalize Your Financial Queries!** Skip the typing and speak naturally—ask the AI Council complex questions on-the-go and get visual cards instantly. |
 | <img src="public/assets/git-img/sharestreak.jpg" width="360" alt="Streak Sharing & Rewards" /> | **6. Social Streak Sharing & Rewards**<br><br>• **Viral Malaysian Themes:** Shareable streak generation badges supporting custom backgrounds (WhatsApp, Telegram, IG Stories).<br>• **Prize Draw Gating:** Unlocks free raffle tickets from streak achievements.<br>• **Streak Shield Protection:** Gamified shields preventing streak breaks during emergency spend periods.<br><br>👉 **🎁 Key User Benefit:** **Get Rewarded for Discipline!** Turn consistency into real-world value—share your progress with beautiful designs, use Streak Shields, and earn prize-draw tickets! |
@@ -149,9 +149,10 @@ Rather than relying on a single general chatbot, BeU NextGen routes queries to t
 * 🛡️ **Commitment Shield (`debt`)**: Smart Bill Lock coordinator, BNPL assessment, and loan/debt shield.
 * 📈 **Growth Guru (`invest`)**: Long-term growth blueprints, unit trust explanations, and ASB analysis.
 
-#### 3. Structured JSON Messaging & Topic Guard
+#### 3. Structured JSON Messaging: Beyond a Normal Chatbot
+* **Not Just Boring Text**: Unlike normal chatbots that spit out generic paragraphs, NextGen generates **Structured AI Response Cards**. These act as actionable, native app widgets integrated directly into your UI.
 * **Input-Topic Guard**: Prevents prompt injection and off-topic chat abuse. The system runs an instant local keyword check for financial context. If a user asks the AI to play games or write poems, the system triggers a localized, ultra-fast rejection without burning Gemini API quota tokens.
-* **Strict Schema Outputs**: The server enforces a strict JSON output schema. The AI doesn't just blabber text; it returns `{ structured: { headline, status, insight, metric, cta } }` which translates into a custom dynamic visual card, or triggers a client-side execution call (e.g., automatically building a savings pocket on behalf of the user).
+* **Strict Schema Outputs**: The server enforces a strict JSON output schema (`{ structured: { headline, status, insight, metric, cta } }`) which translates into the dynamic visual cards, or triggers a client-side execution call (e.g., automatically building a savings pocket on behalf of the user).
 
 ---
 
