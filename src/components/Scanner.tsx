@@ -8,6 +8,12 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import dynamic from "next/dynamic"
+
+const QrScanner = dynamic(
+  () => import('@yudiel/react-qr-scanner').then((mod) => mod.Scanner),
+  { ssr: false }
+)
 import { TopUpModal } from "./TopUpModal"
 import { cn } from "@/lib/utils"
 
@@ -16,6 +22,7 @@ export function Scanner() {
   const { user, addTransaction, safeDailySpend, initialSafeDaily, transactions } = useStore()
   
   const [scannedItem, setScannedItem] = useState<{ merchant: string, amount: number, category: string } | null>(null)
+  const [isIntercepted, setIsIntercepted] = useState(false)
   const [isWarning, setIsWarning] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [isFailed, setIsFailed] = useState(false)
@@ -81,7 +88,7 @@ export function Scanner() {
       amount: amt,
       category: customCategory
     })
-    setIsWarning(true)
+    setIsIntercepted(true)
   }
 
   const handleConfirmPay = () => {
@@ -106,27 +113,43 @@ export function Scanner() {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-slate-900 relative overflow-hidden flex flex-col">
-      {/* Mock Camera View */}
-      <div className="absolute inset-0 z-0 flex items-center justify-center opacity-50">
-        <div className="w-64 h-64 border-2 border-primary/50 relative">
-          <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-primary"></div>
-          <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-primary"></div>
-          <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-primary"></div>
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-primary"></div>
-          <motion.div 
-            animate={{ y: [0, 250, 0] }} 
-            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-            className="w-full h-1 bg-primary shadow-[0_0_15px_#A855F7]"
-          />
+    <div className="h-[calc(100vh-64px)] bg-slate-50 relative overflow-hidden flex flex-col">
+      {/* Real Camera View */}
+      <div className="absolute inset-0 z-0 bg-slate-200">
+        <QrScanner
+          onScan={(result) => {
+            if (result && result.length > 0) {
+              setScannedItem({
+                merchant: "Starbucks Coffee",
+                amount: 18.50,
+                category: "Food"
+              })
+              setIsIntercepted(true)
+            }
+          }}
+          onError={(error) => console.log(error?.message)}
+          formats={['qr_code']}
+        />
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-64 h-64 border-2 border-primary/50 relative">
+            <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-primary"></div>
+            <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-primary"></div>
+            <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-primary"></div>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-primary"></div>
+            <motion.div 
+              animate={{ y: [0, 250, 0] }} 
+              transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+              className="w-full h-1 bg-primary shadow-[0_0_15px_#A855F7]"
+            />
+          </div>
         </div>
       </div>
 
       {/* Header */}
-      <header className="z-10 p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
-        <h1 className="text-white font-bold">Scan DuitNow QR</h1>
+      <header className="z-10 p-4 flex justify-between items-center bg-gradient-to-b from-white/90 to-transparent pb-8">
+        <h1 className="text-slate-900 font-bold">Scan DuitNow QR</h1>
         <Link href="/dashboard">
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 rounded-full">
+          <Button variant="ghost" size="icon" className="text-slate-900 hover:bg-slate-200/50 rounded-full">
             <X className="w-6 h-6" />
           </Button>
         </Link>
@@ -141,16 +164,16 @@ export function Scanner() {
               initial={{ opacity: 0, y: 20 }} 
               animate={{ opacity: 1, y: 0 }} 
               exit={{ opacity: 0, y: 20 }}
-              className="w-full max-h-[80vh] overflow-y-auto scrollbar-hide space-y-4 bg-slate-950/80 backdrop-blur-xl p-5 rounded-3xl border border-white/5 shadow-2xl"
+              className="w-full max-h-[80vh] overflow-y-auto scrollbar-hide space-y-4 bg-white/90 backdrop-blur-xl p-5 rounded-3xl border border-slate-200/50 shadow-2xl"
             >
               <div className="text-center space-y-1 pb-1">
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider">QR Code Simulator</h2>
-                <p className="text-[10px] text-slate-400">Trigger quick QR demo checkout or build a custom scan value below</p>
+                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">QR Code Simulator</h2>
+                <p className="text-[10px] text-slate-500">Trigger quick QR demo checkout or build a custom scan value below</p>
               </div>
 
               {/* Quick Demos Panel */}
               <div className="space-y-2">
-                <p className="text-[9px] uppercase font-bold tracking-wider text-slate-400 px-1">Quick-test Demos</p>
+                <p className="text-[9px] uppercase font-bold tracking-wider text-slate-500 px-1">Quick-test Demos</p>
                 <div className="grid grid-cols-1 gap-2">
                   {[
                     { merchant: "Starbucks Coffee", amount: 18.50, category: "Food", icon: Coffee, color: "text-emerald-400 bg-emerald-500/10" },
@@ -168,9 +191,9 @@ export function Scanner() {
                             amount: demo.amount,
                             category: demo.category
                           })
-                          setIsWarning(true)
+                          setIsIntercepted(true)
                         }}
-                        className="w-full h-12 justify-between bg-white/5 border border-white/5 hover:bg-white/10 active:scale-[0.98] transition-all text-white rounded-xl px-3.5 flex items-center"
+                        className="w-full h-12 justify-between bg-white border border-slate-200 hover:bg-slate-50 active:scale-[0.98] transition-all text-slate-900 rounded-xl px-3.5 flex items-center shadow-sm"
                       >
                         <div className="flex items-center gap-3">
                           <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", demo.color)}>
@@ -178,7 +201,7 @@ export function Scanner() {
                           </div>
                           <div className="text-left">
                             <p className="text-xs font-bold leading-tight">{demo.merchant}</p>
-                            <p className="text-[9px] text-slate-400 leading-tight">{demo.category}</p>
+                            <p className="text-[9px] text-slate-500 leading-tight">{demo.category}</p>
                           </div>
                         </div>
                         <span className="text-xs font-black text-primary">RM {demo.amount.toFixed(2)}</span>
@@ -189,26 +212,26 @@ export function Scanner() {
               </div>
 
               {/* Custom Checkout Creator */}
-              <div className="space-y-2 pt-1 border-t border-white/5">
-                <p className="text-[9px] uppercase font-bold tracking-wider text-slate-400 px-1">Simulate Custom Checkout</p>
-                <div className="bg-white/5 border border-white/5 rounded-2xl p-3.5 space-y-3">
+              <div className="space-y-2 pt-1 border-t border-slate-200/50">
+                <p className="text-[9px] uppercase font-bold tracking-wider text-slate-500 px-1">Simulate Custom Checkout</p>
+                <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-3">
                   
                   {/* Merchant name input */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Merchant Name</label>
+                    <label className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Merchant Name</label>
                     <input
                       type="text"
                       placeholder="e.g. Kedai Tomyam Jaya"
                       value={customMerchant}
                       onChange={(e) => setCustomMerchant(e.target.value)}
-                      className="bg-slate-900/60 border border-white/10 text-xs text-white rounded-xl h-9 px-3 focus:outline-none focus:border-primary/50 placeholder-slate-500 font-medium"
+                      className="bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl h-9 px-3 focus:outline-none focus:border-primary/50 placeholder-slate-400 font-medium"
                     />
                   </div>
 
                   {/* Amount & Category select */}
                   <div className="grid grid-cols-2 gap-2.5">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Amount (RM)</label>
+                      <label className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Amount (RM)</label>
                       <input
                         type="number"
                         step="0.01"
@@ -220,25 +243,25 @@ export function Scanner() {
                             setCustomAmount(val);
                           }
                         }}
-                        className="bg-slate-900/60 border border-white/10 text-xs text-white rounded-xl h-9 px-3 focus:outline-none focus:border-primary/50 placeholder-slate-500 font-bold"
+                        className="bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl h-9 px-3 focus:outline-none focus:border-primary/50 placeholder-slate-400 font-bold"
                       />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Category</label>
+                      <label className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Category</label>
                       <div className="relative">
                         <select
                           value={customCategory}
                           onChange={(e) => setCustomCategory(e.target.value)}
-                          className="w-full bg-slate-900/60 border border-white/10 text-xs text-white rounded-xl h-9 pl-3 pr-8 focus:outline-none focus:border-primary/50 appearance-none cursor-pointer font-bold"
+                          className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl h-9 pl-3 pr-8 focus:outline-none focus:border-primary/50 appearance-none cursor-pointer font-bold"
                         >
-                          <option value="Food" className="bg-slate-900">🍔 Food</option>
-                          <option value="Shopping" className="bg-slate-900">🛍️ Shopping</option>
-                          <option value="Entertainment" className="bg-slate-900">🎮 Entertainment</option>
-                          <option value="Transport" className="bg-slate-900">🚗 Transport</option>
-                          <option value="Bills" className="bg-slate-900">⚡ Bills</option>
+                          <option value="Food" className="bg-white">🍔 Food</option>
+                          <option value="Shopping" className="bg-white">🛍️ Shopping</option>
+                          <option value="Entertainment" className="bg-white">🎮 Entertainment</option>
+                          <option value="Transport" className="bg-white">🚗 Transport</option>
+                          <option value="Bills" className="bg-white">⚡ Bills</option>
                         </select>
-                        <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>
                     </div>
                   </div>
@@ -255,6 +278,60 @@ export function Scanner() {
                 </div>
               </div>
 
+            </motion.div>
+          )}
+
+          {scannedItem && isIntercepted && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+            >
+              <div className="bg-gradient-to-br from-rose-500 to-rose-600 rounded-3xl p-6 shadow-2xl text-white w-full max-w-sm space-y-6 relative overflow-hidden border border-rose-400/30">
+                <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/20 rounded-full blur-3xl"></div>
+                
+                <div className="flex flex-col items-center text-center space-y-3 z-10 relative pt-2">
+                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-2 shadow-inner">
+                    <Zap className="w-10 h-10 text-white animate-bounce" />
+                  </div>
+                  <h2 className="text-3xl font-black uppercase tracking-tight">HOLD UP, BOSSKU! 🛑</h2>
+                  <p className="text-lg font-bold text-rose-50 leading-snug">
+                    {scannedItem.merchant === "Starbucks Coffee" 
+                      ? `Starbucks lagi?! RM${scannedItem.amount.toFixed(2)} terbang camtu je?` 
+                      : `RM${scannedItem.amount.toFixed(2)} untuk ${scannedItem.merchant}? Biar betul?`}
+                  </p>
+                  <div className="bg-black/10 rounded-xl p-3 w-full backdrop-blur-sm border border-black/5 mt-2">
+                    <p className="text-sm font-semibold text-rose-100">
+                      {scannedItem.merchant === "Starbucks Coffee"
+                        ? "Air Coway kat kolej kediaman kan free. Tak payah nak ngada-ngada kopi kayangan. PTPTN bulan ni cukup ke tak tu?"
+                        : "Fikir masak-masak sebelum scan. Nanti hujung bulan makan meggi je dalam bilik."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 z-10 relative pt-4">
+                  <Button 
+                    className="w-full h-14 bg-white text-rose-600 hover:bg-rose-50 font-black rounded-xl text-base shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
+                    onClick={() => {
+                      setIsIntercepted(false)
+                      setScannedItem(null)
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    variant="ghost"
+                    className="w-full h-12 text-rose-100 hover:bg-rose-700/50 hover:text-white font-bold rounded-xl text-sm"
+                    onClick={() => {
+                      setIsIntercepted(false)
+                      setIsWarning(true)
+                    }}
+                  >
+                    Proceed
+                  </Button>
+                </div>
+              </div>
             </motion.div>
           )}
 
