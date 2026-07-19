@@ -114,8 +114,7 @@ export function Scanner() {
 
   return (
     <div className="h-[calc(100vh-64px)] bg-slate-50 relative overflow-hidden flex flex-col">
-      {/* Real Camera View */}
-      <div className="absolute inset-0 z-0 bg-slate-200">
+      <div className="absolute inset-0 z-0 bg-slate-900">
         <QrScanner
           onScan={(result) => {
             if (result && result.length > 0) {
@@ -129,17 +128,25 @@ export function Scanner() {
           }}
           onError={(error) => console.log(error?.message)}
           formats={['qr_code']}
+          components={{ finder: false }}
         />
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-64 h-64 border-2 border-primary/50 relative">
-            <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-primary"></div>
-            <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-primary"></div>
-            <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-primary"></div>
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-primary"></div>
+        
+        {/* Cutout Overlay */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 overflow-hidden">
+          {/* Box Shadow Trick for cutout overlay */}
+          <div className="w-64 h-64 rounded-xl border-2 border-primary/80 relative shadow-[0_0_0_4000px_rgba(0,0,0,0.6)]">
+            
+            {/* Corner highlights */}
+            <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-xl"></div>
+            <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-xl"></div>
+            <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-xl"></div>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-xl"></div>
+            
+            {/* Laser */}
             <motion.div 
-              animate={{ y: [0, 250, 0] }} 
+              animate={{ y: [0, 240, 0] }} 
               transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-              className="w-full h-1 bg-primary shadow-[0_0_15px_#A855F7]"
+              className="absolute top-0 left-0 right-0 h-[2px] bg-primary shadow-[0_0_15px_#A855F7]"
             />
           </div>
         </div>
@@ -159,127 +166,6 @@ export function Scanner() {
       <div className="flex-1 z-10 flex flex-col justify-end p-4 pb-12">
         
         <AnimatePresence>
-          {!scannedItem && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              exit={{ opacity: 0, y: 20 }}
-              className="w-full max-h-[80vh] overflow-y-auto scrollbar-hide space-y-4 bg-white/90 backdrop-blur-xl p-5 rounded-3xl border border-slate-200/50 shadow-2xl"
-            >
-              <div className="text-center space-y-1 pb-1">
-                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">QR Code Simulator</h2>
-                <p className="text-[10px] text-slate-500">Trigger quick QR demo checkout or build a custom scan value below</p>
-              </div>
-
-              {/* Quick Demos Panel */}
-              <div className="space-y-2">
-                <p className="text-[9px] uppercase font-bold tracking-wider text-slate-500 px-1">Quick-test Demos</p>
-                <div className="grid grid-cols-1 gap-2">
-                  {[
-                    { merchant: "Starbucks Coffee", amount: 18.50, category: "Food", icon: Coffee, color: "text-emerald-400 bg-emerald-500/10" },
-                    { merchant: "H&M Stores", amount: 150.00, category: "Shopping", icon: ShoppingBag, color: "text-pink-500 bg-pink-600/10" },
-                    { merchant: "Steam Gaming", amount: 89.00, category: "Entertainment", icon: Gamepad2, color: "text-amber-400 bg-amber-500/10" },
-                  ].map((demo, idx) => {
-                    const IconComp = demo.icon
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => {
-                          setScannedItem({
-                            merchant: demo.merchant,
-                            amount: demo.amount,
-                            category: demo.category
-                          })
-                          setIsIntercepted(true)
-                        }}
-                        className="w-full h-12 justify-between bg-white border border-slate-200 hover:bg-slate-50 active:scale-[0.98] transition-all text-slate-900 rounded-xl px-3.5 flex items-center shadow-sm"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", demo.color)}>
-                            <IconComp className="w-4 h-4" />
-                          </div>
-                          <div className="text-left">
-                            <p className="text-xs font-bold leading-tight">{demo.merchant}</p>
-                            <p className="text-[9px] text-slate-500 leading-tight">{demo.category}</p>
-                          </div>
-                        </div>
-                        <span className="text-xs font-black text-primary">RM {demo.amount.toFixed(2)}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Custom Checkout Creator */}
-              <div className="space-y-2 pt-1 border-t border-slate-200/50">
-                <p className="text-[9px] uppercase font-bold tracking-wider text-slate-500 px-1">Simulate Custom Checkout</p>
-                <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-3">
-                  
-                  {/* Merchant name input */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Merchant Name</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Kedai Tomyam Jaya"
-                      value={customMerchant}
-                      onChange={(e) => setCustomMerchant(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl h-9 px-3 focus:outline-none focus:border-primary/50 placeholder-slate-400 font-medium"
-                    />
-                  </div>
-
-                  {/* Amount & Category select */}
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Amount (RM)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={customAmount}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === "" || parseFloat(val) >= 0) {
-                            setCustomAmount(val);
-                          }
-                        }}
-                        className="bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl h-9 px-3 focus:outline-none focus:border-primary/50 placeholder-slate-400 font-bold"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Category</label>
-                      <div className="relative">
-                        <select
-                          value={customCategory}
-                          onChange={(e) => setCustomCategory(e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-xl h-9 pl-3 pr-8 focus:outline-none focus:border-primary/50 appearance-none cursor-pointer font-bold"
-                        >
-                          <option value="Food" className="bg-white">🍔 Food</option>
-                          <option value="Shopping" className="bg-white">🛍️ Shopping</option>
-                          <option value="Entertainment" className="bg-white">🎮 Entertainment</option>
-                          <option value="Transport" className="bg-white">🚗 Transport</option>
-                          <option value="Bills" className="bg-white">⚡ Bills</option>
-                        </select>
-                        <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Simulate Scan Button */}
-                  <Button
-                    onClick={handleCustomScan}
-                    disabled={!customAmount}
-                    className="w-full h-10 bg-primary hover:bg-primary/95 text-slate-900 font-extrabold rounded-xl text-xs gap-1.5 shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-95 transition-all mt-1"
-                  >
-                    <QrCode className="w-4 h-4" /> Scan Custom Code
-                  </Button>
-
-                </div>
-              </div>
-
-            </motion.div>
-          )}
 
           {scannedItem && isIntercepted && (
             <motion.div 
