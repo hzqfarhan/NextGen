@@ -57,11 +57,10 @@ export function useCoachChat() {
 
   const triggerGreeting = () => {
     const store = useStore.getState();
-    const urgentBills = analyzeBills(store.bills).filter(b => b.status === 'urgent').length;
-    const isBroke = store.safeDailySpend < 5;
+    const urgentBills = analyzeBills(store.bills.filter(b => b.status !== 'paid')).filter(b => b.status === 'urgent').length;
     
     let greetingMessage: Message | null = null;
-
+ 
     if (urgentBills > 0) {
       greetingMessage = {
         timestamp: new Date().toISOString(),
@@ -70,25 +69,12 @@ export function useCoachChat() {
         content: `Hey! You have ${urgentBills} urgent bill(s) due soon. Want me to check if you have enough balance to cover them?`,
         actions: [{ id: 'check_bills', label: 'Check Bills', type: 'check_bills' }]
       };
-    } else if (isBroke) {
-      greetingMessage = {
-        timestamp: new Date().toISOString(),
-        role: 'assistant',
-        agent: 'Finance Strategist',
-        content: `Warning: Your safe daily spend is critically low (RM ${store.safeDailySpend.toFixed(2)}). Let's review your recent spending or turn on Spend Guard.`,
-        actions: [{ id: 'toggle_sg', label: 'Toggle Spend Guard', type: 'postpone' }]
-      };
-    } else {
-      greetingMessage = {
-        timestamp: new Date().toISOString(),
-        role: 'assistant',
-        agent: 'Finance Strategist',
-        content: `Welcome back, ${store.user.name}! Your finances are looking steady today. How can I help?`
-      };
     }
-
+ 
     if (greetingMessage) {
       setMessages([greetingMessage]);
+    } else {
+      setMessages([]);
     }
     setIsLoaded(true);
   };
@@ -187,10 +173,14 @@ export function useCoachChat() {
         }
       }
 
+      // Only restore from cache if the conversation has actual user interaction.
+      // If it's purely assistant greeting messages (no user messages), always
+      // regenerate a fresh greeting from live store data.
       if (savedMessages) {
         try {
           const parsed = JSON.parse(savedMessages);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          const hasUserMsg = Array.isArray(parsed) && parsed.some((m: any) => m.role === 'user');
+          if (Array.isArray(parsed) && parsed.length > 0 && hasUserMsg) {
             setMessages(parsed);
             setIsLoaded(true);
             return;
@@ -204,7 +194,8 @@ export function useCoachChat() {
         if (oldSaved) {
           try {
             const parsed = JSON.parse(oldSaved);
-            if (Array.isArray(parsed) && parsed.length > 0) {
+            const hasUserMsg = Array.isArray(parsed) && parsed.some((m: any) => m.role === 'user');
+            if (Array.isArray(parsed) && parsed.length > 0 && hasUserMsg) {
               setMessages(parsed);
               localStorage.setItem('coach_messages_default', oldSaved);
               setIsLoaded(true);
@@ -464,7 +455,7 @@ export function useCoachChat() {
     const store = useStore.getState();
     const spending = analyzeSpending(store.transactions);
     const topCategories = spending.slice(0, 3).map(s => `${s.category} (RM ${s.total})`).join(", ");
-    const billStatus = analyzeBills(store.bills);
+    const billStatus = analyzeBills(store.bills.filter(b => b.status !== 'paid'));
     const billCoverage = checkBillCoverage(store.user.currentBalance, billStatus);
     const urgentBills = billStatus.filter(b => b.status === 'urgent').length;
     
@@ -1095,7 +1086,7 @@ export function useCoachChat() {
 
         // Fast path for bills
         if (textToSubmit.includes("bill") && textToSubmit.includes("due")) {
-          const billStatus = analyzeBills(useStore.getState().bills);
+          const billStatus = analyzeBills(useStore.getState().bills.filter(b => b.status !== 'paid'));
           responses.push({ timestamp: new Date().toISOString(), role: 'assistant', agent: 'Commitment Shield', content: `Here are your upcoming bills:`, proposal: { type: 'bill_timeline', bills: billStatus } });
           setMessages(prev => [...prev, ...responses]);
           setIsThinking(false);
