@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, Mic, MicOff } from "lucide-react"
+import { Send, Mic, Square } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface CoachInputBarProps {
@@ -86,7 +86,7 @@ export function CoachInputBar({
               : "bg-slate-50 hover:bg-slate-100 text-slate-500 border-pink-50/50"
           )}
         >
-          {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          {isListening ? <Square className="w-4 h-4 fill-white" /> : <Mic className="w-4 h-4" />}
         </Button>
         <Button
           size="icon"
