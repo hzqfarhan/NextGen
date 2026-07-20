@@ -588,7 +588,7 @@ export function Coach() {
         )}
       </AnimatePresence>
 
-      <VoiceOverlay isListening={isListening} interimTranscript={interimTranscript} />
+      <VoiceOverlay isListening={isListening} interimTranscript={interimTranscript} onStop={toggleListening} />
     </div>
   )
 }
